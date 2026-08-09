@@ -3,356 +3,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma Sói - Moderator</title>
+    <title>Môn Sói Là - Game Ma Sói Online</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #121212;
-            color: #e0e0e0;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 { color: #e74c3c; margin-bottom: 30px; }
-        .container { max-width: 500px; margin: 0 auto; }
+        :root { --primary: #e74c3c; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; text-align: center; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #333;
-            background: #1e1e1e;
-            color: white;
-            box-sizing: border-box;
-            font-size: 16px; /* Prevent iOS zoom */
-        }
+        /* UI Components */
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333; }
+        h1 { color: var(--primary); font-size: 2.5em; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; transition: transform 0.1s; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #555; cursor: not-allowed; opacity: 0.7; }
+        .secondary-btn { background: #2980b9; }
+        .ghost-btn { background: #333; font-size: 0.9em; padding: 8px; border: 1px solid #444; }
 
-        button {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            margin: 10px 0;
-            transition: opacity 0.2s;
-        }
-        button:active { opacity: 0.8; }
+        /* Pages */
+        .page { display: none; flex: 1; flex-direction: column; justify-content: center; }
+        .page.active { display: flex; }
 
-        .lobby {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 15px;
-            margin-top: 30px;
-        }
-        .player-card {
-            padding: 10px;
-            border-radius: 12px;
-            background: #2a2a2a;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .player-card img { border-radius: 50%; width: 50px; height: 50px; }
-        .player-card p { margin: 5px 0 0 0; font-size: 0.8em; overflow: hidden; text-overflow: ellipsis; }
+        /* Lobby Grid */
+        .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px; margin-top: 20px; }
+        .player-card { background: #2a2a2a; padding: 10px; border-radius: 12px; border: 1px solid #444; }
+        .player-card img { border-radius: 50%; width: 50px; height: 50px; object-fit: cover; border: 2px solid #555; }
 
-        .role-result {
-            margin-top: 30px;
-            padding: 15px;
-            background: #1e1e1e;
-            border-radius: 12px;
-            text-align: left;
-        }
-        .role-item {
-            border-bottom: 1px solid #333;
-            padding: 10px 0;
-        }
-        .role-item:last-child { border-bottom: none; }
+        /* Night Overlay */
+        #night-overlay { position: fixed; inset: 0; background: black; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
 
-        #displayRoomCode { font-family: monospace; letter-spacing: 3px; }
+        /* Role Card */
+        .role-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1500; display: none; padding: 40px 20px; overflow-y: auto; }
+
+        #timer-display { position: fixed; top: 10px; left: 10px; background: rgba(231, 76, 60, 0.2); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--primary); font-size: 0.8em; z-index: 2500; }
     </style>
 </head>
 <body>
-    <div id="night-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-        <h1 style="color: #f1c40f; font-size: 3em;">🌙</h1>
-        <h2 style="color: white;">Trời tối rồi...</h2>
-        <p style="color: #666;">Mọi người nhắm mắt lại!</p>
-        <button onclick="document.getElementById('night-overlay').style.display='none'" style="width: auto; background: #333; margin-top: 50px;">Xem vai / chức năng</button>
+    <div id="night-overlay">
+        <h1 style="font-size: 5em;">🌙</h1>
+        <h2>Trời tối rồi...</h2>
+        <p style="color: #888;">Mọi người vui lòng nhắm mắt lại!</p>
+        <button onclick="document.getElementById('night-overlay').style.display='none'" class="ghost-btn" style="width: auto; margin-top: 40px;">Lén xem vai</button>
     </div>
 
-    <div id="timer-display" style="display: none; position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 500; font-size: 0.8em; border: 1px solid #e74c3c; width: 150px; text-align: left;">
-        Trò chơi sẽ tự động bắt đầu sau: <span id="seconds" style="color: #e74c3c; font-weight: bold;">300</span>s
-    </div>
-
-    <!-- Google Identity Services SDK -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <div id="timer-display" style="display: none;">🕒 <span id="seconds">300</span>s</div>
 
     <div class="container">
-        <h1>Môn Sói Là</h1>
-
-        <!-- Google Login Section -->
-        <div id="login-section">
-            <p>Đăng nhập để lấy Avatar và Tên xịn</p>
-            <div id="g_id_onload"
-                 data-client_id="10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com"
-                 data-callback="handleCredentialResponse"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-size="large"
-                 data-theme="outline"
-                 data-text="sign_in_with"
-                 data-shape="rectangular"
-                 data-logo_alignment="left">
+        <!-- PAGE: HOME (Intro + Login) -->
+        <div id="page-home" class="page active">
+            <h1>Môn Sói Là</h1>
+            <p style="color: #888; margin-bottom: 40px;">Game đấu trí phong cách Werewolf.</p>
+            <div class="card">
+                <h3>Vào game ngay</h3>
+                <div id="g_id_onload" data-client_id="10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
+                <div class="g_id_signin" data-type="standard" data-shape="rectangular"></div>
             </div>
         </div>
-            <div id="user-info" style="margin-bottom: 20px;">
-                <img id="myAvatar" src="" width="60" style="border-radius: 50%; border: 2px solid #e74c3c;">
-                <p id="myName" style="font-weight: bold; margin: 5px 0;"></p>
-            </div>
 
-            <button onclick="createRoom()" style="background: #2980b9;">Tạo Phòng Mới</button>
-            <div style="margin: 20px 0; color: #666;">— HOẶC —</div>
-            <input type="text" id="roomCodeInput" inputmode="numeric" pattern="[0-9]*" placeholder="Nhập mã phòng (6 số)...">
+        <!-- PAGE: DASHBOARD (Profile + Create/Join) -->
+        <div id="page-dashboard" class="page">
+            <div class="card">
+                <div id="profile-display">
+                    <img id="myAvatar" src="" width="80" height="80" style="border-radius: 50%; border: 3px solid var(--primary);">
+                    <h2 id="myName" style="margin: 10px 0;">User Name</h2>
+                    <button onclick="toggleEdit(true)" class="ghost-btn" style="width: auto;">Chỉnh sửa Profile</button>
+                </div>
+                <div id="profile-edit" style="display: none;">
+                    <input type="text" id="editName" placeholder="Tên hiển thị...">
+                    <input type="text" id="editAvatar" placeholder="URL ảnh đại diện...">
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="saveProfile()" style="background: #27ae60;">Lưu</button>
+                        <button onclick="toggleEdit(false)" class="ghost-btn">Hủy</button>
+                    </div>
+                </div>
+            </div>
+            <button onclick="createRoom()" class="secondary-btn">Tạo Phòng Mới</button>
+            <div style="margin: 10px; color: #555;">— HOẶC —</div>
+            <input type="text" id="roomCodeInput" inputmode="numeric" placeholder="Mã phòng (6 số)...">
             <button onclick="joinRoom()">Gia Nhập Phòng</button>
         </div>
 
-        <div id="game-section" style="display: none;">
-            <h2>Mã Phòng: <span id="displayRoomCode" style="color: #f1c40f;">######</span></h2>
-            <div id="current-phase" style="color: #f1c40f; font-weight: bold; margin-bottom: 10px;">Giai đoạn: LOBBY</div>
-            <div class="lobby" id="playerList">
-                <!-- Players show here -->
+        <!-- PAGE: LOBBY (Player List) -->
+        <div id="page-lobby" class="page">
+            <div style="margin-bottom: 20px;">
+                <h2 style="margin: 0;">Mã Phòng: <span id="displayRoomCode" style="color: #f1c40f; letter-spacing: 2px;">######</span></h2>
+                <p id="current-phase" style="color: #f1c40f; font-size: 0.9em; font-weight: bold; margin-top: 5px;">Giai đoạn: LOBBY</p>
             </div>
 
-            <div id="host-controls" style="display: none; margin-top: 30px; padding-top: 20px; border-top: 1px solid #333;">
-                <label style="display: block; margin-bottom: 10px;">Cấu hình trận đấu:</label>
-                <select id="ratioSelect" style="width: 100%; padding: 12px; border-radius: 8px; background: #1e1e1e; color: white; border: 1px solid #333;">
-                    <option value="0.25">Tỷ lệ Sói: 25% (Ít Sói)</option>
-                    <option value="0.33">Tỷ lệ Sói: 33% (Nhiều Sói)</option>
+            <div class="card" style="flex: 1; overflow-y: auto; min-height: 200px;">
+                <div id="player-count-badge" style="background: #333; padding: 5px 10px; border-radius: 10px; display: inline-block; font-size: 0.8em; margin-bottom: 10px;">Đang chờ: 0/8 người</div>
+                <div class="player-grid" id="playerList"></div>
+            </div>
+
+            <div id="host-controls" style="display: none;">
+                <label style="font-size: 0.8em; color: #888;">CẤU HÌNH TRẬN ĐẤU</label>
+                <select id="ratioSelect" style="width: 100%; padding: 12px; border-radius: 8px; background: #222; color: white; margin: 10px 0; border: 1px solid #444;">
+                    <option value="0.25">Tỷ lệ Sói: 25% (Ít)</option>
+                    <option value="0.33">Tỷ lệ Sói: 33% (Nhiều)</option>
                 </select>
-                <button id="btnStart" onclick="distributeRoles()" style="background: #27ae60; margin-top: 20px;">BẮT ĐẦU GAME</button>
-                <button id="btnNextPhase" onclick="nextPhase()" style="display: none; background: #f39c12;">CHUYỂN SANG NGÀY/ĐÊM</button>
+                <button id="btnStartGame" onclick="distributeRoles()" style="background: #27ae60;">BẮT ĐẦU GAME</button>
             </div>
+            <button id="btnNextPhase" onclick="nextPhase()" style="display: none; background: #f39c12;">SANG NGÀY/ĐÊM TIẾP THEO</button>
         </div>
-
-        <div id="result" class="role-result" style="display: none;"></div>
     </div>
 
+    <!-- ROLE POPUP -->
+    <div id="role-popup" class="role-popup">
+        <div id="result"></div>
+    </div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        let myId = null;
-        let myName = "";
-        let myAvatar = "";
-        let currentRoomCode = null;
-        let isHost = false;
-        let socket = null;
-        let countdownInterval = null;
+        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null;
+
+        function navigateTo(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
 
         function handleCredentialResponse(response) {
-            // Giải mã JWT token từ Google để lấy thông tin user
-            const responsePayload = decodeJwtResponse(response.credential);
+            const payload = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            myId = payload.sub; myName = payload.name; myAvatar = payload.picture;
 
-            myId = responsePayload.sub;
-            myName = responsePayload.name;
-            myAvatar = responsePayload.picture;
+            const saved = localStorage.getItem('werewolf_user');
+            if (saved) {
+                const user = JSON.parse(saved);
+                myName = user.name; myAvatar = user.avatar;
+            }
 
-            localStorage.setItem('werewolf_user', JSON.stringify({
-                id: myId,
-                name: myName,
-                avatar: myAvatar
-            }));
-
-            showLoginSection();
+            updateProfileUI();
+            localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar}));
+            navigateTo('page-dashboard');
         }
 
-        function decodeJwtResponse(token) {
-            let base64Url = token.split('.')[1];
-            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
+        function updateProfileUI() {
+            document.getElementById('myName').innerText = myName;
+            document.getElementById('myAvatar').src = myAvatar;
+            document.getElementById('editName').value = myName;
+            document.getElementById('editAvatar').value = myAvatar;
         }
 
-        function showLoginSection() {
-            document.getElementById('login-section').innerHTML = `
-                <div id="user-info" style="margin-bottom: 20px;">
-                    <img id="myAvatar" src="${myAvatar}" width="60" style="border-radius: 50%; border: 2px solid #e74c3c;">
-                    <p id="myName" style="font-weight: bold; margin: 5px 0;">${myName}</p>
-                </div>
-                <button onclick="createRoom()" style="background: #2980b9;">Tạo Phòng Mới</button>
-                <div style="margin: 20px 0; color: #666;">— HOẶC —</div>
-                <input type="text" id="roomCodeInput" inputmode="numeric" pattern="[0-9]*" placeholder="Nhập mã phòng (6 số)...">
-                <button onclick="joinRoom()">Gia Nhập Phòng</button>
-            `;
-        }
-
-        window.onload = function() {
-            const savedUser = localStorage.getItem('werewolf_user');
-            if (savedUser) {
-                const user = JSON.parse(savedUser);
-                myId = user.id;
-                myName = user.name;
-                myAvatar = user.avatar;
-                showLoginSection();
+        window.onload = () => {
+            const saved = localStorage.getItem('werewolf_user');
+            if (saved) {
+                const user = JSON.parse(saved);
+                myId = user.id; myName = user.name; myAvatar = user.avatar;
+                updateProfileUI();
+                navigateTo('page-dashboard');
             }
         };
 
-        function connectWebSocket() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            socket = new WebSocket(`${protocol}//${window.location.host}/ws/${myId}`);
-            // ... rest of socket logic ...
+        function toggleEdit(show) {
+            document.getElementById('profile-display').style.display = show ? 'none' : 'block';
+            document.getElementById('profile-edit').style.display = show ? 'block' : 'none';
+        }
 
-            socket.onmessage = (event) => {
-                const msg = JSON.parse(event.data);
-                console.log("WS Message:", msg);
-
-                if (msg.type === "PLAYER_LIST_UPDATE") {
-                    updatePlayerListUI(JSON.parse(msg.data));
-                } else if (msg.type === "YOUR_ROLE") {
-                    displayMyRole(JSON.parse(msg.data));
-                } else if (msg.type === "PHASE_UPDATE") {
-                    handlePhaseUpdate(msg.data);
-                }
-            };
-
-            socket.onclose = () => {
-                console.log("WS Closed. Reconnecting...");
-                setTimeout(connectWebSocket, 1000);
-            };
+        function saveProfile() {
+            myName = document.getElementById('editName').value.trim();
+            myAvatar = document.getElementById('editAvatar').value.trim();
+            if (!myName || !myAvatar) return alert("Vui lòng điền đủ thông tin!");
+            localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar}));
+            updateProfileUI(); toggleEdit(false);
+            if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "UPDATE_PROFILE", data: JSON.stringify({name: myName, avatar: myAvatar})}));
         }
 
         async function createRoom() {
-            if (!myId) return alert("Vui lòng đăng nhập trước!");
-
-            const response = await fetch('/create-room', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: myId, name: myName, avatar: myAvatar })
-            });
-            const room = await response.json();
-            setupRoom(room, true);
+            const res = await fetch('/create-room', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId, name: myName, avatar: myAvatar})});
+            setupRoom(await res.json(), true);
         }
 
         async function joinRoom() {
             const code = document.getElementById('roomCodeInput').value;
-            if (!myId || !code) return alert("Vui lòng đăng nhập và nhập mã phòng!");
-
-            const response = await fetch(`/join-room/${code}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: myId, name: myName, avatar: myAvatar })
-            });
-
-            if (response.ok) {
-                const room = await response.json();
-                setupRoom(room, false);
-            } else {
-                alert("Không tìm thấy phòng!");
-            }
+            if (!code) return alert("Vui lòng nhập mã phòng!");
+            const res = await fetch(`/join-room/${code}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId, name: myName, avatar: myAvatar})});
+            if (res.ok) setupRoom(await res.json(), false); else alert("Phòng không tồn tại!");
         }
 
         function setupRoom(room, host) {
-            currentRoomCode = room.code;
-            isHost = host;
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('game-section').style.display = 'block';
+            currentRoomCode = room.code; isHost = host;
             document.getElementById('displayRoomCode').innerText = room.code;
+            document.getElementById('host-controls').style.display = isHost ? 'block' : 'none';
+            connectWebSocket(); navigateTo('page-lobby'); refreshPlayers();
+        }
 
-            if (isHost) {
-                document.getElementById('host-controls').style.display = 'block';
-            }
-
-            connectWebSocket();
-            refreshPlayers(); // Initial fetch
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            socket = new WebSocket(`${protocol}//${window.location.host}/ws/${myId}`);
+            socket.onmessage = (e) => {
+                const msg = JSON.parse(e.data);
+                if (msg.type === "PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(msg.data));
+                else if (msg.type === "YOUR_ROLE") displayMyRole(JSON.parse(msg.data));
+                else if (msg.type === "PHASE_UPDATE") handlePhaseUpdate(msg.data);
+            };
+            socket.onclose = () => setTimeout(connectWebSocket, 1000);
         }
 
         function updatePlayerListUI(players) {
-            const list = document.getElementById('playerList');
-            list.innerHTML = players.map(p => `
+            document.getElementById('playerList').innerHTML = players.map(p => `
                 <div class="player-card">
-                    <img src="${p.avatar}" width="50" height="50">
-                    <p>${p.name}</p>
+                    <img src="${p.avatar}">
+                    <p style="font-size: 0.7em; margin: 5px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</p>
                 </div>
             `).join('');
+            document.getElementById('player-count-badge').innerText = `Đang chờ: ${players.length}/8 người`;
+
+            if (isHost) {
+                const btn = document.getElementById('btnStartGame');
+                if (players.length >= 8) {
+                    btn.disabled = false; btn.innerText = "BẮT ĐẦU GAME";
+                } else {
+                    btn.disabled = true; btn.innerText = `CẦN THÊM ${8 - players.length} NGƯỜI`;
+                }
+            }
         }
 
         async function refreshPlayers() {
-            if (!currentRoomCode) return;
-            const response = await fetch(`/room/${currentRoomCode}/players`);
-            const players = await response.json();
-            updatePlayerListUI(players);
+            const res = await fetch(`/room/${currentRoomCode}/players`);
+            updatePlayerListUI(await res.json());
         }
 
-        function displayMyRole(assignment) {
+        function displayMyRole(role) {
             if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
-
-            const resultDiv = document.getElementById('result');
-            resultDiv.style.display = 'block';
-
-            const roleIcons = {
-                'WEREWOLF': '🐺',
-                'VILLAGER': '👨‍🌾',
-                'SEER': '🔮',
-                'DOCTOR': '🛡️',
-                'HUNTER': '🔫',
-                'WITCH': '🧪',
-                'CUPID': '🏹'
-            };
-
-            resultDiv.innerHTML = `
-                <div style="text-align: center; border: 2px solid #f1c40f; padding: 20px; border-radius: 15px; background: #2c3e50; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
-                    <h2 style="color: #f1c40f; margin-top: 0;">VAI DIỄN CỦA BẠN</h2>
-                    <div style="font-size: 5em; margin: 10px 0;">${roleIcons[assignment.role] || '👤'}</div>
-                    <h1 style="color: ${assignment.role === 'WEREWOLF' ? '#ff4d4d' : '#4da6ff'}; margin: 10px 0;">
-                        ${assignment.role}
-                    </h1>
-                    <p style="color: #bdc3c7; font-size: 1.1em; line-height: 1.4;">${assignment.description}</p>
-                    <button id="btnUnderstand" onclick="confirmUnderstand()" style="background: #e74c3c; width: 100%; padding: 15px; font-size: 1.2em; border: none; border-radius: 8px; color: white; font-weight: bold;">TÔI ĐÃ HIỂU</button>
+            document.getElementById('role-popup').style.display = 'block';
+            const icons = {'WEREWOLF': '🐺', 'VILLAGER': '👨‍🌾', 'SEER': '🔮', 'DOCTOR': '🛡️', 'HUNTER': '🔫', 'WITCH': '🧪', 'CUPID': '🏹'};
+            document.getElementById('result').innerHTML = `
+                <div class="card" style="margin-top: 50px; text-align: center;">
+                    <h2 style="color: #f1c40f;">VAI DIỄN CỦA BẠN</h2>
+                    <div style="font-size: 6em; margin: 20px 0;">${icons[role.role] || '👤'}</div>
+                    <h1 style="color: ${role.role === 'WEREWOLF' ? '#ff4d4d' : '#4da6ff'}; margin: 10px 0;">${role.role}</h1>
+                    <p style="font-size: 1.1em; line-height: 1.5; color: #bdc3c7;">${role.description}</p>
+                    <button id="btnUnderstand" onclick="confirmUnderstand()" style="background: #e74c3c; padding: 20px; font-size: 1.3em; margin-top: 30px;">TÔI ĐÃ HIỂU</button>
                 </div>
             `;
         }
 
         function confirmUnderstand() {
             const btn = document.getElementById('btnUnderstand');
-            btn.style.background = '#27ae60';
-            btn.innerText = 'ĐÃ XÁC NHẬN';
-            btn.disabled = true;
-
+            btn.style.background = '#7f8c8d'; btn.innerText = 'ĐÃ XÁC NHẬN'; btn.disabled = true;
             socket.send(JSON.stringify({type: "I_UNDERSTAND", data: ""}));
         }
 
         function handlePhaseUpdate(phase) {
             document.getElementById('current-phase').innerText = "Giai đoạn: " + phase;
-
-            if (phase === "PREPARING") {
-                startCountdown(300);
-            } else if (phase === "NIGHT") {
+            if (phase === "PREPARING") startCountdown(300);
+            else if (phase === "NIGHT") {
                 clearInterval(countdownInterval);
                 document.getElementById('timer-display').style.display = 'none';
+                document.getElementById('role-popup').style.display = 'none';
                 document.getElementById('night-overlay').style.display = 'flex';
                 if (window.navigator.vibrate) window.navigator.vibrate(500);
             } else {
                 document.getElementById('night-overlay').style.display = 'none';
-                alert("Trời đã sáng!");
             }
 
             if (isHost) {
-                document.getElementById('btnStart').style.display = phase === "LOBBY" ? "block" : "none";
+                document.getElementById('host-controls').style.display = phase === "LOBBY" ? "block" : "none";
                 document.getElementById('btnNextPhase').style.display = phase !== "LOBBY" ? "block" : "none";
             }
         }
 
-        async function nextPhase() {
-            await fetch(`/room/${currentRoomCode}/next-phase`, { method: 'POST' });
-        }
-
+        async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method: 'POST'}); }
         async function distributeRoles() {
             const ratio = document.getElementById('ratioSelect').value;
-            await fetch(`/room/${currentRoomCode}/distribute?ratio=${ratio}`);
-            // Roles will be distributed via WebSocket
+            const res = await fetch(`/room/${currentRoomCode}/distribute?ratio=${ratio}`);
+            if (!res.ok) alert(await res.text());
         }
 
         function startCountdown(seconds) {
@@ -360,14 +273,9 @@
             let timeLeft = seconds;
             document.getElementById('timer-display').style.display = 'block';
             document.getElementById('seconds').innerText = timeLeft;
-
             countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('seconds').innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    if (isHost) nextPhase(); // Tự động sang đêm
-                }
+                timeLeft--; document.getElementById('seconds').innerText = timeLeft;
+                if (timeLeft <= 0) { clearInterval(countdownInterval); if (isHost) nextPhase(); }
             }, 1000);
         }
     </script>
