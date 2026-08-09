@@ -86,23 +86,29 @@
         Trò chơi sẽ tự động bắt đầu sau: <span id="seconds" style="color: #e74c3c; font-weight: bold;">300</span>s
     </div>
 
-    <!-- Facebook SDK -->
-    <div id="fb-root"></div>
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v19.0" nonce="werewolf"></script>
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <div class="container">
         <h1>Môn Sói Là</h1>
 
-        <!-- Facebook Login Section -->
-        <div id="fb-section">
+        <!-- Google Login Section -->
+        <div id="login-section">
             <p>Đăng nhập để lấy Avatar và Tên xịn</p>
-            <button onclick="loginWithFacebook()" style="background: #1877f2;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" width="20" style="vertical-align: middle; margin-right: 10px; filter: brightness(0) invert(1);">
-                Đăng nhập Facebook
-            </button>
+            <div id="g_id_onload"
+                 data-client_id="10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
         </div>
-
-        <div id="login-section" style="display: none;">
             <div id="user-info" style="margin-bottom: 20px;">
                 <img id="myAvatar" src="" width="60" style="border-radius: 50%; border: 2px solid #e74c3c;">
                 <p id="myName" style="font-weight: bold; margin: 5px 0;"></p>
@@ -144,69 +150,45 @@
         let socket = null;
         let countdownInterval = null;
 
-        function startCountdown(seconds) {
-            clearInterval(countdownInterval);
-            let timeLeft = seconds;
-            document.getElementById('timer-display').style.display = 'block';
-            document.getElementById('seconds').innerText = timeLeft;
+        function handleCredentialResponse(response) {
+            // Giải mã JWT token từ Google để lấy thông tin user
+            const responsePayload = decodeJwtResponse(response.credential);
 
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('seconds').innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    if (isHost) nextPhase(); // Tự động sang đêm
-                }
-            }, 1000);
+            myId = responsePayload.sub;
+            myName = responsePayload.name;
+            myAvatar = responsePayload.picture;
+
+            localStorage.setItem('werewolf_user', JSON.stringify({
+                id: myId,
+                name: myName,
+                avatar: myAvatar
+            }));
+
+            showLoginSection();
         }
 
-        // Init Facebook SDK
-        window.fbAsyncInit = function() {
-            FB.init({
-                appId      : '907372918600458', // Đã cập nhật App ID mới v2
-                cookie     : true,
-                xfbml      : true,
-                version    : 'v19.0'
-            });
-
-            FB.getLoginStatus(function(response) {
-                statusChangeCallback(response);
-            });
-        };
-
-        function loginWithFacebook() {
-            FB.login(function(response) {
-                statusChangeCallback(response);
-            }, {scope: 'public_profile'});
-        }
-
-        function statusChangeCallback(response) {
-            if (response.status === 'connected') {
-                FB.api('/me?fields=id,name,picture.width(100).height(100)', function(userData) {
-                    myId = userData.id;
-                    myName = userData.name;
-                    myAvatar = userData.picture.data.url;
-
-                    // Lưu vào localStorage
-                    localStorage.setItem('werewolf_user', JSON.stringify({
-                        id: myId,
-                        name: myName,
-                        avatar: myAvatar
-                    }));
-
-                    showLoginSection();
-                });
-            }
+        function decodeJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
         }
 
         function showLoginSection() {
-            document.getElementById('fb-section').style.display = 'none';
-            document.getElementById('login-section').style.display = 'block';
-            document.getElementById('myName').innerText = myName;
-            document.getElementById('myAvatar').src = myAvatar;
+            document.getElementById('login-section').innerHTML = `
+                <div id="user-info" style="margin-bottom: 20px;">
+                    <img id="myAvatar" src="${myAvatar}" width="60" style="border-radius: 50%; border: 2px solid #e74c3c;">
+                    <p id="myName" style="font-weight: bold; margin: 5px 0;">${myName}</p>
+                </div>
+                <button onclick="createRoom()" style="background: #2980b9;">Tạo Phòng Mới</button>
+                <div style="margin: 20px 0; color: #666;">— HOẶC —</div>
+                <input type="text" id="roomCodeInput" inputmode="numeric" pattern="[0-9]*" placeholder="Nhập mã phòng (6 số)...">
+                <button onclick="joinRoom()">Gia Nhập Phòng</button>
+            `;
         }
 
-        // Kiểm tra localStorage ngay khi tải trang
         window.onload = function() {
             const savedUser = localStorage.getItem('werewolf_user');
             if (savedUser) {
@@ -371,6 +353,22 @@
             const ratio = document.getElementById('ratioSelect').value;
             await fetch(`/room/${currentRoomCode}/distribute?ratio=${ratio}`);
             // Roles will be distributed via WebSocket
+        }
+
+        function startCountdown(seconds) {
+            clearInterval(countdownInterval);
+            let timeLeft = seconds;
+            document.getElementById('timer-display').style.display = 'block';
+            document.getElementById('seconds').innerText = timeLeft;
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('seconds').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    if (isHost) nextPhase(); // Tự động sang đêm
+                }
+            }, 1000);
         }
     </script>
 </body>
