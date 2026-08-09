@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma Sói - Moderator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #e0e0e0;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { color: #e74c3c; margin-bottom: 30px; }
+        .container { max-width: 500px; margin: 0 auto; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #1e1e1e;
+            color: white;
+            box-sizing: border-box;
+            font-size: 16px; /* Prevent iOS zoom */
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin: 10px 0;
+            transition: opacity 0.2s;
+        }
+        button:active { opacity: 0.8; }
+
+        .lobby {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .player-card {
+            padding: 10px;
+            border-radius: 12px;
+            background: #2a2a2a;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .player-card img { border-radius: 50%; width: 50px; height: 50px; }
+        .player-card p { margin: 5px 0 0 0; font-size: 0.8em; overflow: hidden; text-overflow: ellipsis; }
+
+        .role-result {
+            margin-top: 30px;
+            padding: 15px;
+            background: #1e1e1e;
+            border-radius: 12px;
+            text-align: left;
+        }
+        .role-item {
+            border-bottom: 1px solid #333;
+            padding: 10px 0;
+        }
+        .role-item:last-child { border-bottom: none; }
+
+        #displayRoomCode { font-family: monospace; letter-spacing: 3px; }
+    </style>
+</head>
+<body>
+    <div id="night-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+        <h1 style="color: #f1c40f; font-size: 3em;">🌙</h1>
+        <h2 style="color: white;">Trời tối rồi...</h2>
+        <p style="color: #666;">Mọi người nhắm mắt lại!</p>
+        <button onclick="document.getElementById('night-overlay').style.display='none'" style="width: auto; background: #333; margin-top: 50px;">Xem vai / chức năng</button>
+    </div>
+
+    <div id="timer-display" style="display: none; position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 500; font-size: 0.8em; border: 1px solid #e74c3c; width: 150px; text-align: left;">
+        Trò chơi sẽ tự động bắt đầu sau: <span id="seconds" style="color: #e74c3c; font-weight: bold;">300</span>s
+    </div>
+
+    <!-- Facebook SDK -->
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v19.0" nonce="werewolf"></script>
+
+    <div class="container">
+        <h1>Môn Sói Là</h1>
+
+        <!-- Facebook Login Section -->
+        <div id="fb-section">
+            <p>Đăng nhập để lấy Avatar và Tên xịn</p>
+            <button onclick="loginWithFacebook()" style="background: #1877f2;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" width="20" style="vertical-align: middle; margin-right: 10px; filter: brightness(0) invert(1);">
+                Đăng nhập Facebook
+            </button>
+        </div>
+
+        <div id="login-section" style="display: none;">
+            <div id="user-info" style="margin-bottom: 20px;">
+                <img id="myAvatar" src="" width="60" style="border-radius: 50%; border: 2px solid #e74c3c;">
+                <p id="myName" style="font-weight: bold; margin: 5px 0;"></p>
+            </div>
+
+            <button onclick="createRoom()" style="background: #2980b9;">Tạo Phòng Mới</button>
+            <div style="margin: 20px 0; color: #666;">— HOẶC —</div>
+            <input type="text" id="roomCodeInput" inputmode="numeric" pattern="[0-9]*" placeholder="Nhập mã phòng (6 số)...">
+            <button onclick="joinRoom()">Gia Nhập Phòng</button>
+        </div>
+
+        <div id="game-section" style="display: none;">
+            <h2>Mã Phòng: <span id="displayRoomCode" style="color: #f1c40f;">######</span></h2>
+            <div id="current-phase" style="color: #f1c40f; font-weight: bold; margin-bottom: 10px;">Giai đoạn: LOBBY</div>
+            <div class="lobby" id="playerList">
+                <!-- Players show here -->
+            </div>
+
+            <div id="host-controls" style="display: none; margin-top: 30px; padding-top: 20px; border-top: 1px solid #333;">
+                <label style="display: block; margin-bottom: 10px;">Cấu hình trận đấu:</label>
+                <select id="ratioSelect" style="width: 100%; padding: 12px; border-radius: 8px; background: #1e1e1e; color: white; border: 1px solid #333;">
+                    <option value="0.25">Tỷ lệ Sói: 25% (Ít Sói)</option>
+                    <option value="0.33">Tỷ lệ Sói: 33% (Nhiều Sói)</option>
+                </select>
+                <button id="btnStart" onclick="distributeRoles()" style="background: #27ae60; margin-top: 20px;">BẮT ĐẦU GAME</button>
+                <button id="btnNextPhase" onclick="nextPhase()" style="display: none; background: #f39c12;">CHUYỂN SANG NGÀY/ĐÊM</button>
+            </div>
+        </div>
+
+        <div id="result" class="role-result" style="display: none;"></div>
+    </div>
+
+    <script>
+        let myId = null;
+        let myName = "";
+        let myAvatar = "";
+        let currentRoomCode = null;
+        let isHost = false;
+        let socket = null;
+        let countdownInterval = null;
+
+        function startCountdown(seconds) {
+            clearInterval(countdownInterval);
+            let timeLeft = seconds;
+            document.getElementById('timer-display').style.display = 'block';
+            document.getElementById('seconds').innerText = timeLeft;
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('seconds').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    if (isHost) nextPhase(); // Tự động sang đêm
+                }
+            }, 1000);
+        }
+
+        // Init Facebook SDK
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId      : '907372918600458', // Đã cập nhật App ID mới v2
+                cookie     : true,
+                xfbml      : true,
+                version    : 'v19.0'
+            });
+
+            FB.getLoginStatus(function(response) {
+                statusChangeCallback(response);
+            });
+        };
+
+        function loginWithFacebook() {
+            FB.login(function(response) {
+                statusChangeCallback(response);
+            }, {scope: 'public_profile'});
+        }
+
+        function statusChangeCallback(response) {
+            if (response.status === 'connected') {
+                FB.api('/me?fields=id,name,picture.width(100).height(100)', function(userData) {
+                    myId = userData.id;
+                    myName = userData.name;
+                    myAvatar = userData.picture.data.url;
+
+                    // Lưu vào localStorage
+                    localStorage.setItem('werewolf_user', JSON.stringify({
+                        id: myId,
+                        name: myName,
+                        avatar: myAvatar
+                    }));
+
+                    showLoginSection();
+                });
+            }
+        }
+
+        function showLoginSection() {
+            document.getElementById('fb-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('myName').innerText = myName;
+            document.getElementById('myAvatar').src = myAvatar;
+        }
+
+        // Kiểm tra localStorage ngay khi tải trang
+        window.onload = function() {
+            const savedUser = localStorage.getItem('werewolf_user');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                myId = user.id;
+                myName = user.name;
+                myAvatar = user.avatar;
+                showLoginSection();
+            }
+        };
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            socket = new WebSocket(`${protocol}//${window.location.host}/ws/${myId}`);
+            // ... rest of socket logic ...
+
+            socket.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                console.log("WS Message:", msg);
+
+                if (msg.type === "PLAYER_LIST_UPDATE") {
+                    updatePlayerListUI(JSON.parse(msg.data));
+                } else if (msg.type === "YOUR_ROLE") {
+                    displayMyRole(JSON.parse(msg.data));
+                } else if (msg.type === "PHASE_UPDATE") {
+                    handlePhaseUpdate(msg.data);
+                }
+            };
+
+            socket.onclose = () => {
+                console.log("WS Closed. Reconnecting...");
+                setTimeout(connectWebSocket, 1000);
+            };
+        }
+
+        async function createRoom() {
+            if (!myId) return alert("Vui lòng đăng nhập trước!");
+
+            const response = await fetch('/create-room', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: myId, name: myName, avatar: myAvatar })
+            });
+            const room = await response.json();
+            setupRoom(room, true);
+        }
+
+        async function joinRoom() {
+            const code = document.getElementById('roomCodeInput').value;
+            if (!myId || !code) return alert("Vui lòng đăng nhập và nhập mã phòng!");
+
+            const response = await fetch(`/join-room/${code}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: myId, name: myName, avatar: myAvatar })
+            });
+
+            if (response.ok) {
+                const room = await response.json();
+                setupRoom(room, false);
+            } else {
+                alert("Không tìm thấy phòng!");
+            }
+        }
+
+        function setupRoom(room, host) {
+            currentRoomCode = room.code;
+            isHost = host;
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('game-section').style.display = 'block';
+            document.getElementById('displayRoomCode').innerText = room.code;
+
+            if (isHost) {
+                document.getElementById('host-controls').style.display = 'block';
+            }
+
+            connectWebSocket();
+            refreshPlayers(); // Initial fetch
+        }
+
+        function updatePlayerListUI(players) {
+            const list = document.getElementById('playerList');
+            list.innerHTML = players.map(p => `
+                <div class="player-card">
+                    <img src="${p.avatar}" width="50" height="50">
+                    <p>${p.name}</p>
+                </div>
+            `).join('');
+        }
+
+        async function refreshPlayers() {
+            if (!currentRoomCode) return;
+            const response = await fetch(`/room/${currentRoomCode}/players`);
+            const players = await response.json();
+            updatePlayerListUI(players);
+        }
+
+        function displayMyRole(assignment) {
+            if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+
+            const roleIcons = {
+                'WEREWOLF': '🐺',
+                'VILLAGER': '👨‍🌾',
+                'SEER': '🔮',
+                'DOCTOR': '🛡️',
+                'HUNTER': '🔫',
+                'WITCH': '🧪',
+                'CUPID': '🏹'
+            };
+
+            resultDiv.innerHTML = `
+                <div style="text-align: center; border: 2px solid #f1c40f; padding: 20px; border-radius: 15px; background: #2c3e50; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+                    <h2 style="color: #f1c40f; margin-top: 0;">VAI DIỄN CỦA BẠN</h2>
+                    <div style="font-size: 5em; margin: 10px 0;">${roleIcons[assignment.role] || '👤'}</div>
+                    <h1 style="color: ${assignment.role === 'WEREWOLF' ? '#ff4d4d' : '#4da6ff'}; margin: 10px 0;">
+                        ${assignment.role}
+                    </h1>
+                    <p style="color: #bdc3c7; font-size: 1.1em; line-height: 1.4;">${assignment.description}</p>
+                    <button id="btnUnderstand" onclick="confirmUnderstand()" style="background: #e74c3c; width: 100%; padding: 15px; font-size: 1.2em; border: none; border-radius: 8px; color: white; font-weight: bold;">TÔI ĐÃ HIỂU</button>
+                </div>
+            `;
+        }
+
+        function confirmUnderstand() {
+            const btn = document.getElementById('btnUnderstand');
+            btn.style.background = '#27ae60';
+            btn.innerText = 'ĐÃ XÁC NHẬN';
+            btn.disabled = true;
+
+            socket.send(JSON.stringify({type: "I_UNDERSTAND", data: ""}));
+        }
+
+        function handlePhaseUpdate(phase) {
+            document.getElementById('current-phase').innerText = "Giai đoạn: " + phase;
+
+            if (phase === "PREPARING") {
+                startCountdown(300);
+            } else if (phase === "NIGHT") {
+                clearInterval(countdownInterval);
+                document.getElementById('timer-display').style.display = 'none';
+                document.getElementById('night-overlay').style.display = 'flex';
+                if (window.navigator.vibrate) window.navigator.vibrate(500);
+            } else {
+                document.getElementById('night-overlay').style.display = 'none';
+                alert("Trời đã sáng!");
+            }
+
+            if (isHost) {
+                document.getElementById('btnStart').style.display = phase === "LOBBY" ? "block" : "none";
+                document.getElementById('btnNextPhase').style.display = phase !== "LOBBY" ? "block" : "none";
+            }
+        }
+
+        async function nextPhase() {
+            await fetch(`/room/${currentRoomCode}/next-phase`, { method: 'POST' });
+        }
+
+        async function distributeRoles() {
+            const ratio = document.getElementById('ratioSelect').value;
+            await fetch(`/room/${currentRoomCode}/distribute?ratio=${ratio}`);
+            // Roles will be distributed via WebSocket
+        }
+    </script>
+</body>
+</html>
