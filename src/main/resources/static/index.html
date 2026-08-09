@@ -7,7 +7,7 @@
     <style>
         :root { --primary: #e74c3c; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; text-align: center; }
-        .container { max-width: 500px; margin: 0 auto; padding: 20px; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; }
 
         /* UI Components */
         .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333; }
@@ -20,8 +20,9 @@
         .ghost-btn { background: #333; font-size: 0.9em; padding: 8px; border: 1px solid #444; }
 
         /* Pages */
-        .page { display: none; flex: 1; flex-direction: column; justify-content: center; }
+        .page { display: none; flex: 1; flex-direction: column; justify-content: center; max-width: 500px; margin: 0 auto; width: 100%; }
         .page.active { display: flex; }
+        #page-gallery { max-width: 1000px; }
 
         /* Gallery Grid */
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; text-align: left; }
@@ -39,9 +40,9 @@
         }
         .gallery-card .card-img {
             width: 100%;
-            height: 370px; /* Tăng thêm để bù phần cắt */
+            height: 415px; /* Bù thêm 15px bị đẩy lên */
             object-fit: cover;
-            margin-top: -20px; /* Đẩy lên 1/20 để giấu tag AI phía trên */
+            margin-top: -15px; /* Cắt đúng 1/30 của chiều cao (giả định tầm 450px) */
             border-right: none;
             border-bottom: 2px solid #d4af37;
         }
@@ -62,9 +63,9 @@
         }
         .role-card-big img {
             width: 100%;
-            height: 320px; /* Tăng thêm để bù phần cắt */
+            height: 310px; /* Bù thêm 10px bị đẩy lên */
             object-fit: cover;
-            margin-top: -20px; /* Đẩy lên 1/20 để giấu tag AI phía trên */
+            margin-top: -10px; /* Cắt 1/30 của chiều cao card lớn */
             border-bottom: 3px solid #d4af37;
         }
         .role-card-content { padding: 25px; }
