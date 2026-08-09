@@ -24,11 +24,41 @@
         .page.active { display: flex; }
 
         /* Gallery Grid */
-        .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; text-align: left; }
-        .gallery-card { background: #2a2a2a; padding: 15px; border-radius: 12px; border: 1px solid #444; display: flex; align-items: center; gap: 15px; }
-        .gallery-card .icon { font-size: 2.5em; min-width: 60px; text-align: center; }
-        .gallery-card h4 { margin: 0; color: #f1c40f; }
-        .gallery-card p { margin: 5px 0 0 0; font-size: 0.85em; color: #aaa; line-height: 1.4; }
+        .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px; text-align: left; }
+        .gallery-card {
+            background: #1a1a1a;
+            padding: 0;
+            border-radius: 12px;
+            border: 2px solid #d4af37; /* Viền màu vàng đồng cổ điển */
+            display: flex;
+            align-items: center;
+            gap: 0;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        }
+        .gallery-card .card-img {
+            width: 100px;
+            height: 140px;
+            object-fit: cover;
+            border-right: 2px solid #d4af37;
+        }
+        .gallery-card .card-info { padding: 15px; flex: 1; }
+        .gallery-card h4 { margin: 0; color: #d4af37; font-family: 'Georgia', serif; font-size: 1.2em; text-transform: uppercase; letter-spacing: 1px; }
+        .gallery-card p { margin: 8px 0 0 0; font-size: 0.85em; color: #ccc; line-height: 1.5; font-style: italic; }
+
+        /* Role Popup - Phong cách Thẻ bài lớn */
+        .role-card-big {
+            background: #1a1a1a;
+            border: 4px solid #d4af37;
+            border-radius: 20px;
+            padding: 0;
+            overflow: hidden;
+            max-width: 350px;
+            margin: 50px auto;
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.3);
+        }
+        .role-card-big img { width: 100%; height: 300px; object-fit: cover; border-bottom: 3px solid #d4af37; }
+        .role-card-content { padding: 25px; }
 
         /* Lobby Grid */
         .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px; margin-top: 20px; }
@@ -151,13 +181,13 @@
         let lastPage = 'page-home';
 
         const allRoles = [
-            { role: 'WEREWOLF', icon: '🐺', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm. Hãy cố gắng ẩn mình và tiêu diệt phe dân làng.' },
-            { role: 'VILLAGER', icon: '👨‍🌾', description: 'Dân Làng - Không có chức năng đặc biệt. Hãy dùng khả năng lập luận để tìm ra sói và treo cổ chúng.' },
-            { role: 'SEER', icon: '🔮', description: 'Tiên Tri - Mỗi đêm được soi danh tính của một người chơi. Hãy dùng thông tin đó dẫn dắt làng.' },
-            { role: 'DOCTOR', icon: '🛡️', description: 'Bảo Vệ - Mỗi đêm chọn một người để bảo vệ khỏi sự tấn công của sói. Không thể bảo vệ chính mình 2 đêm liên tiếp.' },
-            { role: 'HUNTER', icon: '🔫', description: 'Thợ Săn - Khi bị chết (treo cổ hoặc bị cắn), được phép nổ súng bắn một người chơi khác đi theo.' },
-            { role: 'WITCH', icon: '🧪', description: 'Phù Thủy - Có 2 bình thuốc: 1 bình thuốc cứu người bị cắn và 1 bình thuốc độc để giết kẻ tình nghi.' },
-            { role: 'CUPID', icon: '🏹', description: 'Thần Tình Yêu - Đêm đầu tiên chọn 2 người để ghép đôi. Nếu 1 người chết, người kia sẽ chết theo vì đau lòng.' }
+            { role: 'WEREWOLF', image: 'https://images.unsplash.com/photo-1550747528-cdb8d030f302?q=80&w=400', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm. Hãy cố gắng ẩn mình và tiêu diệt phe dân làng.' },
+            { role: 'VILLAGER', image: 'https://images.unsplash.com/photo-1506466010722-395aa2bef877?q=80&w=400', description: 'Dân Làng - Không có chức năng đặc biệt. Hãy dùng khả năng lập luận để tìm ra sói và treo cổ chúng.' },
+            { role: 'SEER', image: 'https://images.unsplash.com/photo-1515021644402-2afd9f13e6d4?q=80&w=400', description: 'Tiên Tri - Mỗi đêm được soi danh tính của một người chơi. Hãy dùng thông tin đó dẫn dắt làng.' },
+            { role: 'DOCTOR', image: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&w=400', description: 'Bảo Vệ - Mỗi đêm chọn một người để bảo vệ khỏi sự tấn công của sói. Không thể bảo vệ chính mình 2 đêm liên tiếp.' },
+            { role: 'HUNTER', image: 'https://images.unsplash.com/photo-1590424753858-394a12a5ecba?q=80&w=400', description: 'Thợ Săn - Khi bị chết (treo cổ hoặc bị cắn), được phép nổ súng bắn một người chơi khác đi theo.' },
+            { role: 'WITCH', image: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400', description: 'Phù Thủy - Có 2 bình thuốc: 1 bình thuốc cứu người bị cắn và 1 bình thuốc độc để giết kẻ tình nghi.' },
+            { role: 'CUPID', image: 'https://images.unsplash.com/photo-1518131394553-c3fd6647990b?q=80&w=400', description: 'Thần Tình Yêu - Đêm đầu tiên chọn 2 người để ghép đôi. Nếu 1 người chết, người kia sẽ chết theo vì đau lòng.' }
         ];
 
         function navigateTo(pageId) {
@@ -170,8 +200,8 @@
             const list = document.getElementById('galleryList');
             list.innerHTML = allRoles.map(r => `
                 <div class="gallery-card">
-                    <div class="icon">${r.icon}</div>
-                    <div>
+                    <img src="${r.image}" class="card-img">
+                    <div class="card-info">
                         <h4>${r.role}</h4>
                         <p>${r.description}</p>
                     </div>
@@ -369,14 +399,18 @@
         function displayMyRole(role) {
             if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
             document.getElementById('role-popup').style.display = 'block';
-            const icons = {'WEREWOLF': '🐺', 'VILLAGER': '👨‍🌾', 'SEER': '🔮', 'DOCTOR': '🛡️', 'HUNTER': '🔫', 'WITCH': '🧪', 'CUPID': '🏹'};
+
+            const roleData = allRoles.find(r => r.role === role.role) || allRoles[1]; // Mặc định là dân nếu ko tìm thấy
+
             document.getElementById('result').innerHTML = `
-                <div class="card" style="margin-top: 50px; text-align: center;">
-                    <h2 style="color: #f1c40f;">VAI DIỄN CỦA BẠN</h2>
-                    <div style="font-size: 6em; margin: 20px 0;">${icons[role.role] || '👤'}</div>
-                    <h1 style="color: ${role.role === 'WEREWOLF' ? '#ff4d4d' : '#4da6ff'}; margin: 10px 0;">${role.role}</h1>
-                    <p style="font-size: 1.1em; line-height: 1.5; color: #bdc3c7;">${role.description}</p>
-                    <button id="btnUnderstand" onclick="confirmUnderstand()" style="background: #e74c3c; padding: 20px; font-size: 1.3em; margin-top: 30px;">TÔI ĐÃ HIỂU</button>
+                <div class="role-card-big">
+                    <img src="${roleData.image}">
+                    <div class="role-card-content">
+                        <h2 style="color: #d4af37; font-family: 'Georgia', serif; margin: 0;">VAI DIỄN CỦA BẠN</h2>
+                        <h1 style="color: ${role.role === 'WEREWOLF' ? '#ff4d4d' : '#4da6ff'}; margin: 10px 0; font-size: 2.5em;">${role.role}</h1>
+                        <p style="font-size: 1.1em; line-height: 1.6; color: #bdc3c7; font-style: italic;">"${role.description}"</p>
+                        <button id="btnUnderstand" onclick="confirmUnderstand()" style="background: #e74c3c; padding: 20px; font-size: 1.3em; margin-top: 30px; width: 100%;">TÔI ĐÃ HIỂU</button>
+                    </div>
                 </div>
             `;
         }
