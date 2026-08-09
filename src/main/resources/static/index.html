@@ -24,23 +24,26 @@
         .page.active { display: flex; }
 
         /* Gallery Grid */
-        .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px; text-align: left; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; text-align: left; }
         .gallery-card {
             background: #1a1a1a;
             padding: 0;
             border-radius: 12px;
             border: 2px solid #d4af37; /* Viền màu vàng đồng cổ điển */
             display: flex;
-            align-items: center;
+            flex-direction: column; /* Ảnh trên, text dưới */
+            align-items: stretch;
             gap: 0;
             overflow: hidden;
             box-shadow: 0 10px 20px rgba(0,0,0,0.8);
         }
         .gallery-card .card-img {
-            width: 100px;
-            height: 140px;
+            width: 100%;
+            height: 370px; /* Tăng thêm để bù phần cắt */
             object-fit: cover;
-            border-right: 2px solid #d4af37;
+            margin-top: -20px; /* Đẩy lên 1/20 để giấu tag AI phía trên */
+            border-right: none;
+            border-bottom: 2px solid #d4af37;
         }
         .gallery-card .card-info { padding: 15px; flex: 1; }
         .gallery-card h4 { margin: 0; color: #d4af37; font-family: 'Georgia', serif; font-size: 1.2em; text-transform: uppercase; letter-spacing: 1px; }
@@ -57,7 +60,13 @@
             margin: 50px auto;
             box-shadow: 0 0 50px rgba(212, 175, 55, 0.3);
         }
-        .role-card-big img { width: 100%; height: 300px; object-fit: cover; border-bottom: 3px solid #d4af37; }
+        .role-card-big img {
+            width: 100%;
+            height: 320px; /* Tăng thêm để bù phần cắt */
+            object-fit: cover;
+            margin-top: -20px; /* Đẩy lên 1/20 để giấu tag AI phía trên */
+            border-bottom: 3px solid #d4af37;
+        }
         .role-card-content { padding: 25px; }
 
         /* Lobby Grid */
@@ -182,11 +191,11 @@
 
         const allRoles = [
             { role: 'WEREWOLF', image: 'https://images.unsplash.com/photo-1550747528-cdb8d030f302?q=80&w=400', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm. Hãy cố gắng ẩn mình và tiêu diệt phe dân làng.' },
-            { role: 'VILLAGER', image: 'https://images.unsplash.com/photo-1506466010722-395aa2bef877?q=80&w=400', description: 'Dân Làng - Không có chức năng đặc biệt. Hãy dùng khả năng lập luận để tìm ra sói và treo cổ chúng.' },
-            { role: 'SEER', image: 'https://images.unsplash.com/photo-1515021644402-2afd9f13e6d4?q=80&w=400', description: 'Tiên Tri - Mỗi đêm được soi danh tính của một người chơi. Hãy dùng thông tin đó dẫn dắt làng.' },
+            { role: 'VILLAGER', image: 'images/roles/thevillager.png', description: 'Dân Làng - Không có chức năng đặc biệt. Hãy dùng khả năng lập luận để tìm ra sói và treo cổ chúng.' },
+            { role: 'SEER', image: 'images/roles/theseer.png', description: 'Tiên Tri - Mỗi đêm được soi danh tính của một người chơi. Hãy dùng thông tin đó dẫn dắt làng.' },
             { role: 'DOCTOR', image: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&w=400', description: 'Bảo Vệ - Mỗi đêm chọn một người để bảo vệ khỏi sự tấn công của sói. Không thể bảo vệ chính mình 2 đêm liên tiếp.' },
             { role: 'HUNTER', image: 'https://images.unsplash.com/photo-1590424753858-394a12a5ecba?q=80&w=400', description: 'Thợ Săn - Khi bị chết (treo cổ hoặc bị cắn), được phép nổ súng bắn một người chơi khác đi theo.' },
-            { role: 'WITCH', image: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400', description: 'Phù Thủy - Có 2 bình thuốc: 1 bình thuốc cứu người bị cắn và 1 bình thuốc độc để giết kẻ tình nghi.' },
+            { role: 'WITCH', image: 'images/roles/thewitch.png', description: 'Phù Thủy - Có 2 bình thuốc: 1 bình thuốc cứu người bị cắn và 1 bình thuốc độc để giết kẻ tình nghi.' },
             { role: 'CUPID', image: 'https://images.unsplash.com/photo-1518131394553-c3fd6647990b?q=80&w=400', description: 'Thần Tình Yêu - Đêm đầu tiên chọn 2 người để ghép đôi. Nếu 1 người chết, người kia sẽ chết theo vì đau lòng.' }
         ];
 
