@@ -110,16 +110,34 @@ fun main() {
                         if (frame is Frame.Text) {
                             val text = frame.readText()
                             val msg = Json.decodeFromString<SocketMessage>(text)
-                            if (msg.type == "I_UNDERSTAND") {
-                                // Tìm phòng của player này
-                                val room = rooms.values.find { r -> r.players.any { it.id == playerId } }
-                                if (room != null && room.phase == "PREPARING") {
-                                    room.readyPlayers.add(playerId)
-                                    // Kiểm tra xem tất cả đã sẵn sàng chưa
-                                    if (room.readyPlayers.size == room.players.size) {
-                                        room.phase = "NIGHT"
-                                        room.players.forEach { p ->
-                                            playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "NIGHT"))
+                            when (msg.type) {
+                                "I_UNDERSTAND" -> {
+                                    val room = rooms.values.find { r -> r.players.any { it.id == playerId } }
+                                    if (room != null && room.phase == "PREPARING") {
+                                        room.readyPlayers.add(playerId)
+                                        if (room.readyPlayers.size == room.players.size) {
+                                            room.phase = "NIGHT"
+                                            room.players.forEach { p ->
+                                                playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "NIGHT"))
+                                            }
+                                        }
+                                    }
+                                }
+                                "UPDATE_PROFILE" -> {
+                                    val updateData = Json.decodeFromString<Map<String, String>>(msg.data)
+                                    val room = rooms.values.find { r -> r.players.any { it.id == playerId } }
+                                    if (room != null) {
+                                        val index = room.players.indexOfFirst { it.id == playerId }
+                                        if (index != -1) {
+                                            val oldPlayer = room.players[index]
+                                            room.players[index] = oldPlayer.copy(
+                                                name = updateData["name"] ?: oldPlayer.name,
+                                                avatar = updateData["avatar"] ?: oldPlayer.avatar
+                                            )
+                                            // Gửi danh sách cập nhật cho mọi người trong phòng
+                                            room.players.forEach { p ->
+                                                playerSessions[p.id]?.sendSerialized(SocketMessage("PLAYER_LIST_UPDATE", Json.encodeToString(room.players)))
+                                            }
                                         }
                                     }
                                 }
@@ -161,8 +179,15 @@ fun main() {
                 val ratioParam = call.parameters["ratio"] ?: "0.25"
                 val wolfRatio = ratioParam.toDouble()
                 val room = rooms[code]
-                if (room == null || room.players.isEmpty()) {
-                    call.respond(emptyList<GameAssignment>())
+                
+                if (room == null) {
+                    call.respond(io.ktor.http.HttpStatusCode.NotFound, "Không tìm thấy phòng!")
+                    return@get
+                }
+
+                // Kiểm tra số lượng người chơi (tối thiểu 8)
+                if (room.players.size < 8) {
+                    call.respond(io.ktor.http.HttpStatusCode.BadRequest, "Cần tối thiểu 8 người để bắt đầu game!")
                     return@get
                 }
 

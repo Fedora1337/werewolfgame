@@ -86,32 +86,28 @@
         Trò chơi sẽ tự động bắt đầu sau: <span id="seconds" style="color: #e74c3c; font-weight: bold;">300</span>s
     </div>
 
-    <!-- Facebook SDK -->
-    <div id="fb-root"></div>
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v19.0" nonce="werewolf"></script>
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <div class="container">
         <h1>Môn Sói Là</h1>
 
-        <!-- Facebook Login Section -->
-        <div id="fb-section">
+        <!-- Login Section -->
+        <div id="login-section">
             <p>Đăng nhập để lấy Avatar và Tên xịn</p>
-            <button onclick="loginWithFacebook()" style="background: #1877f2;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" width="20" style="vertical-align: middle; margin-right: 10px; filter: brightness(0) invert(1);">
-                Đăng nhập Facebook
-            </button>
-        </div>
-
-        <div id="login-section" style="display: none;">
-            <div id="user-info" style="margin-bottom: 20px;">
-                <img id="myAvatar" src="" width="60" style="border-radius: 50%; border: 2px solid #e74c3c;">
-                <p id="myName" style="font-weight: bold; margin: 5px 0;"></p>
+            <div id="g_id_onload"
+                 data-client_id="10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
             </div>
-
-            <button onclick="createRoom()" style="background: #2980b9;">Tạo Phòng Mới</button>
-            <div style="margin: 20px 0; color: #666;">— HOẶC —</div>
-            <input type="text" id="roomCodeInput" inputmode="numeric" pattern="[0-9]*" placeholder="Nhập mã phòng (6 số)...">
-            <button onclick="joinRoom()">Gia Nhập Phòng</button>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
         </div>
 
         <div id="game-section" style="display: none;">
@@ -144,69 +140,92 @@
         let socket = null;
         let countdownInterval = null;
 
-        function startCountdown(seconds) {
-            clearInterval(countdownInterval);
-            let timeLeft = seconds;
-            document.getElementById('timer-display').style.display = 'block';
-            document.getElementById('seconds').innerText = timeLeft;
+        function handleCredentialResponse(response) {
+            const responsePayload = decodeJwtResponse(response.credential);
+            myId = responsePayload.sub;
+            myName = responsePayload.name;
+            myAvatar = responsePayload.picture;
 
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('seconds').innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    if (isHost) nextPhase(); // Tự động sang đêm
-                }
-            }, 1000);
+            localStorage.setItem('werewolf_user', JSON.stringify({
+                id: myId,
+                name: myName,
+                avatar: myAvatar
+            }));
+
+            showLobbyControls();
         }
 
-        // Init Facebook SDK
-        window.fbAsyncInit = function() {
-            FB.init({
-                appId      : '907372918600458', // Đã cập nhật App ID mới v2
-                cookie     : true,
-                xfbml      : true,
-                version    : 'v19.0'
-            });
-
-            FB.getLoginStatus(function(response) {
-                statusChangeCallback(response);
-            });
-        };
-
-        function loginWithFacebook() {
-            FB.login(function(response) {
-                statusChangeCallback(response);
-            }, {scope: 'public_profile'});
+        function decodeJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
         }
 
-        function statusChangeCallback(response) {
-            if (response.status === 'connected') {
-                FB.api('/me?fields=id,name,picture.width(100).height(100)', function(userData) {
-                    myId = userData.id;
-                    myName = userData.name;
-                    myAvatar = userData.picture.data.url;
+        function showLobbyControls() {
+            document.getElementById('login-section').innerHTML = `
+                <div id="user-info" style="margin-bottom: 20px; background: #2a2a2a; padding: 15px; border-radius: 12px; border: 1px solid #444;">
+                    <div id="profile-display">
+                        <img id="myAvatar" src="${myAvatar}" width="60" height="60" style="border-radius: 50%; border: 2px solid #e74c3c; object-fit: cover;">
+                        <p id="myName" style="font-weight: bold; margin: 10px 0; font-size: 1.2em;">${myName}</p>
+                        <button onclick="toggleEditProfile()" style="width: auto; padding: 5px 15px; font-size: 0.8em; background: #555;">Chỉnh sửa Profile</button>
+                    </div>
+                    <div id="profile-edit" style="display: none;">
+                        <input type="text" id="editName" value="${myName}" placeholder="Tên hiển thị...">
+                        <input type="text" id="editAvatar" value="${myAvatar}" placeholder="Link ảnh đại diện (URL)...">
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="saveProfile()" style="background: #27ae60;">Lưu</button>
+                            <button onclick="toggleEditProfile()" style="background: #7f8c8d;">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="createRoom()" style="background: #2980b9;">Tạo Phòng Mới</button>
+                <div style="margin: 20px 0; color: #666;">— HOẶC —</div>
+                <input type="text" id="roomCodeInput" inputmode="numeric" pattern="[0-9]*" placeholder="Nhập mã phòng (6 số)...">
+                <button onclick="joinRoom()">Gia Nhập Phòng</button>
+            `;
+        }
 
-                    // Lưu vào localStorage
-                    localStorage.setItem('werewolf_user', JSON.stringify({
-                        id: myId,
-                        name: myName,
-                        avatar: myAvatar
-                    }));
-
-                    showLoginSection();
-                });
+        function toggleEditProfile() {
+            const display = document.getElementById('profile-display');
+            const edit = document.getElementById('profile-edit');
+            if (display.style.display === 'none') {
+                display.style.display = 'block';
+                edit.style.display = 'none';
+            } else {
+                display.style.display = 'none';
+                edit.style.display = 'block';
             }
         }
 
-        function showLoginSection() {
-            document.getElementById('fb-section').style.display = 'none';
-            document.getElementById('login-section').style.display = 'block';
-            document.getElementById('myName').innerText = myName;
-            document.getElementById('myAvatar').src = myAvatar;
+        function saveProfile() {
+            const newName = document.getElementById('editName').value.trim();
+            const newAvatar = document.getElementById('editAvatar').value.trim();
+
+            if (!newName || !newAvatar) return alert("Không được để trống tên hoặc ảnh!");
+
+            myName = newName;
+            myAvatar = newAvatar;
+
+            localStorage.setItem('werewolf_user', JSON.stringify({
+                id: myId,
+                name: myName,
+                avatar: myAvatar
+            }));
+
+            // Nếu đang trong phòng, gửi cập nhật lên server
+            if (currentRoomCode && socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: "UPDATE_PROFILE",
+                    data: JSON.stringify({ name: myName, avatar: myAvatar })
+                }));
+            }
+
+            showLobbyControls();
         }
 
-        // Kiểm tra localStorage ngay khi tải trang
         window.onload = function() {
             const savedUser = localStorage.getItem('werewolf_user');
             if (savedUser) {
@@ -214,19 +233,16 @@
                 myId = user.id;
                 myName = user.name;
                 myAvatar = user.avatar;
-                showLoginSection();
+                showLobbyControls();
             }
         };
 
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             socket = new WebSocket(`${protocol}//${window.location.host}/ws/${myId}`);
-            // ... rest of socket logic ...
 
             socket.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
-                console.log("WS Message:", msg);
-
                 if (msg.type === "PLAYER_LIST_UPDATE") {
                     updatePlayerListUI(JSON.parse(msg.data));
                 } else if (msg.type === "YOUR_ROLE") {
@@ -237,14 +253,12 @@
             };
 
             socket.onclose = () => {
-                console.log("WS Closed. Reconnecting...");
                 setTimeout(connectWebSocket, 1000);
             };
         }
 
         async function createRoom() {
-            if (!myId) return alert("Vui lòng đăng nhập trước!");
-
+            if (!myId) return alert("Vui lòng đăng nhập!");
             const response = await fetch('/create-room', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -256,14 +270,12 @@
 
         async function joinRoom() {
             const code = document.getElementById('roomCodeInput').value;
-            if (!myId || !code) return alert("Vui lòng đăng nhập và nhập mã phòng!");
-
-            const response = await fetch(`/join-room/${code}`, {
+            if (!myId || !code) return alert("Vui lòng nhập mã phòng!");
+            const response = await fetch(\`/join-room/$\{code}\`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: myId, name: myName, avatar: myAvatar })
             });
-
             if (response.ok) {
                 const room = await response.json();
                 setupRoom(room, false);
@@ -278,13 +290,9 @@
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('game-section').style.display = 'block';
             document.getElementById('displayRoomCode').innerText = room.code;
-
-            if (isHost) {
-                document.getElementById('host-controls').style.display = 'block';
-            }
-
+            if (isHost) document.getElementById('host-controls').style.display = 'block';
             connectWebSocket();
-            refreshPlayers(); // Initial fetch
+            refreshPlayers();
         }
 
         function updatePlayerListUI(players) {
@@ -299,63 +307,44 @@
 
         async function refreshPlayers() {
             if (!currentRoomCode) return;
-            const response = await fetch(`/room/${currentRoomCode}/players`);
+            const response = await fetch(\`/room/$\{currentRoomCode\}/players\`);
             const players = await response.json();
             updatePlayerListUI(players);
         }
 
         function displayMyRole(assignment) {
             if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
-
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
-
             const roleIcons = {
-                'WEREWOLF': '🐺',
-                'VILLAGER': '👨‍🌾',
-                'SEER': '🔮',
-                'DOCTOR': '🛡️',
-                'HUNTER': '🔫',
-                'WITCH': '🧪',
-                'CUPID': '🏹'
+                'WEREWOLF': '🐺', 'VILLAGER': '👨‍🌾', 'SEER': '🔮',
+                'DOCTOR': '🛡️', 'HUNTER': '🔫', 'WITCH': '🧪', 'CUPID': '🏹'
             };
-
             resultDiv.innerHTML = `
-                <div style="text-align: center; border: 2px solid #f1c40f; padding: 20px; border-radius: 15px; background: #2c3e50; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
-                    <h2 style="color: #f1c40f; margin-top: 0;">VAI DIỄN CỦA BẠN</h2>
-                    <div style="font-size: 5em; margin: 10px 0;">${roleIcons[assignment.role] || '👤'}</div>
-                    <h1 style="color: ${assignment.role === 'WEREWOLF' ? '#ff4d4d' : '#4da6ff'}; margin: 10px 0;">
-                        ${assignment.role}
-                    </h1>
-                    <p style="color: #bdc3c7; font-size: 1.1em; line-height: 1.4;">${assignment.description}</p>
-                    <button id="btnUnderstand" onclick="confirmUnderstand()" style="background: #e74c3c; width: 100%; padding: 15px; font-size: 1.2em; border: none; border-radius: 8px; color: white; font-weight: bold;">TÔI ĐÃ HIỂU</button>
+                <div style="text-align: center; border: 2px solid #f1c40f; padding: 20px; border-radius: 15px; background: #2c3e50;">
+                    <h2 style="color: #f1c40f;">VAI DIỄN CỦA BẠN</h2>
+                    <div style="font-size: 5em; margin: 10px 0;">$\{roleIcons[assignment.role] || '👤'}</div>
+                    <h1 style="color: $\{assignment.role === 'WEREWOLF' ? '#ff4d4d' : '#4da6ff'};">$\{assignment.role}</h1>
+                    <p style="color: #bdc3c7;">$\{assignment.description}</p>
+                    <button id="btnUnderstand" onclick="confirmUnderstand()" style="background: #e74c3c;">TÔI ĐÃ HIỂU</button>
                 </div>
             `;
         }
 
         function confirmUnderstand() {
             const btn = document.getElementById('btnUnderstand');
-            btn.style.background = '#27ae60';
-            btn.innerText = 'ĐÃ XÁC NHẬN';
-            btn.disabled = true;
-
+            btn.style.background = '#27ae60'; btn.innerText = 'ĐÃ XÁC NHẬN'; btn.disabled = true;
             socket.send(JSON.stringify({type: "I_UNDERSTAND", data: ""}));
         }
 
         function handlePhaseUpdate(phase) {
             document.getElementById('current-phase').innerText = "Giai đoạn: " + phase;
-
-            if (phase === "PREPARING") {
-                startCountdown(300);
-            } else if (phase === "NIGHT") {
+            if (phase === "PREPARING") startCountdown(300);
+            else if (phase === "NIGHT") {
                 clearInterval(countdownInterval);
                 document.getElementById('timer-display').style.display = 'none';
                 document.getElementById('night-overlay').style.display = 'flex';
-                if (window.navigator.vibrate) window.navigator.vibrate(500);
-            } else {
-                document.getElementById('night-overlay').style.display = 'none';
-                alert("Trời đã sáng!");
-            }
+            } else document.getElementById('night-overlay').style.display = 'none';
 
             if (isHost) {
                 document.getElementById('btnStart').style.display = phase === "LOBBY" ? "block" : "none";
@@ -363,14 +352,24 @@
             }
         }
 
-        async function nextPhase() {
-            await fetch(`/room/${currentRoomCode}/next-phase`, { method: 'POST' });
-        }
-
+        async function nextPhase() { await fetch(\`/room/$\{currentRoomCode\}/next-phase\`, { method: 'POST' }); }
         async function distributeRoles() {
             const ratio = document.getElementById('ratioSelect').value;
-            await fetch(`/room/${currentRoomCode}/distribute?ratio=${ratio}`);
-            // Roles will be distributed via WebSocket
+            const response = await fetch(`/room/${currentRoomCode}/distribute?ratio=${ratio}`);
+            if (!response.ok) {
+                const errorMsg = await response.text();
+                alert(errorMsg);
+            }
+        }
+        function startCountdown(seconds) {
+            clearInterval(countdownInterval);
+            let timeLeft = seconds;
+            document.getElementById('timer-display').style.display = 'block';
+            document.getElementById('seconds').innerText = timeLeft;
+            countdownInterval = setInterval(() => {
+                timeLeft--; document.getElementById('seconds').innerText = timeLeft;
+                if (timeLeft <= 0) { clearInterval(countdownInterval); if (isHost) nextPhase(); }
+            }, 1000);
         }
     </script>
 </body>
