@@ -201,6 +201,7 @@
             { role: 'MOON MAIDEN', image: 'https://images.unsplash.com/photo-1505506819647-681c40ad68bc?q=80&w=400', description: 'Nguyệt Nữ - Mỗi đêm vô hiệu hóa chức năng 1 người. Không chọn 1 người 2 đêm liên tiếp.' },
             { role: 'TWIN SIBLINGS', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400', description: 'Hai Chị Em - Đi theo cặp. Nếu 1 người chết, người kia rơi vào trạng thái "say máu" và mỗi đêm giết 1 người. Bị cản bởi Nguyệt Nữ.' },
             { role: 'ELDER', image: 'https://images.unsplash.com/photo-1471018197922-2bad34197b9d?q=80&w=400', description: 'Già Làng - 1 mạng trước sói. Khi chết, tất cả chức năng phe dân không phải giết bị vô hiệu hóa.' },
+            { role: 'RUSSIAN', image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=400', description: 'Người Nga - Mỗi sáng sớm, nếu có sói ngồi cạnh, gấu của Người Nga sẽ nổi điên và nốc Vodka để báo hiệu.' },
             { role: 'WITCH', image: 'images/roles/thewitch.png', description: 'Phù Thủy - Có 2 bình thuốc: 1 bình thuốc cứu người bị cắn và 1 bình thuốc độc để giết kẻ tình nghi.' },
             { role: 'CUPID', image: 'https://images.unsplash.com/photo-1518131394553-c3fd6647990b?q=80&w=400', description: 'Thần Tình Yêu - Đêm đầu tiên chọn 2 người để ghép đôi. Nếu 1 người chết, người kia sẽ chết theo vì đau lòng.' },
             { role: 'HUNTER', image: 'https://images.unsplash.com/photo-1590424753858-394a12a5ecba?q=80&w=400', description: 'Thợ Săn - Tùy chỉnh: Kéo theo 1 người khi chết (Passive) hoặc chủ động bắn ban đêm (Active - sai thì chết theo).' }
@@ -352,6 +353,7 @@
                 if (msg.type === "PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(msg.data));
                 else if (msg.type === "YOUR_ROLE") displayMyRole(JSON.parse(msg.data));
                 else if (msg.type === "PHASE_UPDATE") handlePhaseUpdate(msg.data);
+                else if (msg.type === "ANNOUNCEMENT") announce(msg.data);
             };
             socket.onclose = () => setTimeout(connectWebSocket, 1000);
         }
@@ -441,6 +443,7 @@
             const parts = data.split('|');
             const phase = parts[0];
             const duration = parts.length > 1 ? parseInt(parts[1]) : 0;
+            const russianStatus = parts.length > 2 ? parts[2] : "";
 
             document.getElementById('current-phase').innerText = "Giai đoạn: " + phase;
 
@@ -463,7 +466,14 @@
             } else if (phase === "DAY") {
                 document.getElementById('night-overlay').style.display = 'none';
                 startCountdown(duration);
-                announce("Trời đã sáng rồi. Các bạn có " + duration + " giây để thảo luận.");
+
+                let dayMessage = "Trời đã sáng rồi. Các bạn có " + duration + " giây để thảo luận.";
+                if (russianStatus === "RUSSIAN_VODKA") {
+                    dayMessage = "Gấu của người Nga cảm thấy nguy hiểm và bắt đầu nốc vodka! " + dayMessage;
+                } else if (russianStatus === "RUSSIAN_CALM") {
+                    dayMessage = "Sáng nay Người Nga vẫn rất bình tĩnh. " + dayMessage;
+                }
+                announce(dayMessage);
             } else {
                 document.getElementById('night-overlay').style.display = 'none';
             }
