@@ -17,9 +17,15 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.launch
 
 @Serializable
-data class Player(val id: String, val name: String, val avatar: String)
+data class Player(
+    val id: String, 
+    val name: String, 
+    val avatar: String,
+    var isReady: Boolean = false
+)
 
 @Serializable
 data class GameAssignment(val playerName: String, val role: String, val description: String)
@@ -30,8 +36,8 @@ data class Room(
     val hostId: String,
     val players: MutableList<Player> = mutableListOf(),
     val assignments: MutableMap<String, GameAssignment> = mutableMapOf(),
-    val readyPlayers: MutableSet<String> = mutableSetOf(), // Lưu ID những người đã bấm "Tôi đã hiểu"
-    var phase: String = "LOBBY" // LOBBY, PREPARING, NIGHT, DAY
+    val readyPlayers: MutableSet<String> = mutableSetOf(),
+    var phase: String = "LOBBY"
 )
 
 @Serializable
@@ -63,17 +69,10 @@ class Moderator {
         repeat(werewolfCount) { roleDeck.add(Role.WEREWOLF) }
         repeat(villagerCount) { roleDeck.add(Role.VILLAGER) }
 
-        val availableSpecialRoles = Role.values()
-            .filter { it.type == RoleType.SPECIAL }
-            .shuffled()
-            .toMutableList()
-
+        val availableSpecialRoles = Role.values().filter { it.type == RoleType.SPECIAL }.shuffled().toMutableList()
         for (i in 0 until specialCount) {
-            if (availableSpecialRoles.isNotEmpty()) {
-                roleDeck.add(availableSpecialRoles.removeAt(0))
-            } else {
-                roleDeck.add(Role.VILLAGER)
-            }
+            if (availableSpecialRoles.isNotEmpty()) roleDeck.add(availableSpecialRoles.removeAt(0))
+            else roleDeck.add(Role.VILLAGER)
         }
         roleDeck.shuffle()
 
@@ -86,14 +85,10 @@ class Moderator {
 fun main() {
     val port = System.getenv("PORT")?.toInt() ?: 8080
     embeddedServer(Netty, port = port, host = "0.0.0.0") {
-        install(ContentNegotiation) {
-            json()
-        }
+        install(ContentNegotiation) { json() }
         install(WebSockets) {
             pingPeriod = Duration.ofSeconds(15)
             timeout = Duration.ofSeconds(15)
-            maxFrameSize = Long.MAX_VALUE
-            masking = false
             contentConverter = KotlinxWebsocketSerializationConverter(Json)
         }
 
@@ -108,35 +103,47 @@ fun main() {
                 try {
                     for (frame in incoming) {
                         if (frame is Frame.Text) {
-                            val text = frame.readText()
-                            val msg = Json.decodeFromString<SocketMessage>(text)
-                            if (msg.type == "I_UNDERSTAND") {
-                                // Tìm phòng của player này
-                                val room = rooms.values.find { r -> r.players.any { it.id == playerId } }
-                                if (room != null && room.phase == "PREPARING") {
-                                    room.readyPlayers.add(playerId)
-                                    // Kiểm tra xem tất cả đã sẵn sàng chưa
-                                    if (room.readyPlayers.size == room.players.size) {
-                                        room.phase = "NIGHT"
-                                        room.players.forEach { p ->
-                                            playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "NIGHT"))
+                            val msg = Json.decodeFromString<SocketMessage>(frame.readText())
+                            val room = rooms.values.find { r -> r.players.any { it.id == playerId } } ?: continue
+                            
+                            when (msg.type) {
+                                "I_UNDERSTAND" -> {
+                                    if (room.phase == "PREPARING") {
+                                        room.readyPlayers.add(playerId)
+                                        if (room.readyPlayers.size == room.players.size) {
+                                            room.phase = "NIGHT"
+                                            room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "NIGHT")) } }
+                                        }
+                                    }
+                                }
+                                "UPDATE_PROFILE" -> {
+                                    val data = Json.decodeFromString<Map<String, String>>(msg.data)
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p != null) {
+                                        room.players[room.players.indexOf(p)] = p.copy(name = data["name"] ?: p.name, avatar = data["avatar"] ?: p.avatar)
+                                        broadcastPlayerList(room)
+                                    }
+                                }
+                                "TOGGLE_READY" -> {
+                                    if (room.phase == "LOBBY" && room.hostId != playerId) {
+                                        val p = room.players.find { it.id == playerId }
+                                        if (p != null) {
+                                            p.isReady = !p.isReady
+                                            broadcastPlayerList(room)
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                } finally {
-                    playerSessions.remove(playerId)
-                }
+                } finally { playerSessions.remove(playerId) }
             }
 
             post("/create-room") {
                 val host = call.receive<Player>()
                 val code = (100000..999999).random().toString()
-                val newRoom = Room(code, host.id, mutableListOf(host))
-                rooms[code] = newRoom
-                call.respond(newRoom)
+                rooms[code] = Room(code, host.id, mutableListOf(host.copy(isReady = true)))
+                call.respond(rooms[code]!!)
             }
 
             post("/join-room/{code}") {
@@ -145,60 +152,51 @@ fun main() {
                 val room = rooms[code]
                 if (room != null) {
                     if (room.players.none { it.id == player.id }) {
-                        room.players.add(player)
-                        room.players.forEach { p ->
-                            playerSessions[p.id]?.sendSerialized(SocketMessage("PLAYER_LIST_UPDATE", Json.encodeToString(room.players)))
-                        }
+                        room.players.add(player.copy(isReady = false))
+                        broadcastPlayerList(room)
                     }
                     call.respond(room)
-                } else {
-                    call.respond(io.ktor.http.HttpStatusCode.NotFound, "Phòng không tồn tại!")
-                }
+                } else call.respond(io.ktor.http.HttpStatusCode.NotFound)
+            }
+
+            post("/leave-room/{code}") {
+                val code = call.parameters["code"] ?: ""
+                val id = call.receive<Map<String, String>>()["id"] ?: ""
+                val room = rooms[code]
+                if (room != null) {
+                    room.players.removeIf { it.id == id }
+                    if (room.players.isEmpty()) rooms.remove(code) else broadcastPlayerList(room)
+                    call.respond(mapOf("ok" to true))
+                } else call.respond(io.ktor.http.HttpStatusCode.NotFound)
             }
 
             get("/room/{code}/distribute") {
                 val code = call.parameters["code"] ?: ""
-                val ratioParam = call.parameters["ratio"] ?: "0.25"
-                val wolfRatio = ratioParam.toDouble()
-                val room = rooms[code]
-                if (room == null || room.players.isEmpty()) {
-                    call.respond(emptyList<GameAssignment>())
-                    return@get
-                }
-
-                val assignments = moderator.distributeRoles(room.players, wolfRatio)
+                val room = rooms[code] ?: return@get call.respond(io.ktor.http.HttpStatusCode.NotFound)
+                if (room.players.size < 8 || room.players.any { !it.isReady }) return@get call.respond(io.ktor.http.HttpStatusCode.BadRequest, "Chưa đủ người hoặc có người chưa sẵn sàng!")
+                
+                val assignments = moderator.distributeRoles(room.players, (call.parameters["ratio"] ?: "0.25").toDouble())
                 room.assignments.putAll(assignments)
                 room.readyPlayers.clear()
-                room.phase = "PREPARING" 
-
-                assignments.forEach { (playerId, assignment) ->
-                    playerSessions[playerId]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assignment)))
-                }
-                
-                room.players.forEach { p ->
-                    playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING"))
-                }
-                
-                call.respond(mapOf("status" to "started"))
+                room.phase = "PREPARING"
+                assignments.forEach { (pid, assign) -> launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) } }
+                room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING")) } }
+                call.respond(mapOf("ok" to true))
             }
 
             post("/room/{code}/next-phase") {
-                val code = call.parameters["code"] ?: ""
-                val room = rooms[code] ?: return@post call.respond(io.ktor.http.HttpStatusCode.NotFound)
-                
+                val room = rooms[call.parameters["code"]] ?: return@post call.respond(io.ktor.http.HttpStatusCode.NotFound)
                 room.phase = if (room.phase == "NIGHT") "DAY" else "NIGHT"
-                
-                room.players.forEach { p ->
-                    playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", room.phase))
-                }
-                call.respond(mapOf("newPhase" to room.phase))
+                room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", room.phase)) } }
+                call.respond(mapOf("phase" to room.phase))
             }
 
-            get("/room/{code}/players") {
-                val code = call.parameters["code"] ?: ""
-                val room = rooms[code]
-                call.respond(room?.players ?: emptyList())
-            }
+            get("/room/{code}/players") { call.respond(rooms[call.parameters["code"]]?.players ?: emptyList<Player>()) }
         }
     }.start(wait = true)
+}
+
+suspend fun broadcastPlayerList(room: Room) {
+    val json = Json.encodeToString(room.players)
+    room.players.forEach { p -> playerSessions[p.id]?.sendSerialized(SocketMessage("PLAYER_LIST_UPDATE", json)) }
 }

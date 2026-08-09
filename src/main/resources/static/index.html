@@ -25,7 +25,9 @@
 
         /* Lobby Grid */
         .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px; margin-top: 20px; }
-        .player-card { background: #2a2a2a; padding: 10px; border-radius: 12px; border: 1px solid #444; }
+        .player-card { background: #2a2a2a; padding: 10px; border-radius: 12px; border: 1px solid #444; position: relative; }
+        .player-card.ready { border-color: #27ae60; box-shadow: 0 0 10px rgba(39, 174, 96, 0.4); }
+        .player-card.ready::after { content: '✓'; position: absolute; top: -5px; right: -5px; background: #27ae60; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); }
         .player-card img { border-radius: 50%; width: 50px; height: 50px; object-fit: cover; border: 2px solid #555; }
 
         /* Night Overlay */
@@ -68,8 +70,18 @@
                     <button onclick="toggleEdit(true)" class="ghost-btn" style="width: auto;">Chỉnh sửa Profile</button>
                 </div>
                 <div id="profile-edit" style="display: none;">
-                    <input type="text" id="editName" placeholder="Tên hiển thị...">
-                    <input type="text" id="editAvatar" placeholder="URL ảnh đại diện...">
+                    <div style="text-align: left; margin-bottom: 15px;">
+                        <label style="font-size: 0.8em; color: #888;">NHẬP TÊN HIỂN THỊ</label>
+                        <input type="text" id="editName" placeholder="Tên của bạn...">
+                    </div>
+
+                    <div style="text-align: left; margin-bottom: 15px;">
+                        <label style="font-size: 0.8em; color: #888;">AVATAR</label>
+                        <input type="file" id="fileAvatar" accept="image/*" style="font-size: 0.8em; padding: 8px;">
+                        <p style="font-size: 0.7em; color: #555; margin: 5px 0;">Hoặc dán URL ảnh trực tiếp vào đây:</p>
+                        <input type="text" id="editAvatar" placeholder="http://...">
+                    </div>
+
                     <div style="display: flex; gap: 10px;">
                         <button onclick="saveProfile()" style="background: #27ae60;">Lưu</button>
                         <button onclick="toggleEdit(false)" class="ghost-btn">Hủy</button>
@@ -102,7 +114,9 @@
                 </select>
                 <button id="btnStartGame" onclick="distributeRoles()" style="background: #27ae60;">BẮT ĐẦU GAME</button>
             </div>
+            <button id="btnReady" onclick="toggleReady()" style="display: none; background: #2980b9;">SẴN SÀNG</button>
             <button id="btnNextPhase" onclick="nextPhase()" style="display: none; background: #f39c12;">SANG NGÀY/ĐÊM TIẾP THEO</button>
+            <button onclick="leaveRoom()" class="ghost-btn" style="border-color: #e74c3c; color: #e74c3c; margin-top: 20px; border: 1px solid #e74c3c;">RỜI PHÒNG CHỜ</button>
         </div>
     </div>
 
@@ -158,12 +172,32 @@
         }
 
         function saveProfile() {
-            myName = document.getElementById('editName').value.trim();
-            myAvatar = document.getElementById('editAvatar').value.trim();
-            if (!myName || !myAvatar) return alert("Vui lòng điền đủ thông tin!");
-            localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar}));
-            updateProfileUI(); toggleEdit(false);
-            if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "UPDATE_PROFILE", data: JSON.stringify({name: myName, avatar: myAvatar})}));
+            const nameInput = document.getElementById('editName').value.trim();
+            const urlInput = document.getElementById('editAvatar').value.trim();
+            const fileInput = document.getElementById('fileAvatar').files[0];
+
+            if (!nameInput) return alert("Vui lòng nhập tên hiển thị!");
+
+            const finalizeSave = (avatarData) => {
+                myName = nameInput;
+                myAvatar = avatarData;
+                localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar}));
+                updateProfileUI();
+                toggleEdit(false);
+                if (socket?.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({type: "UPDATE_PROFILE", data: JSON.stringify({name: myName, avatar: myAvatar})}));
+                }
+            };
+
+            if (fileInput) {
+                const reader = new FileReader();
+                reader.onload = (e) => finalizeSave(e.target.result);
+                reader.readAsDataURL(fileInput);
+            } else if (urlInput) {
+                finalizeSave(urlInput);
+            } else {
+                finalizeSave(myAvatar); // Giữ nguyên ảnh cũ nếu không đổi
+            }
         }
 
         async function createRoom() {
@@ -175,14 +209,43 @@
             const code = document.getElementById('roomCodeInput').value;
             if (!code) return alert("Vui lòng nhập mã phòng!");
             const res = await fetch(`/join-room/${code}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId, name: myName, avatar: myAvatar})});
-            if (res.ok) setupRoom(await res.json(), false); else alert("Phòng không tồn tại!");
+            if (res.ok) {
+                setupRoom(await res.json(), false);
+                requestMediaPermissions(); // Xin quyền Mic/Loa để chuẩn bị cho Voice Chat
+            } else alert("Phòng không tồn tại!");
+        }
+
+        async function leaveRoom() {
+            if (!currentRoomCode) return;
+            await fetch(`/leave-room/${currentRoomCode}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: myId})
+            });
+            currentRoomCode = null;
+            isHost = false;
+            if (socket) socket.close();
+            navigateTo('page-dashboard');
+        }
+
+        // Tích hợp sẵn xin quyền Mic/Loa (Future-proofing)
+        async function requestMediaPermissions() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop()); // Tắt mic ngay sau khi xin quyền thành công
+                console.log("Quyền Micro và Loa đã sẵn sàng cho bản nâng cấp Voice Chat!");
+            } catch (err) {
+                console.log("Người dùng từ chối quyền Mic: ", err);
+            }
         }
 
         function setupRoom(room, host) {
             currentRoomCode = room.code; isHost = host;
             document.getElementById('displayRoomCode').innerText = room.code;
             document.getElementById('host-controls').style.display = isHost ? 'block' : 'none';
+            document.getElementById('btnReady').style.display = isHost ? 'none' : 'block';
             connectWebSocket(); navigateTo('page-lobby'); refreshPlayers();
+            if (isHost) requestMediaPermissions();
         }
 
         function connectWebSocket() {
@@ -197,21 +260,53 @@
             socket.onclose = () => setTimeout(connectWebSocket, 1000);
         }
 
+        function toggleReady() {
+            if (socket?.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({type: "TOGGLE_READY", data: ""}));
+            }
+        }
+
         function updatePlayerListUI(players) {
             document.getElementById('playerList').innerHTML = players.map(p => `
-                <div class="player-card">
+                <div class="player-card ${p.isReady ? 'ready' : ''}">
                     <img src="${p.avatar}">
                     <p style="font-size: 0.7em; margin: 5px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</p>
                 </div>
             `).join('');
-            document.getElementById('player-count-badge').innerText = `Đang chờ: ${players.length}/8 người`;
+
+            const badge = document.getElementById('player-count-badge');
+            const count = players.length;
+            const readyCount = players.filter(p => p.isReady).length;
+
+            if (count < 8) {
+                badge.innerText = `Cần ít nhất 8 người để bắt đầu. Số người còn thiếu: ${8 - count}`;
+                badge.style.background = "#333";
+            } else if (readyCount < count) {
+                badge.innerText = `Chờ mọi người sẵn sàng (${readyCount}/${count})`;
+                badge.style.background = "#f39c12";
+            } else {
+                badge.innerText = "Đủ người chơi có thể bắt đầu game!";
+                badge.style.background = "#27ae60";
+            }
 
             if (isHost) {
                 const btn = document.getElementById('btnStartGame');
-                if (players.length >= 8) {
+                if (count >= 8 && readyCount === count) {
                     btn.disabled = false; btn.innerText = "BẮT ĐẦU GAME";
                 } else {
-                    btn.disabled = true; btn.innerText = `CẦN THÊM ${8 - players.length} NGƯỜI`;
+                    btn.disabled = true;
+                    if (count < 8) btn.innerText = `CẦN THÊM ${8 - count} NGƯỜI`;
+                    else btn.innerText = `CHỜ ${count - readyCount} NGƯỜI SẴN SÀNG`;
+                }
+            } else {
+                const myPlayer = players.find(p => p.id === myId);
+                const btn = document.getElementById('btnReady');
+                if (myPlayer?.isReady) {
+                    btn.innerText = "HUỶ SẴN SÀNG";
+                    btn.style.background = "#e74c3c";
+                } else {
+                    btn.innerText = "SẴN SÀNG";
+                    btn.style.background = "#2980b9";
                 }
             }
         }
