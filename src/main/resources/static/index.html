@@ -437,8 +437,13 @@
             socket.send(JSON.stringify({type: "I_UNDERSTAND", data: ""}));
         }
 
-        function handlePhaseUpdate(phase) {
+        function handlePhaseUpdate(data) {
+            const parts = data.split('|');
+            const phase = parts[0];
+            const duration = parts.length > 1 ? parseInt(parts[1]) : 0;
+
             document.getElementById('current-phase').innerText = "Giai đoạn: " + phase;
+
             if (phase === "PREPARING") {
                 startCountdown(300);
                 announce("Trận đấu bắt đầu. Vui lòng kiểm tra vai trò của bạn và nhấn xác nhận.");
@@ -450,11 +455,15 @@
                 if (window.navigator.vibrate) window.navigator.vibrate(500);
                 announce("Trời tối rồi, mọi người vui lòng nhắm mắt lại. Sói hãy thức giấc.");
             } else if (phase === "TRIAL_DEFENSE") {
-                startCountdown(45);
-                announce("Người chơi đã bị đưa lên giàn giáo. Bạn có 45 giây để trăn trối trước khi làng thực hiện xét xử.");
+                startCountdown(duration);
+                announce("Người chơi đã bị đưa lên giàn giáo. Bạn có " + duration + " giây để trăn trối.");
+            } else if (phase === "TRIAL_VOTING") {
+                startCountdown(duration);
+                announce("Bắt đầu bỏ phiếu. Hãy chọn cứu hoặc giết.");
             } else if (phase === "DAY") {
                 document.getElementById('night-overlay').style.display = 'none';
-                announce("Trời đã sáng rồi. Mọi người hãy thức dậy và tìm kiếm kẻ tình nghi.");
+                startCountdown(duration);
+                announce("Trời đã sáng rồi. Các bạn có " + duration + " giây để thảo luận.");
             } else {
                 document.getElementById('night-overlay').style.display = 'none';
             }

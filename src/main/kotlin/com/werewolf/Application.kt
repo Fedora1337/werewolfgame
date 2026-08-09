@@ -50,8 +50,9 @@ data class Room(
     val assignments: MutableMap<String, GameAssignment> = mutableMapOf(),
     val readyPlayers: MutableSet<String> = mutableSetOf(),
     var phase: String = "LOBBY",
+    var dayCount: Int = 0, // Theo dõi số ngày đã trôi qua
     val derpWolfRevengeList: MutableList<String> = mutableListOf(),
-    var trialTargetId: String? = null // ID người đang trên giàn giáo
+    var trialTargetId: String? = null
 )
 
 @Serializable
@@ -252,9 +253,9 @@ fun main() {
                     "NIGHT" -> {
                         processGameLogic(room)
                         room.phase = "DAY"
+                        room.dayCount += 1
                     }
                     "DAY" -> {
-                        // Tìm người bị vote nhiều nhất
                         val alivePlayers = room.players.filter { !it.isDead }
                         val maxVotes = if (alivePlayers.isNotEmpty()) alivePlayers.maxOf { it.vote } else 0
                         val topVoted = alivePlayers.filter { it.vote == maxVotes && maxVotes > 0 }
@@ -263,13 +264,11 @@ fun main() {
                             room.phase = "TRIAL_DEFENSE"
                             room.trialTargetId = topVoted[0].id
                         } else {
-                            processGameLogic(room) // Reset vote
+                            processGameLogic(room)
                             room.phase = "NIGHT"
                         }
                     }
-                    "TRIAL_DEFENSE" -> {
-                        room.phase = "TRIAL_VOTING"
-                    }
+                    "TRIAL_DEFENSE" -> room.phase = "TRIAL_VOTING"
                     "TRIAL_VOTING" -> {
                         processGameLogic(room)
                         room.phase = "NIGHT"
@@ -278,14 +277,59 @@ fun main() {
                     else -> room.phase = "NIGHT"
                 }
 
-                room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", room.phase)) } }
+                val duration = getPhaseDuration(room)
+                room.players.forEach { p -> 
+                    launch { 
+                        playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "${room.phase}|$duration")) 
+                    } 
+                }
                 broadcastPlayerList(room)
-                call.respond(mapOf("phase" to room.phase))
+                call.respond(mapOf("phase" to room.phase, "duration" to duration))
             }
 
             get("/room/{code}/players") { call.respond(rooms[call.parameters["code"]]?.players ?: emptyList<Player>()) }
         }
     }.start(wait = true)
+}
+
+fun getPhaseDuration(room: Room): Int {
+    val count = room.players.size
+    val isDay1 = room.dayCount <= 1
+    val lagBuffer = 5 // +5s phòng mạng ngáo
+
+    return when (room.phase) {
+        "DAY" -> {
+            val baseTime = when {
+                count >= 46 -> if (isDay1) 900 else 420
+                count >= 31 -> if (isDay1) 600 else 300
+                count >= 21 -> if (isDay1) 420 else 240
+                count >= 16 -> if (isDay1) 300 else 180
+                count >= 12 -> if (isDay1) 210 else 150
+                else -> if (isDay1) 120 else 90
+            }
+            baseTime + lagBuffer
+        }
+        "TRIAL_DEFENSE" -> {
+            val baseTime = when {
+                count >= 21 -> 60
+                count >= 12 -> 45
+                else -> 30
+            }
+            baseTime + lagBuffer
+        }
+        "TRIAL_VOTING" -> {
+            val baseTime = when {
+                count >= 46 -> 45
+                count >= 31 -> 30
+                count >= 21 -> 20
+                count >= 12 -> 15
+                else -> 10
+            }
+            baseTime + lagBuffer
+        }
+        "PREPARING" -> 300 // Mặc định cho giai đoạn chuẩn bị
+        else -> 0
+    }
 }
 
 fun processGameLogic(room: Room) {
