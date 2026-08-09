@@ -193,11 +193,17 @@
         const allRoles = [
             { role: 'WEREWOLF', image: 'https://images.unsplash.com/photo-1550747528-cdb8d030f302?q=80&w=400', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm. Hãy cố gắng ẩn mình và tiêu diệt phe dân làng.' },
             { role: 'VILLAGER', image: 'images/roles/thevillager.png', description: 'Dân Làng - Không có chức năng đặc biệt. Hãy dùng khả năng lập luận để tìm ra sói và treo cổ chúng.' },
-            { role: 'SEER', image: 'images/roles/theseer.png', description: 'Tiên Tri - Mỗi đêm được soi danh tính của một người chơi. Hãy dùng thông tin đó dẫn dắt làng.' },
-            { role: 'DOCTOR', image: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&w=400', description: 'Bảo Vệ - Mỗi đêm chọn một người để bảo vệ khỏi sự tấn công của sói. Không thể bảo vệ chính mình 2 đêm liên tiếp.' },
-            { role: 'HUNTER', image: 'https://images.unsplash.com/photo-1590424753858-394a12a5ecba?q=80&w=400', description: 'Thợ Săn - Khi bị chết (treo cổ hoặc bị cắn), được phép nổ súng bắn một người chơi khác đi theo.' },
+            { role: 'SEER', image: 'images/roles/theseer.png', description: 'Tiên Tri - Mỗi đêm được soi phe của một người chơi (Dân hoặc Sói). Có thể bị sai lệch bởi Già Làng chết, Bán Sói, Nguyệt Nữ... <span style="display:none;">hoặc các event cụ thể</span>' },
+            { role: 'GUARDIAN', image: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&w=400', description: 'Bảo Vệ - Mỗi đêm chọn 1 người chơi để MIỄN NHIỄM VỚI SÓI. Không bảo vệ 1 người 2 đêm liên tiếp. Vẫn có thể chết bởi các chức năng khác (Độc, Tình yêu, Chị em...).' },
+            { role: 'CURSER WEREWOLF', image: 'https://images.unsplash.com/photo-1572059002053-8cc5ad2f4a38?q=80&w=400', description: 'Sói Nguyền - 1 LẦN DUY NHẤT, nguyền rủa nạn nhân phe sói biến họ thành sói (giữ chức năng cũ, đổi phe). Bị cản bởi Bảo Vệ, Nguyệt Nữ, Phù Thủy.' },
+            { role: 'PROPHET WEREWOLF', image: 'https://images.unsplash.com/photo-1635332064176-3f33ab392413?q=80&w=400', description: 'Sói Tiên Tri - Soi chức năng 1 người và công khai cho cả làng. Bị ảnh hưởng bởi Nguyệt Nữ. Số lần dùng có hạn.' },
+            { role: 'CELESTIAL FOX', image: 'https://images.unsplash.com/photo-1557315360-6a350ab4f8ca?q=80&w=400', description: 'Hồ Ly - Mỗi đêm soi 1 người + 2 người bên cạnh. Nếu có sói, giữ quyền năng. Nếu cả 3 là dân, mất chức năng vĩnh viễn.' },
+            { role: 'MOON MAIDEN', image: 'https://images.unsplash.com/photo-1505506819647-681c40ad68bc?q=80&w=400', description: 'Nguyệt Nữ - Mỗi đêm vô hiệu hóa chức năng 1 người. Không chọn 1 người 2 đêm liên tiếp.' },
+            { role: 'TWIN SIBLINGS', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400', description: 'Hai Chị Em - Đi theo cặp. Nếu 1 người chết, người kia rơi vào trạng thái "say máu" và mỗi đêm giết 1 người. Bị cản bởi Nguyệt Nữ.' },
+            { role: 'ELDER', image: 'https://images.unsplash.com/photo-1471018197922-2bad34197b9d?q=80&w=400', description: 'Già Làng - 1 mạng trước sói. Khi chết, tất cả chức năng phe dân không phải giết bị vô hiệu hóa.' },
             { role: 'WITCH', image: 'images/roles/thewitch.png', description: 'Phù Thủy - Có 2 bình thuốc: 1 bình thuốc cứu người bị cắn và 1 bình thuốc độc để giết kẻ tình nghi.' },
-            { role: 'CUPID', image: 'https://images.unsplash.com/photo-1518131394553-c3fd6647990b?q=80&w=400', description: 'Thần Tình Yêu - Đêm đầu tiên chọn 2 người để ghép đôi. Nếu 1 người chết, người kia sẽ chết theo vì đau lòng.' }
+            { role: 'CUPID', image: 'https://images.unsplash.com/photo-1518131394553-c3fd6647990b?q=80&w=400', description: 'Thần Tình Yêu - Đêm đầu tiên chọn 2 người để ghép đôi. Nếu 1 người chết, người kia sẽ chết theo vì đau lòng.' },
+            { role: 'HUNTER', image: 'https://images.unsplash.com/photo-1590424753858-394a12a5ecba?q=80&w=400', description: 'Thợ Săn - Tùy chỉnh: Kéo theo 1 người khi chết (Passive) hoặc chủ động bắn ban đêm (Active - sai thì chết theo).' }
         ];
 
         function navigateTo(pageId) {
@@ -433,13 +439,22 @@
 
         function handlePhaseUpdate(phase) {
             document.getElementById('current-phase').innerText = "Giai đoạn: " + phase;
-            if (phase === "PREPARING") startCountdown(300);
-            else if (phase === "NIGHT") {
+            if (phase === "PREPARING") {
+                startCountdown(300);
+                announce("Trận đấu bắt đầu. Vui lòng kiểm tra vai trò của bạn và nhấn xác nhận.");
+            } else if (phase === "NIGHT") {
                 clearInterval(countdownInterval);
                 document.getElementById('timer-display').style.display = 'none';
                 document.getElementById('role-popup').style.display = 'none';
                 document.getElementById('night-overlay').style.display = 'flex';
                 if (window.navigator.vibrate) window.navigator.vibrate(500);
+                announce("Trời tối rồi, mọi người vui lòng nhắm mắt lại. Sói hãy thức giấc.");
+            } else if (phase === "TRIAL_DEFENSE") {
+                startCountdown(45);
+                announce("Người chơi đã bị đưa lên giàn giáo. Bạn có 45 giây để trăn trối trước khi làng thực hiện xét xử.");
+            } else if (phase === "DAY") {
+                document.getElementById('night-overlay').style.display = 'none';
+                announce("Trời đã sáng rồi. Mọi người hãy thức dậy và tìm kiếm kẻ tình nghi.");
             } else {
                 document.getElementById('night-overlay').style.display = 'none';
             }
@@ -448,6 +463,26 @@
                 document.getElementById('host-controls').style.display = phase === "LOBBY" ? "block" : "none";
                 document.getElementById('btnNextPhase').style.display = phase !== "LOBBY" ? "block" : "none";
             }
+
+            updateTrialUI(phase);
+        }
+
+        function updateTrialUI(phase) {
+            // Hiển thị nút "Chấp nhận cái kết" cho người trên giàn
+            const resultDiv = document.getElementById('result');
+            if (phase === "TRIAL_DEFENSE") {
+                refreshPlayers().then(() => {
+                    fetch(`/room/${currentRoomCode}/players`).then(r => r.json()).then(players => {
+                        const room = { trialTargetId: players.find(p => p.id === myId)?.id }; // Giả lập check
+                        // Thực tế mình cần Server báo trialTargetId, nma tạm thời check ID mình
+                        // Tìm người bị vote cao nhất trong list UI
+                    });
+                });
+            }
+        }
+
+        function skipDefense() {
+            socket.send(JSON.stringify({type: "SKIP_DEFENSE", data: ""}));
         }
 
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method: 'POST'}); }
@@ -466,6 +501,21 @@
                 timeLeft--; document.getElementById('seconds').innerText = timeLeft;
                 if (timeLeft <= 0) { clearInterval(countdownInterval); if (isHost) nextPhase(); }
             }, 1000);
+        }
+
+        // HÀM ĐỌC THÔNG BÁO (Text to Speech)
+        function announce(text) {
+            if (!('speechSynthesis' in window)) return;
+
+            // Hủy các câu đang đọc dở để đọc câu mới ngay
+            window.speechSynthesis.cancel();
+
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'vi-VN'; // Đọc tiếng Việt
+            msg.rate = 0.9;     // Đọc chậm rãi cho kịch tính
+            msg.pitch = 0.8;    // Tông giọng trầm ma mị
+
+            window.speechSynthesis.speak(msg);
         }
     </script>
 </body>

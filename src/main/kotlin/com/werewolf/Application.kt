@@ -24,7 +24,19 @@ data class Player(
     val id: String, 
     val name: String, 
     val avatar: String,
-    var isReady: Boolean = false
+    var isReady: Boolean = false,
+    var role: Role? = null,
+    var trulyTeam: String = "Dân",
+    var team: String = "Dân",
+    var heal: Int = 1,
+    var shield: Int = 0,
+    var linked: Int = 0,
+    var isDead: Boolean = false,
+    var vote: Int = 0,
+    var saveVote: Int = 0,
+    var killVote: Int = 0,
+    var werewolfMark: Int = 0,
+    val killersVotedForMe: MutableList<String> = mutableListOf()
 )
 
 @Serializable
@@ -37,7 +49,9 @@ data class Room(
     val players: MutableList<Player> = mutableListOf(),
     val assignments: MutableMap<String, GameAssignment> = mutableMapOf(),
     val readyPlayers: MutableSet<String> = mutableSetOf(),
-    var phase: String = "LOBBY"
+    var phase: String = "LOBBY",
+    val derpWolfRevengeList: MutableList<String> = mutableListOf(),
+    var trialTargetId: String? = null // ID người đang trên giàn giáo
 )
 
 @Serializable
@@ -49,13 +63,21 @@ val playerSessions = ConcurrentHashMap<String, DefaultWebSocketServerSession>()
 enum class RoleType { WEREWOLF, VILLAGER, SPECIAL }
 
 enum class Role(val type: RoleType, val description: String) {
-    WEREWOLF(RoleType.WEREWOLF, "Ma Sói - Ăn thịt dân làng mỗi đêm"),
-    VILLAGER(RoleType.VILLAGER, "Dân Làng - Tìm ra sói và treo cổ chúng"),
-    SEER(RoleType.SPECIAL, "Tiên Tri - Soi xem ai là sói mỗi đêm"),
-    DOCTOR(RoleType.SPECIAL, "Bảo Vệ - Chọn một người để bảo vệ mỗi đêm"),
-    HUNTER(RoleType.SPECIAL, "Thợ Săn - Khi chết được bắn một người theo"),
-    WITCH(RoleType.SPECIAL, "Phù Thủy - Có 1 bình thuốc cứu và 1 bình thuốc độc"),
-    CUPID(RoleType.SPECIAL, "Thần Tình Yêu - Ghép đôi 2 người thành cặp đôi định mệnh")
+    WEREWOLF(RoleType.WEREWOLF, "Ma Sói - Ăn thịt dân làng mỗi đêm."),
+    DERP_WOLF(RoleType.WEREWOLF, "Sói Ngu - Không tham gia tiệc sói, có quyền báo thù nếu bị treo cổ."),
+    LYCAN(RoleType.SPECIAL, "Bán Sói - Ban đầu là dân, nếu bị sói cắn sẽ hóa sói."),
+    VILLAGER(RoleType.VILLAGER, "Dân Làng - Không có chức năng đặc biệt."),
+    SEER(RoleType.SPECIAL, "Tiên Tri - Mỗi đêm soi phe 1 người (Dân/Sói)."),
+    GUARDIAN(RoleType.SPECIAL, "Bảo Vệ - Bảo vệ 1 người khỏi Sói mỗi đêm."),
+    CURSER_WEREWOLF(RoleType.WEREWOLF, "Sói Nguyền - Biến nạn nhân bị sói cắn thành sói (1 lần)."),
+    PROPHET_WEREWOLF(RoleType.WEREWOLF, "Sói Tiên Tri - Soi chức năng 1 người cho cả làng biết."),
+    CELESTIAL_FOX(RoleType.SPECIAL, "Hồ Ly - Soi phe 1 người + 2 hàng xóm."),
+    MOON_MAIDEN(RoleType.SPECIAL, "Nguyệt Nữ - Khóa chức năng 1 người mỗi đêm."),
+    TWINS(RoleType.SPECIAL, "Hai Chị Em - Đi theo cặp."),
+    ELDER(RoleType.SPECIAL, "Già Làng - 1 mạng trước Sói, khi chết dân làng mất năng lực."),
+    WITCH(RoleType.SPECIAL, "Phù Thủy - Có bình thuốc độc và thuốc cứu."),
+    CUPID(RoleType.SPECIAL, "Thần Tình Yêu - Ghép đôi 2 người."),
+    HUNTER(RoleType.SPECIAL, "Thợ Săn - Kéo theo 1 người khi chết hoặc bắn vào ban đêm.")
 }
 
 class Moderator {
@@ -77,6 +99,18 @@ class Moderator {
         roleDeck.shuffle()
 
         return players.zip(roleDeck).associate { (player, role) ->
+            player.role = role
+            player.shield = if (role == Role.ELDER) 1 else 0
+            if (role.type == RoleType.WEREWOLF) {
+                player.trulyTeam = "Sói"
+                player.team = "Sói"
+            } else if (role == Role.LYCAN) {
+                player.trulyTeam = "Sói"
+                player.team = "Dân"
+            } else {
+                player.trulyTeam = "Dân"
+                player.team = "Dân"
+            }
             player.id to GameAssignment(player.name, role.name, role.description)
         }
     }
@@ -133,6 +167,32 @@ fun main() {
                                         }
                                     }
                                 }
+                                "WEREWOLF_VOTE" -> {
+                                    val targetId = msg.data
+                                    val me = room.players.find { it.id == playerId }
+                                    // Chỉ Sói "xịn" (đã hóa hình, không ngu) mới được tham gia tiệc
+                                    if (me != null && me.role != Role.DERP_WOLF && me.trulyTeam == "Sói" && me.team == "Sói") {
+                                        val target = room.players.find { it.id == targetId }
+                                        if (target != null && !target.isDead && !(target.trulyTeam == "Sói" && target.team == "Sói")) {
+                                            target.werewolfMark += 1
+                                            broadcastPlayerList(room)
+                                        }
+                                    }
+                                }
+                                "DERP_REVENGE_KILL" -> {
+                                    val targetId = msg.data
+                                    if (room.derpWolfRevengeList.contains(targetId)) {
+                                        room.players.find { it.id == targetId }?.heal = 0
+                                        room.derpWolfRevengeList.clear()
+                                        broadcastPlayerList(room)
+                                    }
+                                }
+                                "SKIP_DEFENSE" -> { // Người trên giàn chấp nhận cái kết
+                                    if (room.phase == "TRIAL_DEFENSE" && room.trialTargetId == playerId) {
+                                        room.phase = "TRIAL_VOTING"
+                                        room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "TRIAL_VOTING")) } }
+                                    }
+                                }
                             }
                         }
                     }
@@ -173,7 +233,7 @@ fun main() {
             get("/room/{code}/distribute") {
                 val code = call.parameters["code"] ?: ""
                 val room = rooms[code] ?: return@get call.respond(io.ktor.http.HttpStatusCode.NotFound)
-                if (room.players.size < 8 || room.players.any { !it.isReady }) return@get call.respond(io.ktor.http.HttpStatusCode.BadRequest, "Chưa đủ người hoặc có người chưa sẵn sàng!")
+                if (room.players.size < 8 || room.players.any { !it.isReady }) return@get call.respond(io.ktor.http.HttpStatusCode.BadRequest, "Chưa đủ người hoặc chưa sẵn sàng!")
                 
                 val assignments = moderator.distributeRoles(room.players, (call.parameters["ratio"] ?: "0.25").toDouble())
                 room.assignments.putAll(assignments)
@@ -185,15 +245,114 @@ fun main() {
             }
 
             post("/room/{code}/next-phase") {
-                val room = rooms[call.parameters["code"]] ?: return@post call.respond(io.ktor.http.HttpStatusCode.NotFound)
-                room.phase = if (room.phase == "NIGHT") "DAY" else "NIGHT"
+                val code = call.parameters["code"] ?: ""
+                val room = rooms[code] ?: return@post call.respond(io.ktor.http.HttpStatusCode.NotFound)
+                
+                when (room.phase) {
+                    "NIGHT" -> {
+                        processGameLogic(room)
+                        room.phase = "DAY"
+                    }
+                    "DAY" -> {
+                        // Tìm người bị vote nhiều nhất
+                        val alivePlayers = room.players.filter { !it.isDead }
+                        val maxVotes = if (alivePlayers.isNotEmpty()) alivePlayers.maxOf { it.vote } else 0
+                        val topVoted = alivePlayers.filter { it.vote == maxVotes && maxVotes > 0 }
+                        
+                        if (topVoted.size == 1) {
+                            room.phase = "TRIAL_DEFENSE"
+                            room.trialTargetId = topVoted[0].id
+                        } else {
+                            processGameLogic(room) // Reset vote
+                            room.phase = "NIGHT"
+                        }
+                    }
+                    "TRIAL_DEFENSE" -> {
+                        room.phase = "TRIAL_VOTING"
+                    }
+                    "TRIAL_VOTING" -> {
+                        processGameLogic(room)
+                        room.phase = "NIGHT"
+                        room.trialTargetId = null
+                    }
+                    else -> room.phase = "NIGHT"
+                }
+
                 room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", room.phase)) } }
+                broadcastPlayerList(room)
                 call.respond(mapOf("phase" to room.phase))
             }
 
             get("/room/{code}/players") { call.respond(rooms[call.parameters["code"]]?.players ?: emptyList<Player>()) }
         }
     }.start(wait = true)
+}
+
+fun processGameLogic(room: Room) {
+    if (room.phase == "TRIAL_VOTING") {
+        // 1. Xử lý kết quả treo cổ
+        val target = room.players.find { it.id == room.trialTargetId }
+        if (target != null && !target.isDead) {
+            if (target.killVote > target.saveVote) {
+                target.heal -= 1
+                if (target.role == Role.DERP_WOLF) {
+                    room.derpWolfRevengeList.clear()
+                    room.derpWolfRevengeList.addAll(target.killersVotedForMe)
+                }
+            }
+        }
+    }
+
+    if (room.phase == "DAY" || room.phase == "TRIAL_VOTING") {
+        room.players.forEach {
+            it.vote = 0
+            it.saveVote = 0
+            it.killVote = 0
+            it.killersVotedForMe.clear()
+        }
+    }
+
+    if (room.phase == "NIGHT") {
+        val aliveTargets = room.players.filter { !it.isDead && !(it.trulyTeam == "Sói" && it.team == "Sói") }
+        if (aliveTargets.isNotEmpty()) {
+            val maxMarks = aliveTargets.maxOf { it.werewolfMark }
+            if (maxMarks > 0) {
+                val topMarked = aliveTargets.filter { it.werewolfMark == maxMarks }
+                if (topMarked.size == 1) {
+                    topMarked[0].shield -= 1
+                }
+            }
+        }
+    }
+
+    room.players.forEach { p ->
+        if (p.role == Role.LYCAN && p.shield == -1) {
+            p.team = "Sói"
+            p.shield = 0 
+        }
+
+        if (p.role != Role.LYCAN && p.shield < 0) {
+            p.heal += p.shield
+            p.shield = 0
+        }
+
+        if (room.phase == "NIGHT") {
+            if (p.role != Role.ELDER && p.shield > 0) p.shield = 0
+            p.vote = 0
+            p.werewolfMark = 0
+            p.killersVotedForMe.clear()
+        }
+    }
+
+    val dyingLinked = room.players.filter { it.linked == 2 && it.heal <= 0 }
+    if (dyingLinked.isNotEmpty()) {
+        room.players.filter { it.linked == 2 }.forEach { p ->
+            p.heal = 0
+            p.linked = 1 
+        }
+    }
+
+    room.players.forEach { p -> if (p.heal <= 0) p.isDead = true }
 }
 
 suspend fun broadcastPlayerList(room: Room) {
