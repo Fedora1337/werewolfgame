@@ -23,6 +23,13 @@
         .page { display: none; flex: 1; flex-direction: column; justify-content: center; }
         .page.active { display: flex; }
 
+        /* Gallery Grid */
+        .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; text-align: left; }
+        .gallery-card { background: #2a2a2a; padding: 15px; border-radius: 12px; border: 1px solid #444; display: flex; align-items: center; gap: 15px; }
+        .gallery-card .icon { font-size: 2.5em; min-width: 60px; text-align: center; }
+        .gallery-card h4 { margin: 0; color: #f1c40f; }
+        .gallery-card p { margin: 5px 0 0 0; font-size: 0.85em; color: #aaa; line-height: 1.4; }
+
         /* Lobby Grid */
         .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px; margin-top: 20px; }
         .player-card { background: #2a2a2a; padding: 10px; border-radius: 12px; border: 1px solid #444; position: relative; }
@@ -59,6 +66,7 @@
                 <div id="g_id_onload" data-client_id="10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
                 <div class="g_id_signin" data-type="standard" data-shape="rectangular"></div>
             </div>
+            <button onclick="showGallery()" class="ghost-btn" style="width: auto; margin: 20px auto;">📖 Xem bộ bài</button>
         </div>
 
         <!-- PAGE: DASHBOARD (Profile + Create/Join) -->
@@ -92,6 +100,18 @@
             <div style="margin: 10px; color: #555;">— HOẶC —</div>
             <input type="text" id="roomCodeInput" inputmode="numeric" placeholder="Mã phòng (6 số)...">
             <button onclick="joinRoom()">Gia Nhập Phòng</button>
+            <button onclick="showGallery()" class="ghost-btn" style="width: auto; margin-top: 20px;">📖 Thư viện bài</button>
+        </div>
+
+        <!-- PAGE: GALLERY -->
+        <div id="page-gallery" class="page">
+            <h2 style="color: #f1c40f;">Bộ Bài Môn Sói Là</h2>
+            <div class="card" style="flex: 1; overflow-y: auto; text-align: left;">
+                <div class="gallery-grid" id="galleryList">
+                    <!-- Roles will be injected here -->
+                </div>
+            </div>
+            <button onclick="backFromGallery()" class="ghost-btn">Quay lại</button>
         </div>
 
         <!-- PAGE: LOBBY (Player List) -->
@@ -128,10 +148,40 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null;
+        let lastPage = 'page-home';
+
+        const allRoles = [
+            { role: 'WEREWOLF', icon: '🐺', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm. Hãy cố gắng ẩn mình và tiêu diệt phe dân làng.' },
+            { role: 'VILLAGER', icon: '👨‍🌾', description: 'Dân Làng - Không có chức năng đặc biệt. Hãy dùng khả năng lập luận để tìm ra sói và treo cổ chúng.' },
+            { role: 'SEER', icon: '🔮', description: 'Tiên Tri - Mỗi đêm được soi danh tính của một người chơi. Hãy dùng thông tin đó dẫn dắt làng.' },
+            { role: 'DOCTOR', icon: '🛡️', description: 'Bảo Vệ - Mỗi đêm chọn một người để bảo vệ khỏi sự tấn công của sói. Không thể bảo vệ chính mình 2 đêm liên tiếp.' },
+            { role: 'HUNTER', icon: '🔫', description: 'Thợ Săn - Khi bị chết (treo cổ hoặc bị cắn), được phép nổ súng bắn một người chơi khác đi theo.' },
+            { role: 'WITCH', icon: '🧪', description: 'Phù Thủy - Có 2 bình thuốc: 1 bình thuốc cứu người bị cắn và 1 bình thuốc độc để giết kẻ tình nghi.' },
+            { role: 'CUPID', icon: '🏹', description: 'Thần Tình Yêu - Đêm đầu tiên chọn 2 người để ghép đôi. Nếu 1 người chết, người kia sẽ chết theo vì đau lòng.' }
+        ];
 
         function navigateTo(pageId) {
+            if (pageId !== 'page-gallery') lastPage = pageId;
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
+        }
+
+        function showGallery() {
+            const list = document.getElementById('galleryList');
+            list.innerHTML = allRoles.map(r => `
+                <div class="gallery-card">
+                    <div class="icon">${r.icon}</div>
+                    <div>
+                        <h4>${r.role}</h4>
+                        <p>${r.description}</p>
+                    </div>
+                </div>
+            `).join('');
+            navigateTo('page-gallery');
+        }
+
+        function backFromGallery() {
+            navigateTo(lastPage);
         }
 
         function handleCredentialResponse(response) {
