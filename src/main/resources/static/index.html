@@ -144,11 +144,23 @@
             if (saved) { const u = JSON.parse(saved); myName = u.name; myAvatar = u.avatar; }
             updateProfileUI();
             localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar}));
-            updateHomeUI(); // Chỉ cập nhật giao diện tại Home, không nhảy trang
+            updateHomeUI();
+        }
+
+        function updateProfileUI() {
+            const nameElem = document.getElementById('myName');
+            const avatarElem = document.getElementById('myAvatar');
+            if (nameElem) nameElem.innerText = myName;
+            if (avatarElem) avatarElem.src = myAvatar;
+            const editName = document.getElementById('editName');
+            const editAvatar = document.getElementById('editAvatar');
+            if (editName) editName.value = myName;
+            if (editAvatar) editAvatar.value = myAvatar;
         }
 
         function updateHomeUI() {
             const section = document.getElementById('home-auth-section');
+            if (!section) return;
             if (myId) {
                 section.innerHTML = `
                     <img src="${myAvatar}" width="60" style="border-radius: 50%; border: 2px solid var(--primary); margin-bottom: 10px;">
@@ -159,11 +171,19 @@
             } else {
                 section.innerHTML = `
                     <h3>Vào game ngay</h3>
-                    <div id="g_id_onload" data-client_id="10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
-                    <div class="g_id_signin" data-type="standard" data-shape="rectangular"></div>
+                    <div id="google-btn-container"></div>
                 `;
-                // Re-init Google Sign-in if needed
-                if (window.google) google.accounts.id.renderButton(document.querySelector('.g_id_signin'), {type: 'standard'});
+                // Khởi tạo lại nút Google programmatically
+                if (window.google) {
+                    google.accounts.id.initialize({
+                        client_id: "10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com",
+                        callback: handleCredentialResponse
+                    });
+                    google.accounts.id.renderButton(
+                        document.getElementById("google-btn-container"),
+                        { type: 'standard', shape: 'rectangular' }
+                    );
+                }
             }
         }
 
