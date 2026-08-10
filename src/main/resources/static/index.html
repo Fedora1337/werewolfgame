@@ -6,61 +6,100 @@
     <title>Môn Sói Là</title>
     <style>
         :root { --primary: #e74c3c; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0; --nav-h: 70px; --header-h: 60px; --dev-w: 300px; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; text-align: center; overflow-x: hidden; }
 
-        header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-h); background: rgba(26,26,26,0.95); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; z-index: 2000; backdrop-filter: blur(10px); transition: all 0.3s; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
+
+        /* ROOT LAYOUT */
+        #app-root { display: flex; width: 100vw; height: 100vh; }
+
+        /* SIDEBAR */
+        #dev-sidebar {
+            width: var(--dev-w); background: #111; border-right: 2px solid #27ae60;
+            display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
+            transition: all 0.3s ease; flex-shrink: 0; z-index: 4000;
+        }
+        #dev-sidebar.collapsed { margin-left: calc(-1 * var(--dev-w)); }
+
+        #dev-toggle {
+            position: fixed; left: var(--dev-w); top: 50%; transform: translateY(-50%);
+            background: #27ae60; width: 35px; height: 60px; display: none;
+            align-items: center; justify-content: center; border-radius: 0 10px 10px 0;
+            cursor: pointer; z-index: 4001; transition: left 0.3s;
+        }
+        #dev-sidebar.collapsed + #dev-toggle { left: 0; }
+
+        /* MAIN CONTENT AREA */
+        #main-content { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+
+        header {
+            height: var(--header-h); background: rgba(26,26,26,0.95);
+            display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid #333; flex-shrink: 0; backdrop-filter: blur(10px);
+        }
         header h2 { color: var(--primary); margin: 0; font-size: 1.2em; text-transform: uppercase; letter-spacing: 2px; }
 
-        nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: #1a1a1a; display: none; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #333; z-index: 2000; transition: all 0.3s; }
+        #scroll-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; }
+        #page-gallery.active .container { max-width: 1000px; }
+
+        nav#bottom-nav {
+            height: var(--nav-h); background: #1a1a1a; border-top: 1px solid #333;
+            display: none; grid-template-columns: repeat(3, 1fr); flex-shrink: 0;
+        }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7em; color: #888; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item span { font-size: 1.5em; margin-bottom: 4px; }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: calc(var(--header-h) + 20px) 20px calc(var(--nav-h) + 20px) 20px; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; transition: all 0.3s; }
+        /* PAGES */
+        .page { display: none; width: 100%; flex-direction: column; }
+        .page.active { display: flex; }
 
-        #dev-bar { position: fixed; left: 0; top: 0; bottom: 0; width: var(--dev-w); background: #111; border-right: 2px solid #27ae60; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; z-index: 4000; transition: transform 0.3s; transform: translateX(-100%); }
-        #dev-bar.active { transform: translateX(0); }
-
-        body.dev-open header, body.dev-open nav { left: var(--dev-w); }
-        body.dev-open .container { margin-left: var(--dev-w); max-width: calc(100% - var(--dev-w)); }
-
-        #dev-toggle { position: fixed; left: 0; top: 50%; background: #27ae60; width: 35px; height: 60px; display: none; align-items: center; justify-content: center; border-radius: 0 10px 10px 0; cursor: pointer; z-index: 4001; transition: left 0.3s; box-shadow: 4px 0 10px rgba(0,0,0,0.5); }
-        body.dev-open #dev-toggle { left: var(--dev-w); }
-
+        /* UI COMPONENTS */
         .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; width: 100%; box-sizing: border-box; }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
         button { width: 100%; padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; }
         .secondary-btn { background: #2980b9; }
         .ghost-btn { background: #333; font-size: 0.9em; padding: 8px; border: 1px solid #444; }
 
-        .page { display: none; flex: 1; flex-direction: column; justify-content: flex-start; max-width: 500px; margin: 0 auto; width: 100%; }
-        .page.active { display: flex; }
-        #page-gallery { max-width: 1000px; }
-
-        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
-        @media (min-width: 768px) { .game-grid { grid-template-columns: repeat(9, 1fr); } }
+        /* GAME GRID */
+        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+        @media (min-width: 1000px) { .game-grid { grid-template-columns: repeat(9, 1fr); } }
         .game-player-card { background: #2a2a2a; border-radius: 12px; padding: 10px; border: 2px solid #444; cursor: pointer; position: relative; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .game-player-card.selected { border-color: var(--primary); box-shadow: 0 0 15px var(--primary); }
-        .game-player-card img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; }
-        .game-player-card .player-num { position: absolute; top: 5px; right: 5px; color: #f1c40f; font-size: 0.7em; font-weight: bold; }
-        .game-player-card .kick-btn { position: absolute; top: -10px; left: -10px; background: #e74c3c; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 2px solid var(--bg); }
-        .game-player-card p { font-size: 0.7em; margin: 8px 0 0 0; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .game-player-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid #444; }
+        .game-player-card .player-num { position: absolute; top: 5px; right: 8px; color: #f1c40f; font-size: 0.7em; font-weight: bold; }
+        .game-player-card p { font-size: 0.65em; margin: 8px 0 0 0; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .game-player-card.ready { border-color: #27ae60; }
+        .kick-btn { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #111; z-index: 5; }
 
-        .action-overlay { position: fixed; bottom: 15px; left: 15px; right: 15px; display: none; align-items: flex-end; justify-content: space-between; pointer-events: none; z-index: 3000; transition: all 0.3s; }
-        body.has-nav .action-overlay { bottom: calc(var(--nav-h) + 15px); }
-        body.dev-open .action-overlay { left: calc(var(--dev-w) + 15px); }
-
-        .host-action-bar { background: rgba(20, 20, 20, 0.98); padding: 12px; border-radius: 20px; border: 2px solid #333; pointer-events: auto; display: none; flex-direction: column; gap: 8px; width: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        /* ACTION OVERLAY (Floating in main-content) */
+        #action-overlay {
+            position: absolute; bottom: 20px; left: 20px; right: 20px;
+            display: none; align-items: flex-end; justify-content: space-between;
+            pointer-events: none; z-index: 3000;
+        }
+        .host-action-bar { background: rgba(20, 20, 20, 0.98); padding: 12px; border-radius: 20px; border: 2px solid #333; pointer-events: auto; display: none; flex-direction: column; gap: 8px; width: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .action-buttons { display: flex; gap: 8px; flex-direction: column; pointer-events: auto; }
-        .action-btn { width: auto; padding: 10px 15px; font-size: 0.8em; margin: 0; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); pointer-events: auto; }
+        .action-btn { width: auto; padding: 10px 20px; font-size: 0.85em; margin: 0; border-radius: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); pointer-events: auto; }
 
-        .self-card-mini { background: rgba(26, 26, 26, 0.95); border: 2px solid var(--primary); border-radius: 18px; padding: 8px 15px; display: flex; align-items: center; gap: 12px; pointer-events: auto; min-width: 140px; backdrop-filter: blur(10px); box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
-        .self-card-mini img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid var(--primary); }
+        .self-card-mini {
+            background: rgba(26, 26, 26, 0.95); border: 2px solid var(--primary); border-radius: 20px;
+            padding: 8px 15px; display: flex; align-items: center; gap: 12px;
+            pointer-events: auto; min-width: 140px; backdrop-filter: blur(10px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        }
+        .self-card-mini img { width: 40px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid var(--primary); }
         .self-card-mini div { text-align: left; }
-        .self-card-mini h5 { margin: 0; font-size: 0.9em; color: var(--primary); font-weight: 900; }
+        .self-card-mini h5 { margin: 0; font-size: 0.9em; color: var(--primary); }
         .self-card-mini p { margin: 0; font-size: 0.8em; color: white; font-weight: bold; }
 
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 10px; text-align: left; }
+        /* OVERLAYS */
+        #night-overlay { position: fixed; inset: 0; background: black; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .role-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 4500; display: none; padding: 40px 20px; overflow-y: auto; }
+        .role-card-big { background: #1a1a1a; border: 4px solid #d4af37; border-radius: 20px; overflow: hidden; max-width: 350px; margin: 40px auto; }
+        .role-card-big img { width: 100%; height: 300px; object-fit: cover; margin-top: -10px; border-bottom: 3px solid #d4af37; }
+
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; text-align: left; width: 100%; }
         .gallery-card { background: #1a1a1a; border-radius: 12px; border: 2px solid #d4af37; overflow: hidden; }
         .gallery-card img { width: 100%; height: 380px; object-fit: cover; margin-top: -12px; border-bottom: 2px solid #d4af37; }
         .card-info { padding: 15px; }
@@ -68,53 +107,62 @@
     </style>
 </head>
 <body>
-    <header>
-        <div id="back-btn" onclick="goBack()" style="position: absolute; left: 15px; cursor: pointer; display: none; font-size: 1.5em;">←</div>
-        <h2>Môn Sói Là</h2>
-        <div onclick="showDevLogin()" style="position: absolute; right: 15px; opacity: 0.2; cursor: pointer;">🛠️</div>
-    </header>
+    <div id="app-root">
+        <!-- SIDEBAR -->
+        <aside id="dev-sidebar" class="collapsed">
+            <label style="color:#27ae60; font-size: 0.7em; font-weight: bold; margin-bottom: 10px; display: block;">DEVELOPER CONSOLE</label>
+            <div id="dev-logs" style="background: black; color: #27ae60; font-family: monospace; padding: 10px; flex: 1; overflow-y: auto; font-size: 0.7em; border-radius: 8px; margin-bottom: 15px; text-align: left; border: 1px solid #222;">> Sẵn sàng...</div>
+            <input type="text" id="devConsole" placeholder="Lệnh /..." style="margin-bottom: 15px;" onkeydown="if(event.key==='Enter') executeDevCommand()">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button onclick="addBot()" style="background: #27ae60; padding: 10px; margin: 0;">+BOT</button>
+                <button onclick="devCommand('/next')" style="background: #f39c12; padding: 10px; margin: 0;">NEXT</button>
+                <button onclick="devCommand('/start')" style="background: #2980b9; padding: 10px; margin: 0;">START</button>
+                <button onclick="location.reload()" style="background: #555; padding: 10px; margin: 0;">REFRESH</button>
+            </div>
+        </aside>
+        <div id="dev-toggle" onclick="toggleDevBar()">⚙️</div>
 
-    <nav id="main-nav">
-        <div class="nav-item active" onclick="navigateTo('page-dashboard')"><span>🏠</span>Sảnh</div>
-        <div class="nav-item" onclick="navigateTo('page-gallery')"><span>📖</span>Bộ bài</div>
-        <div class="nav-item" onclick="navigateTo('page-profile')"><span>👤</span>Hồ sơ</div>
-    </nav>
+        <!-- MAIN CONTENT AREA -->
+        <div id="main-content">
+            <header>
+                <div id="back-btn" onclick="goBack()" style="position: absolute; left: 15px; cursor: pointer; display: none; font-size: 1.5em;">←</div>
+                <h2>Môn Sói Là</h2>
+                <div onclick="showDevLogin()" style="position: absolute; right: 15px; opacity: 0.2; cursor: pointer;">🛠️</div>
+            </header>
 
-    <div id="dev-bar">
-        <label style="color:#27ae60; font-size: 0.7em; font-weight: bold; margin-bottom: 10px; display: block;">DEVELOPER CONSOLE</label>
-        <div id="dev-logs" style="background: black; color: #27ae60; font-family: monospace; padding: 10px; flex: 1; overflow-y: auto; font-size: 0.7em; border-radius: 8px; margin-bottom: 15px; text-align: left; border: 1px solid #222;">> Sẵn sàng...</div>
-        <input type="text" id="devConsole" placeholder="Lệnh /..." style="margin-bottom: 15px;" onkeydown="if(event.key==='Enter') executeDevCommand()">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button onclick="addBot()" style="background: #27ae60; padding: 10px; margin: 0;">+BOT</button>
-            <button onclick="devCommand('/next')" style="background: #f39c12; padding: 10px; margin: 0;">NEXT</button>
-            <button onclick="devCommand('/start')" style="background: #2980b9; padding: 10px; margin: 0;">START</button>
-            <button onclick="location.reload()" style="background: #555; padding: 10px; margin: 0;">REFRESH</button>
-        </div>
-    </div>
-    <div id="dev-toggle" onclick="toggleDevBar()">⚙️</div>
+            <main id="scroll-area">
+                <div class="container">
+                    <div id="page-home" class="page active"><div id="home-auth-section" class="card"><h3>Đang tải...</h3></div></div>
+                    <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng (6 số)..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
+                    <div id="page-profile" class="page"><div class="card"><img id="profile-ava-preview" src="" width="100" height="100" style="border-radius:50%; border:4px solid var(--primary); object-fit:cover;"><div style="text-align:left"><label style="font-size:0.8em;color:#888">TÊN HIỂN THỊ</label><input type="text" id="editName"><label style="font-size:0.8em;color:#888">TẢI ẢNH LÊN</label><input type="file" id="fileAvatar"><label style="font-size:0.8em;color:#888">HOẶC URL ẢNH</label><input type="text" id="editAvatar"></div><button onclick="saveProfile()" style="background:#27ae60">LƯU HỒ SƠ</button><button onclick="logout()" class="ghost-btn">Đăng xuất</button></div></div>
+                    <div id="page-lobby" class="page"><div class="card" style="flex:1; overflow-y:auto"><h2>Mã: <span id="displayRoomCode" style="color:#f1c40f">######</span></h2><div id="player-count-badge" style="background:#333;padding:5px 10px;border-radius:10px;font-size:0.8em;margin-bottom:10px">Đang chờ...</div><div id="game-grid" class="game-grid"></div></div><button id="btnReady" onclick="toggleReady()" style="display:none; background:#2980b9">SẴN SÀNG</button><button onclick="leaveRoom()" class="ghost-btn" style="color:#e74c3c">RỜI PHÒNG</button></div>
+                    <div id="page-gallery" class="page"><h2 style="color:#f1c40f">Bộ Bài Môn Sói Là</h2><div class="gallery-grid" id="galleryList"></div></div>
+                    <div id="page-dev-login" class="page"><div class="card"><h3>Developer Portal</h3><input type="password" id="devPassword" placeholder="Mật khẩu..."><button onclick="checkDevPassword()">Kích hoạt</button></div></div>
+                </div>
+            </main>
 
-    <div id="action-overlay" class="action-overlay">
-        <div id="host-action-bar" class="host-action-bar">
-            <select id="ratioSelect" style="width:100%; background:#222; color:white; border-radius:8px; padding:5px;"><option value="0.25">Newbie</option><option value="0.33">Standard</option></select>
-            <button id="btnStartGame" onclick="distributeRoles()" style="background:#27ae60; padding:8px; margin:0;">BẮT ĐẦU</button>
-            <button id="btnNextPhase" onclick="nextPhase()" style="display:none; background:#f39c12; padding:8px; margin:0;">TIẾP TỤC</button>
-        </div>
-        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
-            <div id="action-buttons" class="action-buttons"></div>
-            <div class="self-card-mini">
-                <img id="self-mini-ava" src="https://robohash.org/default">
-                <div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">Name</p></div>
+            <nav id="bottom-nav">
+                <div class="nav-item active" onclick="navigateTo('page-dashboard')"><span>🏠</span>Sảnh</div>
+                <div class="nav-item" onclick="navigateTo('page-gallery')"><span>📖</span>Bộ bài</div>
+                <div class="nav-item" onclick="navigateTo('page-profile')"><span>👤</span>Hồ sơ</div>
+            </nav>
+
+            <!-- ACTION OVERLAY -->
+            <div id="action-overlay">
+                <div id="host-action-bar" class="host-action-bar">
+                    <select id="ratioSelect" style="width:100%; background:#222; color:white; border-radius:8px; padding:8px;"><option value="0.25">Newbie</option><option value="0.33">Standard</option></select>
+                    <button id="btnStartGame" onclick="distributeRoles()" style="background:#27ae60; padding:10px; margin:0;">BẮT ĐẦU</button>
+                    <button id="btnNextPhase" onclick="nextPhase()" style="display:none; background:#f39c12; padding:10px; margin:0;">TIẾP TỤC</button>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+                    <div id="action-buttons" class="action-buttons"></div>
+                    <div class="self-card-mini">
+                        <img id="self-mini-ava" src="https://robohash.org/default">
+                        <div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">Name</p></div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-
-    <div class="container">
-        <div id="page-home" class="page active"><div id="home-auth-section" class="card"><h3>Đang tải...</h3></div></div>
-        <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
-        <div id="page-profile" class="page"><div class="card"><img id="profile-ava-preview" src="" width="100" height="100" style="border-radius:50%; border:4px solid var(--primary); object-fit:cover;"><div style="text-align:left"><label>TÊN</label><input type="text" id="editName"><label>FILE</label><input type="file" id="fileAvatar"><label>URL</label><input type="text" id="editAvatar"></div><button onclick="saveProfile()" style="background:#27ae60">LƯU</button><button onclick="logout()" class="ghost-btn">Đăng xuất</button></div></div>
-        <div id="page-lobby" class="page"><div class="card" style="flex:1; overflow-y:auto"><h2>Mã: <span id="displayRoomCode">######</span></h2><div id="player-count-badge">Đang chờ...</div><div id="game-grid" class="game-grid"></div></div><button id="btnReady" onclick="toggleReady()" style="display:none; background:#2980b9">SẴN SÀNG</button><button onclick="leaveRoom()" class="ghost-btn" style="color:#e74c3c">RỜI PHÒNG</button></div>
-        <div id="page-gallery" class="page"><div class="gallery-grid" id="galleryList"></div></div>
-        <div id="page-dev-login" class="page"><div class="card"><h3>Dev Portal</h3><input type="password" id="devPassword"><button onclick="checkDevPassword()">Truy cập</button></div></div>
     </div>
 
     <div id="role-popup" class="role-popup"><div id="result"></div></div>
@@ -146,7 +194,9 @@
             const b = document.getElementById('back-btn'); if(b) b.style.display = (pId==='page-home'||pId==='page-dashboard')?'none':'block';
             if(pId!=='page-gallery'&&pId!=='page-dev-login'&&pId!=='page-profile'&&pId!=='page-lobby') lastPage=pId;
             document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(pId).classList.add('active');
-            const nav=document.getElementById('main-nav'); if(pId==='page-lobby'||pId==='page-home'){ nav.style.display='none'; document.body.classList.remove('has-nav'); } else { nav.style.display='grid'; document.body.classList.add('has-nav'); }
+            const nav=document.getElementById('bottom-nav');
+            if(pId==='page-lobby'||pId==='page-home'){ nav.style.display='none'; document.body.classList.remove('has-nav'); }
+            else { nav.style.display='grid'; document.body.classList.add('has-nav'); }
             document.getElementById('action-overlay').style.display = (pId==='page-lobby') ? 'flex' : 'none';
             if(pId==='page-gallery') showGallery();
             updateProfileUI();
@@ -166,8 +216,8 @@
         function updateHomeUI() { const s=document.getElementById('home-auth-section'); if(!s) return; if(myId){ s.innerHTML=`<img src="${myAvatar}" width="80" style="border-radius:50%; border:3px solid var(--primary);"><h3 style="margin:10px 0;">${myName}</h3><button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer;">Đăng xuất</p>`; } else { s.innerHTML=`<h3>Vào game ngay</h3><div id="google-btn"></div>`; if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'rectangular'}); } } }
         function logout() { localStorage.removeItem('werewolf_user'); myId=null; updateHomeUI(); navigateTo('page-home'); }
         function showDevLogin() { navigateTo('page-dev-login'); }
-        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; document.getElementById('dev-bar').style.display='flex'; document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
-        function toggleDevBar() { const b=document.getElementById('dev-bar'); b.classList.toggle('active'); document.body.classList.toggle('dev-open'); }
+        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; document.getElementById('dev-sidebar').style.display='flex'; document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.getElementById('dev-sidebar').classList.remove('collapsed'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
+        function toggleDevBar() { const b=document.getElementById('dev-sidebar'); b.classList.toggle('collapsed'); document.body.classList.toggle('dev-open'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
         window.onload=()=>{ const s=localStorage.getItem('werewolf_user'); if(s){ const u=JSON.parse(s); myId=u.id; myName=u.name; myAvatar=u.avatar; updateProfileUI(); } updateHomeUI(); navigateTo('page-home'); };
         function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); alert("Lưu!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
@@ -176,7 +226,18 @@
         function leaveRoom() { if(currentRoomCode) fetch(`/leave-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId})}); currentRoomCode=null; if(socket) socket.close(); navigateTo('page-dashboard'); }
         function setupRoom(r, h) { currentRoomCode=r.code; isHost=h; document.getElementById('displayRoomCode').innerText=r.code; document.getElementById('host-action-bar').style.display=isHost?'flex':'none'; document.getElementById('btnReady').style.display=isHost?'none':'block'; connectWebSocket(); navigateTo('page-lobby'); refreshPlayers(); }
         function connectWebSocket() { const p=window.location.protocol==='https:'?'wss:':'ws:'; socket=new WebSocket(`${p}//${window.location.host}/ws/${myId}`); socket.onmessage=(e)=>{ const m=JSON.parse(e.data); if(m.type==="PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(m.data)); else if(m.type==="YOUR_ROLE") { myRoleData=JSON.parse(m.data); displayMyRole(myRoleData); } else if(m.type==="PHASE_UPDATE") handlePhaseUpdate(m.data); else if(m.type==="ANNOUNCEMENT") { announce(m.data); logDev(m.data); } else if(m.type==="KICKED"){ alert(m.data); window.location.reload(); } }; }
-        function updatePlayerListUI(ps) { playersCache=ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId); g.innerHTML=ps.map((p,i)=>`<div class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''}" onclick="selectPlayer('${p.id}')">${isHost&&p.id!==myId?`<div class="kick-btn" onclick="event.stopPropagation(); kickPlayer('${p.id}')">×</div>`:''}<div class="player-num">#${i+1}</div><img src="${p.avatar}"><p>${p.name}</p>${p.isDead?'<div style="position:absolute; inset:0; background:rgba(255,0,0,0.3); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:white; z-index:5;">RIP</div>':''}</div>`).join(''); if(mi!==-1) document.getElementById('self-mini-num').innerText=`#${mi+1}`; const b=document.getElementById('player-count-badge'); const c=ps.length; const rc=ps.filter(p=>p.isReady).length; if(c<8) b.innerText=`Cần ${8-c} nữa`; else if(rc<c) b.innerText=`Chờ (${rc}/${c})`; else b.innerText="Đủ!"; if(isHost){ const btn=document.getElementById('btnStartGame'); if(c>=8&&rc===c){ btn.disabled=false; btn.innerText="BẮT ĐẦU"; } else { btn.disabled=true; btn.innerText=c<8?`CẦN THÊM ${8-c}`:`CHỜ ${c-rc} SẴN SÀNG`; } } else { const me=ps.find(p=>p.id===myId); const btn=document.getElementById('btnReady'); if(me?.isReady){ btn.innerText="HUỶ"; btn.style.background="#e74c3c"; } else { btn.innerText="SẴN SÀNG"; btn.style.background="#2980b9"; } } updateActionButtons(); }
+
+        function updatePlayerListUI(ps) {
+            playersCache=ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
+            g.innerHTML=ps.map((p,i)=>`<div class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''}" onclick="selectPlayer('${p.id}')">${isHost&&p.id!==myId?`<div class="kick-btn" onclick="event.stopPropagation(); kickPlayer('${p.id}')">×</div>`:''}<div class="player-num">#${i+1}</div><img src="${p.avatar}"><p>${p.name}</p>${p.isDead?'<div style="position:absolute; inset:0; background:rgba(255,0,0,0.3); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:white; z-index:5;">RIP</div>':''}</div>`).join('');
+            if(mi!==-1) document.getElementById('self-mini-num').innerText=`#${mi+1}`;
+            const b=document.getElementById('player-count-badge'); const c=ps.length; const rc=ps.filter(p=>p.isReady).length;
+            if(c<8) b.innerText=`Cần ${8-c} nữa`; else if(rc<c) b.innerText=`Chờ (${rc}/${c})`; else b.innerText="Đủ!";
+            if(isHost){ const btn=document.getElementById('btnStartGame'); if(c>=8&&rc===c){ btn.disabled=false; btn.innerText="BẮT ĐẦU"; } else { btn.disabled=true; btn.innerText=c<8?`CẦN THÊM ${8-c}`:`CHỜ ${c-rc} SẴN SÀNG`; } }
+            else { const me=ps.find(p=>p.id===myId); const btn=document.getElementById('btnReady'); if(me?.isReady){ btn.innerText="HUỶ"; btn.style.background="#e74c3c"; } else { btn.innerText="SẴN SÀNG"; btn.style.background="#2980b9"; } }
+            updateActionButtons();
+        }
+
         function kickPlayer(id) { if(confirm("Kick?")) socket.send(JSON.stringify({type:"KICK_PLAYER", data:id})); }
         function selectPlayer(id) { selectedPlayerId=(selectedPlayerId===id)?null:id; updatePlayerListUI(playersCache); }
         function updateActionButtons() { const c=document.getElementById('action-buttons'); const o=document.getElementById('action-overlay'); const ap=document.querySelector('.page.active').id; if(ap!=='page-lobby'){ o.style.display='none'; return; } o.style.display='flex'; c.innerHTML=''; if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`; }
@@ -188,7 +249,7 @@
         function confirmUnderstand() { document.getElementById('btnUnderstand').style.background='#7f8c8d'; document.getElementById('btnUnderstand').innerText='OK'; document.getElementById('btnUnderstand').disabled=true; socket.send(JSON.stringify({type:"I_UNDERSTAND", data:""})); }
         function handlePhaseUpdate(data) { const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; if(ph==="NIGHT"){ clearInterval(countdownInterval); document.getElementById('timer-display').style.display='none'; document.getElementById('role-popup').style.display='none'; document.getElementById('night-overlay').style.display='flex'; announce("Tối rồi."); } else if(ph==="DAY"){ document.getElementById('night-overlay').style.display='none'; startCountdown(du); let m="Sáng rồi."; if(rs==="RUSSIAN_VODKA") m="Gấu nốc rượu! "+m; announce(m); } else { startCountdown(du); } if(isHost){ document.getElementById('host-action-bar').style.display='flex'; document.getElementById('btnNextPhase').style.display=(ph!=="LOBBY")?'block':'none'; document.getElementById('btnStartGame').style.display=(ph==="LOBBY")?'block':'none'; } }
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
-        async function distributeRoles() { const r=await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if(!r.ok) alert("Lỗi!"); }
+        async function distributeRoles() { const r = await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if (!r.ok) alert("Lỗi!"); }
         function startCountdown(s) { clearInterval(countdownInterval); let t=s; document.getElementById('timer-display').style.display='block'; document.getElementById('seconds').innerText = t; countdownInterval=setInterval(()=>{t--; document.getElementById('seconds').innerText=t; if(t<=0){clearInterval(countdownInterval); if(isHost)nextPhase();}},1000); }
         function announce(t) { if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const m=new SpeechSynthesisUtterance(t); m.lang='vi-VN'; m.rate=0.9; window.speechSynthesis.speak(m); }
         async function requestMediaPermissions() { try { const s=await navigator.mediaDevices.getUserMedia({audio:true}); s.getTracks().forEach(t=>t.stop()); } catch (err){} }
