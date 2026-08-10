@@ -106,7 +106,45 @@
                 <div id="g_id_onload" data-client_id="10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
                 <div class="g_id_signin" data-type="standard" data-shape="rectangular"></div>
             </div>
-            <button onclick="showGallery()" class="ghost-btn" style="width: auto; margin: 20px auto;">📖 Xem bộ bài</button>
+            <button onclick="showGallery()" class="ghost-btn" style="width: auto; margin: 10px auto;">📖 Xem bộ bài</button>
+            <p onclick="showDevLogin()" style="font-size: 0.6em; color: #333; cursor: pointer; margin-top: 50px;">Developer Access</p>
+        </div>
+
+        <!-- PAGE: DEV LOGIN -->
+        <div id="page-dev-login" class="page">
+            <div class="card">
+                <h3>Developer Portal</h3>
+                <input type="password" id="devPassword" placeholder="Nhập mật khẩu...">
+                <button onclick="checkDevPassword()">Truy cập</button>
+                <button onclick="navigateTo('page-home')" class="ghost-btn">Quay lại</button>
+            </div>
+        </div>
+
+        <!-- PAGE: DEV DASHBOARD -->
+        <div id="page-dev-dash" class="page" style="max-width: 800px;">
+            <div class="card" style="text-align: left;">
+                <h2 style="color: #f1c40f;">Developer Console</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4>Quản lý Bot</h4>
+                        <input type="text" id="botName" placeholder="Tên Bot...">
+                        <button onclick="addBot()" class="secondary-btn">Thêm Bot</button>
+                        <button onclick="clearBots()" class="ghost-btn">Xóa tất cả Bot</button>
+                    </div>
+                    <div>
+                        <h4>Lệnh nhanh</h4>
+                        <button onclick="devCommand('/next')" style="background: #f39c12;">Skip Phase</button>
+                        <button onclick="devCommand('/reveal')" style="background: #2980b9;">Hiện tất cả bài</button>
+                    </div>
+                </div>
+                <hr style="border: 1px solid #333; margin: 20px 0;">
+                <h4>Command Console</h4>
+                <input type="text" id="devConsole" placeholder="Gõ lệnh /... (VD: /setrole Fedora Sói)" onkeydown="if(event.key==='Enter') executeDevCommand()">
+                <div id="consoleOutput" style="background: black; color: #27ae60; font-family: monospace; padding: 10px; height: 150px; overflow-y: auto; font-size: 0.8em; border-radius: 8px;">
+                    > Sẵn sàng nhận lệnh...
+                </div>
+            </div>
+            <button onclick="navigateTo('page-home')" class="ghost-btn">Thoát chế độ Dev</button>
         </div>
 
         <!-- PAGE: DASHBOARD (Profile + Create/Join) -->
@@ -229,6 +267,78 @@
 
         function backFromGallery() {
             navigateTo(lastPage);
+        }
+
+        // DEVELOPER TOOLS
+        function showDevLogin() { navigateTo('page-dev-login'); }
+
+        function checkDevPassword() {
+            const pass = document.getElementById('devPassword').value;
+            if (pass === 'N3Tyevcl') {
+                navigateTo('page-dev-dash');
+                logConsole("Chào mừng Developer!");
+            } else {
+                alert("Sai mật khẩu rồi bro!");
+            }
+        }
+
+        function logConsole(msg) {
+            const out = document.getElementById('consoleOutput');
+            out.innerHTML += `<div>> ${msg}</div>`;
+            out.scrollTop = out.scrollHeight;
+        }
+
+        async function addBot() {
+            const name = document.getElementById('botName').value || "Bot_" + Math.floor(Math.random()*1000);
+            const botId = "bot_" + Date.now();
+            const res = await fetch(`/join-room/${currentRoomCode}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: botId, name: name, avatar: "https://robohash.org/" + botId, isReady: true})
+            });
+            if (res.ok) logConsole(`Đã thêm Bot: ${name}`);
+            else logConsole("Lỗi: Phải vào phòng trước mới thêm được Bot!");
+        }
+
+        function executeDevCommand() {
+            const input = document.getElementById('devConsole');
+            const cmd = input.value.trim();
+            if (!cmd.startsWith('/')) return;
+
+            const parts = cmd.split(' ');
+
+            // XỬ LÝ LỆNH /access NGAY TẠI CLIENT
+            if (parts[0] === '/access') {
+                const index = parseInt(parts[1]) - 1;
+                fetch(`/room/${currentRoomCode}/players`).then(r => r.json()).then(players => {
+                    const target = players[index];
+                    if (target) {
+                        myId = target.id;
+                        myName = target.name;
+                        myAvatar = target.avatar;
+                        // Kết nối lại WebSocket với danh tính mới
+                        connectWebSocket();
+                        updateProfileUI();
+                        logConsole(`Đã "nhập hồn" vào: ${target.name} (Vị trí ${parts[1]})`);
+                        // Quay lại trang Dashboard hoặc Lobby tùy trạng thái
+                        navigateTo(currentRoomCode ? 'page-lobby' : 'page-dashboard');
+                    } else {
+                        logConsole("Lỗi: Không tìm thấy người chơi ở vị trí này!");
+                    }
+                });
+            } else {
+                devCommand(cmd);
+            }
+            input.value = '';
+        }
+
+        async function devCommand(cmd) {
+            logConsole(`Gửi lệnh: ${cmd}`);
+            if (socket?.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({type: "DEV_COMMAND", data: cmd}));
+            } else {
+                logConsole("Lỗi: Chưa kết nối WebSocket!");
+            }
         }
 
         function handleCredentialResponse(response) {
@@ -457,6 +567,8 @@
                 document.getElementById('night-overlay').style.display = 'flex';
                 if (window.navigator.vibrate) window.navigator.vibrate(500);
                 announce("Trời tối rồi, mọi người vui lòng nhắm mắt lại. Sói hãy thức giấc.");
+            } else if (phase === "TWINS") {
+                announce("Hai chị em, nếu một người đã chết, người còn lại muốn báo thù ai?");
             } else if (phase === "TRIAL_DEFENSE") {
                 startCountdown(duration);
                 announce("Người chơi đã bị đưa lên giàn giáo. Bạn có " + duration + " giây để trăn trối.");

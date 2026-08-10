@@ -2,3 +2,23 @@ cupid: 15+
 thổi sáo: 20+
 sói ngu: 17+
 già làng: 18+
+
+
+
+#tiến độ thiết kế các char (chưa frontend)
+•
+Ăn Trộm (THIEF): Chưa có logic chọn 1 trong 2 lá bài dư lúc đầu game.
+•
+3 Anh Em & 2 Chị Em: Chưa có cơ chế hiển thị danh sách anh em/chị em cho nhau thấy ban đêm.
+•
+Hồ Ly (CELESTIAL_FOX): Chưa viết hàm soi 1 người + 2 hàng xóm (và logic mất chức năng nếu soi nhầm). ✔️
+•
+Phù Thủy (WITCH): Chưa có message xử lý việc dùng bình cứu (heal += 1) và bình độc (heal -= 1). ✔️
+•
+Thổi Sáo (PIPER): Chưa có logic "thôi miên" và điều kiện thắng riêng khi cả làng bị thôi miên. ✔️
+•
+Già Làng (ELDER): Chưa viết hàm "Vô hiệu hóa chức năng phe Dân" khi Già Làng chết. ✔️
+•
+Thợ Săn (HUNTER): Chưa xử lý logic bắn súng lúc chết hoặc bắn chủ động ban đêm. ✔️
+•
+Nguyệt Nữ (MOON_MAIDEN): Chưa có hàm "khóa" hành động của người khác. ✔️

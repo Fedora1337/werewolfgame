@@ -17,25 +17,20 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 @Serializable
 data class Player(
-    val id: String, 
-    val name: String, 
-    val avatar: String,
-    var isReady: Boolean = false,
-    var role: Role? = null,
-    var trulyTeam: String = "Dân",
-    var team: String = "Dân",
-    var heal: Int = 1,
-    var shield: Int = 0,
-    var linked: Int = 0,
-    var isDead: Boolean = false,
-    var vote: Int = 0,
-    var saveVote: Int = 0,
-    var killVote: Int = 0,
-    var werewolfMark: Int = 0,
+    val id: String, val name: String, val avatar: String,
+    var isReady: Boolean = false, var role: Role? = null,
+    var trulyTeam: String = "Dân", var team: String = "Dân",
+    var heal: Int = 1, var shield: Int = 0, var linked: Int = 0,
+    var isDead: Boolean = false, var vote: Int = 0,
+    var saveVote: Int = 0, var killVote: Int = 0,
+    var werewolfMark: Int = 0, var moonCurse: Int = 0,
+    var count: String = "", var foxPower: Int = 1,
+    var hunterBullets: Int = 0, var canHunterPassive: Boolean = false,
+    var isBloodlust: Boolean = false,
     val killersVotedForMe: MutableList<String> = mutableListOf()
 )
 
@@ -44,23 +39,19 @@ data class GameAssignment(val playerName: String, val role: String, val descript
 
 @Serializable
 data class Room(
-    val code: String,
-    val hostId: String,
-    val players: MutableList<Player> = mutableListOf(),
+    val code: String, val hostId: String, val players: MutableList<Player> = mutableListOf(),
     val assignments: MutableMap<String, GameAssignment> = mutableMapOf(),
     val readyPlayers: MutableSet<String> = mutableSetOf(),
-    var phase: String = "LOBBY",
-    var dayCount: Int = 0,
+    var phase: String = "LOBBY", var dayCount: Int = 0,
     val derpWolfRevengeList: MutableList<String> = mutableListOf(),
-    var trialTargetId: String? = null,
-    var currentNightActionIndex: Int = 0,
+    var trialTargetId: String? = null, var currentNightActionIndex: Int = 0,
     var nightActionList: MutableList<String> = mutableListOf(),
-    var curserUsedAbility: Boolean = false,
-    var isCurseActiveThisNight: Boolean = false,
-    var winner: String? = null,
-    var russianStatus: String? = null,
-    var wolfRatio: Double = 0.25, // Lưu lại tỷ lệ để tính toán
-    var prophetUses: Int = 0      // Số lượt soi còn lại của Sói Tiên Tri
+    var curserUsedAbility: Boolean = false, var isCurseActiveThisNight: Boolean = false,
+    var winner: String? = null, var russianStatus: String? = null,
+    var wolfRatio: Double = 0.25, var prophetUses: Int = 0,
+    var nightJob: Job? = null, val charmedPlayerIds: MutableSet<String> = mutableSetOf(),
+    var witchSaveUsed: Boolean = false, var witchKillUsed: Boolean = false,
+    val tempDeadIds: MutableSet<String> = mutableSetOf(), var elderIsDead: Boolean = false
 )
 
 @Serializable
@@ -70,83 +61,69 @@ val rooms = ConcurrentHashMap<String, Room>()
 val playerSessions = ConcurrentHashMap<String, DefaultWebSocketServerSession>()
 
 enum class RoleType { WEREWOLF, VILLAGER, SPECIAL }
-
-enum class Role(val type: RoleType, val description: String) {
-    THIEF(RoleType.SPECIAL, "Ăn Trộm - Đêm đầu tiên được chọn 1 trong 2 lá bài dư."),
-    THREE_BROTHERS(RoleType.SPECIAL, "3 Anh Em - Thức dậy cùng nhau để nhận mặt."),
-    TWINS(RoleType.SPECIAL, "2 Chị Em - Thức dậy cùng nhau để nhận mặt."),
-    CUPID(RoleType.SPECIAL, "Thần Tình Yêu - Ghép đôi 2 người."),
-    GUARDIAN(RoleType.SPECIAL, "Bảo Vệ - Bảo vệ 1 người khỏi Sói mỗi đêm."),
-    WEREWOLF(RoleType.WEREWOLF, "Ma Sói - Ăn thịt dân làng mỗi đêm."),
-    CURSER_WEREWOLF(RoleType.WEREWOLF, "Sói Nguyền - Biến nạn nhân bị sói cắn thành sói (1 lần)."),
-    PROPHET_WEREWOLF(RoleType.WEREWOLF, "Sói Tiên Tri - Soi chức năng 1 người cho cả làng biết."),
-    SEER(RoleType.SPECIAL, "Tiên Tri - Mỗi đêm soi phe 1 người (Dân/Sói)."),
-    CELESTIAL_FOX(RoleType.SPECIAL, "Hồ Ly - Soi phe 1 người + 2 hàng xóm."),
-    WITCH(RoleType.SPECIAL, "Phù Thủy - Có bình thuốc độc và thuốc cứu."),
-    PIPER(RoleType.SPECIAL, "Thổi Sáo - Thôi miên 2 người mỗi đêm."),
-    ELDER(RoleType.SPECIAL, "Già Làng - 1 mạng trước Sói, khi chết dân làng mất năng lực."),
-    RUSSIAN(RoleType.SPECIAL, "Người Nga - Nếu có sói ngồi cạnh, sáng ra sẽ nổi điên nốc Vodka."),
-    VILLAGER(RoleType.VILLAGER, "Dân Làng - Không có chức năng đặc biệt."),
-    LYCAN(RoleType.SPECIAL, "Bán Sói - Ban đầu là dân, nếu bị sói cắn sẽ hóa sói."),
-    DERP_WOLF(RoleType.WEREWOLF, "Sói Ngu - Không tham gia tiệc sói, có quyền báo thù nếu bị treo cổ."),
-    HUNTER(RoleType.SPECIAL, "Thợ Săn - Kéo theo 1 người khi chết hoặc bắn vào ban đêm."),
-    MOON_MAIDEN(RoleType.SPECIAL, "Nguyệt Nữ - Khóa chức năng 1 người mỗi đêm.")
+enum class Role(val type: RoleType) {
+    THIEF(RoleType.SPECIAL), THREE_BROTHERS(RoleType.SPECIAL), TWINS(RoleType.SPECIAL), CUPID(RoleType.SPECIAL),
+    MOON_MAIDEN(RoleType.SPECIAL), GUARDIAN(RoleType.SPECIAL), WEREWOLF(RoleType.WEREWOLF), CURSER_WEREWOLF(RoleType.WEREWOLF),
+    PROPHET_WEREWOLF(RoleType.WEREWOLF), SEER(RoleType.SPECIAL), CELESTIAL_FOX(RoleType.SPECIAL), WITCH(RoleType.SPECIAL),
+    PIPER(RoleType.SPECIAL), ELDER(RoleType.SPECIAL), VILLAGER(RoleType.VILLAGER), LYCAN(RoleType.SPECIAL),
+    DERP_WOLF(RoleType.WEREWOLF), HUNTER(RoleType.SPECIAL), RUSSIAN(RoleType.SPECIAL)
 }
 
 fun calculateProphetUses(count: Int, ratio: Double): Int {
-    return if (ratio >= 0.33) {
-        when {
-            count >= 26 -> 5
-            count >= 23 -> 4
-            count >= 20 -> 3
-            count >= 17 -> 2
-            count >= 15 -> 1
-            else -> 0
-        }
+    if (ratio >= 0.33) {
+        return when { count >= 26 -> 5; count >= 23 -> 4; count >= 20 -> 3; count >= 17 -> 2; count >= 15 -> 1; else -> 0 }
     } else {
-        when {
-            count >= 23 -> 5
-            count >= 20 -> 4
-            count >= 17 -> 3
-            count >= 14 -> 2
-            count >= 12 -> 1
-            else -> 0
-        }
+        return when { count >= 23 -> 5; count >= 20 -> 4; count >= 17 -> 3; count >= 14 -> 2; count >= 12 -> 1; else -> 0 }
+    }
+}
+
+fun getNightActionDuration(room: Room, roleName: String): Int {
+    val count = room.players.size; val isNight1 = room.dayCount == 0; val buffer = 3
+    if (roleName == "WEREWOLF" || roleName == "CURSER_WEREWOLF" || roleName == "PROPHET_WEREWOLF") {
+        val b = if (room.wolfRatio >= 0.33) { when { count >= 46 -> 75; count >= 31 -> 60; count >= 21 -> 50; count >= 16 -> 40; count >= 12 -> 30; else -> 25 } }
+        else { when { count >= 46 -> 60; count >= 31 -> 50; count >= 21 -> 40; count >= 16 -> 30; count >= 12 -> 25; else -> 20 } }
+        return b + buffer
+    } else {
+        val b = if (isNight1) { when { count >= 31 -> 40; count >= 16 -> 30; else -> 20 } }
+        else { when { count >= 31 -> 30; count >= 16 -> 20; else -> 15 } }
+        return b + buffer
+    }
+}
+
+fun getPhaseDuration(room: Room): Int {
+    val count = room.players.size; val isDay1 = room.dayCount <= 1; val buffer = 5
+    return when (room.phase) {
+        "DAY" -> (if (count >= 46) (if (isDay1) 900 else 420) else if (count >= 31) (if (isDay1) 600 else 300) else if (count >= 21) (if (isDay1) 420 else 240) else if (count >= 16) (if (isDay1) 300 else 180) else if (count >= 12) (if (isDay1) 210 else 150) else (if (isDay1) 120 else 90)) + buffer
+        "TRIAL_DEFENSE" -> (if (count >= 21) 60 else if (count >= 12) 45 else 30) + buffer
+        "TRIAL_VOTING" -> (if (count >= 46) 45 else if (count >= 31) 30 else if (count >= 21) 20 else if (count >= 12) 15 else 10) + buffer
+        "PREPARING" -> 300; "HUNTER_REVENGE" -> 25; else -> 0
     }
 }
 
 class Moderator {
     fun distributeRoles(players: List<Player>, wolfRatio: Double): Map<String, GameAssignment> {
-        val playerCount = players.size
-        val roleDeck = mutableListOf<Role>()
-        val werewolfCount = (playerCount * wolfRatio).toInt()
-        val villagerCount = werewolfCount
-        val specialCount = playerCount - werewolfCount - villagerCount
-
+        val playerCount = players.size; val roleDeck = mutableListOf<Role>()
+        val werewolfCount = (playerCount * wolfRatio).toInt(); val villagerCount = werewolfCount
+        var specialSlots = playerCount - werewolfCount - villagerCount
         repeat(werewolfCount) { roleDeck.add(Role.WEREWOLF) }
         repeat(villagerCount) { roleDeck.add(Role.VILLAGER) }
-
-        val availableSpecialRoles = Role.values().filter { it.type == RoleType.SPECIAL }.shuffled().toMutableList()
-        for (i in 0 until specialCount) {
-            if (availableSpecialRoles.isNotEmpty()) roleDeck.add(availableSpecialRoles.removeAt(0))
-            else roleDeck.add(Role.VILLAGER)
+        val available = Role.entries.filter { it.type == RoleType.SPECIAL }.shuffled().toMutableList()
+        while (specialSlots > 0 && available.isNotEmpty()) {
+            val r = available.removeAt(0)
+            if (r == Role.THREE_BROTHERS) { if (specialSlots >= 3) { repeat(3) { roleDeck.add(r) }; specialSlots -= 3 } }
+            else if (r == Role.TWINS) { if (specialSlots >= 2) { repeat(2) { roleDeck.add(r) }; specialSlots -= 2 } }
+            else { roleDeck.add(r); specialSlots -= 1 }
         }
+        while (specialSlots > 0) { roleDeck.add(Role.VILLAGER); specialSlots-- }
         roleDeck.shuffle()
-
-        return players.zip(roleDeck).associate { (player, role) ->
-            player.role = role
-            player.shield = if (role == Role.ELDER) 1 else 0
-            if (role.type == RoleType.WEREWOLF) {
-                player.trulyTeam = "Sói"
-                player.team = "Sói"
-            } else if (role == Role.LYCAN) {
-                player.trulyTeam = "Sói"
-                player.team = "Dân"
-            } else {
-                player.trulyTeam = "Dân"
-                player.team = "Dân"
-            }
-            player.id to GameAssignment(player.name, role.name, role.description)
+        return players.zip(roleDeck).associate { (p, r) ->
+            p.role = r; p.shield = if (r == Role.ELDER) 1 else 0
+            if (r == Role.HUNTER) { p.hunterBullets = if (wolfRatio >= 0.33) 1 else 0; p.canHunterPassive = true }
+            if (r.type == RoleType.WEREWOLF) { p.trulyTeam = "Sói"; p.team = "Sói" }
+            else if (r == Role.LYCAN) { p.trulyTeam = "Sói"; p.team = "Dân" }
+            else if (r == Role.PIPER) { p.trulyTeam = "piper"; p.team = "Dân" }
+            else { p.trulyTeam = "Dân"; p.team = "Dân" }
+            p.id to GameAssignment(p.name, r.name, r.name)
         }
     }
 }
@@ -155,17 +132,10 @@ fun main() {
     val port = System.getenv("PORT")?.toInt() ?: 8080
     embeddedServer(Netty, port = port, host = "0.0.0.0") {
         install(ContentNegotiation) { json() }
-        install(WebSockets) {
-            pingPeriod = Duration.ofSeconds(15)
-            timeout = Duration.ofSeconds(15)
-            contentConverter = KotlinxWebsocketSerializationConverter(Json)
-        }
-
+        install(WebSockets) { pingPeriod = Duration.ofSeconds(15); timeout = Duration.ofSeconds(15); contentConverter = KotlinxWebsocketSerializationConverter(Json) }
         val moderator = Moderator()
-
         routing {
             staticResources("/", "static")
-
             webSocket("/ws/{playerId}") {
                 val playerId = call.parameters["playerId"] ?: return@webSocket
                 playerSessions[playerId] = this
@@ -174,393 +144,151 @@ fun main() {
                         if (frame is Frame.Text) {
                             val msg = Json.decodeFromString<SocketMessage>(frame.readText())
                             val room = rooms.values.find { r -> r.players.any { it.id == playerId } } ?: continue
-                            
                             when (msg.type) {
-                                "I_UNDERSTAND" -> {
-                                    if (room.phase == "PREPARING") {
-                                        room.readyPlayers.add(playerId)
-                                        if (room.readyPlayers.size == room.players.size) {
-                                            room.phase = "NIGHT"
-                                            room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "NIGHT")) } }
-                                        }
-                                    }
-                                }
+                                "I_UNDERSTAND" -> if (room.phase == "PREPARING") { room.readyPlayers.add(playerId); if (room.readyPlayers.size == room.players.size) triggerNextPhase(room) }
                                 "UPDATE_PROFILE" -> {
-                                    val data = Json.decodeFromString<Map<String, String>>(msg.data)
-                                    val p = room.players.find { it.id == playerId }
-                                    if (p != null) {
-                                        room.players[room.players.indexOf(p)] = p.copy(name = data["name"] ?: p.name, avatar = data["avatar"] ?: p.avatar)
-                                        broadcastPlayerList(room)
-                                    }
+                                    val data = Json.decodeFromString<Map<String, String>>(msg.data); val p = room.players.find { it.id == playerId }
+                                    if (p != null) { room.players[room.players.indexOf(p)] = p.copy(name = data["name"] ?: p.name, avatar = data["avatar"] ?: p.avatar); broadcastPlayerList(room) }
                                 }
-                                "TOGGLE_READY" -> {
-                                    if (room.phase == "LOBBY" && room.hostId != playerId) {
-                                        val p = room.players.find { it.id == playerId }
-                                        if (p != null) {
-                                            p.isReady = !p.isReady
-                                            broadcastPlayerList(room)
-                                        }
-                                    }
-                                }
+                                "TOGGLE_READY" -> if (room.phase == "LOBBY" && room.hostId != playerId) { val p = room.players.find { it.id == playerId }; if (p != null) { p.isReady = !p.isReady; broadcastPlayerList(room) } }
                                 "WEREWOLF_VOTE" -> {
-                                    val targetId = msg.data
-                                    val me = room.players.find { it.id == playerId }
-                                    if (me != null && me.role != Role.DERP_WOLF && (me.trulyTeam == "Sói" || me.trulyTeam == "cupid") && me.team == "Sói") {
-                                        val target = room.players.find { it.id == targetId }
-                                        if (target != null && !target.isDead && !((target.trulyTeam == "Sói" || target.trulyTeam == "cupid") && target.team == "Sói")) {
-                                            target.werewolfMark += 1
-                                            broadcastPlayerList(room)
-                                        }
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p != null && p.moonCurse != 1 && p.role != Role.DERP_WOLF && (p.trulyTeam == "Sói" || p.trulyTeam == "cupid") && p.team == "Sói") {
+                                        val d = room.players.find { it.id == msg.data }
+                                        if (d != null && !d.isDead && !((d.trulyTeam == "Sói" || d.trulyTeam == "cupid") && d.team == "Sói")) { d.werewolfMark += 1; broadcastPlayerList(room) }
                                     }
                                 }
-                                "CUPID_SELECT" -> { // Thần tình yêu ghép đôi
-                                    val targetIds = Json.decodeFromString<List<String>>(msg.data)
-                                    val me = room.players.find { it.id == playerId }
-                                    if (me?.role == Role.CUPID && targetIds.size == 2) {
-                                        me.trulyTeam = "cupid"
-                                        room.players.forEach { p ->
-                                            if (targetIds.contains(p.id)) {
-                                                p.linked = 2
-                                                p.trulyTeam = "cupid"
-                                            }
-                                        }
-                                        broadcastPlayerList(room)
-                                    }
+                                "CUPID_SELECT" -> {
+                                    val ids = Json.decodeFromString<List<String>>(msg.data); val p = room.players.find { it.id == playerId }
+                                    if (p?.role == Role.CUPID && p.moonCurse != 1 && ids.size == 2) { room.players.forEach { if (ids.contains(it.id)) { it.linked = 2; it.trulyTeam = "cupid" } }; p.trulyTeam = "cupid"; broadcastPlayerList(room) }
                                 }
-                                "DERP_REVENGE_KILL" -> {
-                                    val targetId = msg.data
-                                    if (room.derpWolfRevengeList.contains(targetId)) {
-                                        room.players.find { it.id == targetId }?.heal = 0
-                                        room.derpWolfRevengeList.clear()
-                                        broadcastPlayerList(room)
-                                    }
+                                "CURSER_ACTIVATE" -> { val p = room.players.find { it.id == playerId }; if (p?.role == Role.CURSER_WEREWOLF && p.moonCurse != 1 && !room.curserUsedAbility) { room.isCurseActiveThisNight = true; room.curserUsedAbility = true } }
+                                "SEER_CHECK" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p?.role == Role.SEER && p.moonCurse != 1) { val d = room.players.find { it.id == msg.data }; if (d != null) { val res = if (room.elderIsDead) "Dân" else d.team; launch { playerSessions[playerId]?.sendSerialized(SocketMessage("SEER_RESULT", res)) } } }
                                 }
-                                "CURSER_ACTIVATE" -> { // Sói nguyền kích hoạt kỹ năng
-                                    val me = room.players.find { it.id == playerId }
-                                    if (me?.role == Role.CURSER_WEREWOLF && !room.curserUsedAbility) {
-                                        room.isCurseActiveThisNight = true
-                                        room.curserUsedAbility = true
-                                        launch { playerSessions[playerId]?.sendSerialized(SocketMessage("ACTION_CONFIRMED", "Đã kích hoạt nguyền rủa!")) }
-                                    }
+                                "PROPHET_CHECK" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p?.role == Role.PROPHET_WEREWOLF && p.moonCurse != 1 && room.prophetUses > 0) { val d = room.players.find { it.id == msg.data }; if (d != null && !d.isDead) { room.prophetUses -= 1; broadcastAnnouncement(room, "Sói Tiên Tri đã soi ra ${d.role?.name}!") } }
                                 }
-                                "CURSER_SKIP" -> { // Sói nguyền bỏ qua lượt dùng kỹ năng
-                                    val me = room.players.find { it.id == playerId }
-                                    if (me?.role == Role.CURSER_WEREWOLF) {
-                                        launch { playerSessions[playerId]?.sendSerialized(SocketMessage("ACTION_CONFIRMED", "Đã bỏ qua lượt nguyền rủa.")) }
-                                    }
+                                "PROPHET_SKIP" -> { if (room.players.find { it.id == playerId }?.role == Role.PROPHET_WEREWOLF) broadcastAnnouncement(room, "Sói Tiên Tri đã soi ra Dân Làng.") }
+                                "WITCH_SAVE" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p?.role == Role.WITCH && p.moonCurse != 1 && !room.witchSaveUsed && room.tempDeadIds.contains(msg.data)) { if (!room.elderIsDead) { val d = room.players.find { it.id == msg.data }; d?.heal = 1; d?.shield = 0; room.tempDeadIds.remove(msg.data) }; room.witchSaveUsed = true; broadcastPlayerList(room) }
                                 }
-                                "SEER_CHECK" -> { // Tiên tri soi phe
-                                    val targetId = msg.data
-                                    val me = room.players.find { it.id == playerId }
-                                    if (me?.role == Role.SEER) {
-                                        val target = room.players.find { it.id == targetId }
-                                        if (target != null) {
-                                            launch { playerSessions[playerId]?.sendSerialized(SocketMessage("SEER_RESULT", target.team)) }
-                                        }
-                                    }
+                                "WITCH_KILL" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p?.role == Role.WITCH && p.moonCurse != 1 && !room.witchKillUsed) { val d = room.players.find { it.id == msg.data }; if (d != null && !d.isDead) { d.heal = 0; room.tempDeadIds.add(msg.data); room.witchKillUsed = true; broadcastPlayerList(room) } }
                                 }
-                                "PROPHET_CHECK" -> { // Sói Tiên Tri soi thật (Tốn lượt)
-                                    val targetId = msg.data
-                                    val me = room.players.find { it.id == playerId }
-                                    if (me?.role == Role.PROPHET_WEREWOLF && room.prophetUses > 0) {
-                                        val target = room.players.find { it.id == targetId }
-                                        if (target != null && !target.isDead) {
-                                            room.prophetUses -= 1 // Trừ lượt soi
-                                            val roleName = target.role?.name ?: "Dân Làng"
-                                            broadcastAnnouncement(room, "Sói Tiên Tri đã soi ra $roleName!")
-                                        }
-                                    }
+                                "GUARDIAN_PROTECT" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p?.role == Role.GUARDIAN && p.moonCurse != 1 && !p.isDead) { val d = room.players.find { it.id == msg.data }; if (d != null && !d.isDead && d.name != p.count) { if (!room.elderIsDead) d.shield += 1; p.count = d.name; broadcastPlayerList(room) } }
                                 }
-                                "PROPHET_SKIP" -> { // Sói Tiên Tri diễn kịch (Giữ lượt)
-                                    val me = room.players.find { it.id == playerId }
-                                    if (me?.role == Role.PROPHET_WEREWOLF) {
-                                        // KHÔNG trừ room.prophetUses
-                                        broadcastAnnouncement(room, "Sói Tiên Tri đã soi ra Dân Làng.")
-                                    }
+                                "MOON_MAIDEN_SELECT" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p?.role == Role.MOON_MAIDEN && p.moonCurse != 1 && !p.isDead) { val d = room.players.find { it.id == msg.data }; if (d != null && !d.isDead && d.name != p.count) { if (!room.elderIsDead) d.moonCurse = 1; p.count = d.name; broadcastPlayerList(room) } }
                                 }
-                                "SKIP_DEFENSE" -> { // Người trên giàn chấp nhận cái kết
-                                    if (room.phase == "TRIAL_DEFENSE" && room.trialTargetId == playerId) {
-                                        room.phase = "TRIAL_VOTING"
-                                        room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "TRIAL_VOTING")) } }
-                                    }
+                                "PIPER_CHARM" -> {
+                                    val p = room.players.find { it.id == playerId }; val ids = Json.decodeFromString<List<String>>(msg.data)
+                                    if (p?.role == Role.PIPER && p.moonCurse != 1 && ids.size == 2) { ids.forEach { room.charmedPlayerIds.add(it) }; room.charmedPlayerIds.add(playerId); broadcastPlayerList(room) }
                                 }
+                                "HUNTER_KILL" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p?.role == Role.HUNTER && p.moonCurse != 1 && p.hunterBullets > 0 && !p.isDead) { val d = room.players.find { it.id == msg.data }; if (d != null && !d.isDead) { p.hunterBullets -= 1; d.heal -= 1; if (d.trulyTeam == "Dân" || (d.trulyTeam == "cupid" && d.team == "Dân") || d.trulyTeam == "piper") p.heal = 0; broadcastPlayerList(room) } }
+                                }
+                                "HUNTER_REVENGE_SELECT" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p?.role == Role.HUNTER && p.canHunterPassive && p.heal <= 0) { val d = room.players.find { it.id == msg.data }; if (d != null && !d.isDead) { d.heal = 0; p.canHunterPassive = false; broadcastPlayerList(room); triggerNextPhase(room) } }
+                                }
+                                "DEV_COMMAND" -> handleDevCommand(room, msg.data, playerId)
+                                "SKIP_DEFENSE" -> if (room.phase == "TRIAL_DEFENSE" && room.trialTargetId == playerId) triggerNextPhase(room)
+                                "DERP_REVENGE_KILL" -> if (room.derpWolfRevengeList.contains(msg.data)) { room.players.find { it.id == msg.data }?.heal = 0; room.derpWolfRevengeList.clear(); broadcastPlayerList(room) }
                             }
                         }
                     }
                 } finally { playerSessions.remove(playerId) }
             }
-
-            post("/create-room") {
-                val host = call.receive<Player>()
-                val code = (100000..999999).random().toString()
-                rooms[code] = Room(code, host.id, mutableListOf(host.copy(isReady = true)))
-                call.respond(rooms[code]!!)
-            }
-
-            post("/join-room/{code}") {
-                val code = call.parameters["code"] ?: ""
-                val player = call.receive<Player>()
-                val room = rooms[code]
-                if (room != null) {
-                    if (room.players.none { it.id == player.id }) {
-                        room.players.add(player.copy(isReady = false))
-                        broadcastPlayerList(room)
-                    }
-                    call.respond(room)
-                } else call.respond(io.ktor.http.HttpStatusCode.NotFound)
-            }
-
-            post("/leave-room/{code}") {
-                val code = call.parameters["code"] ?: ""
-                val id = call.receive<Map<String, String>>()["id"] ?: ""
-                val room = rooms[code]
-                if (room != null) {
-                    room.players.removeIf { it.id == id }
-                    if (room.players.isEmpty()) rooms.remove(code) else broadcastPlayerList(room)
-                    call.respond(mapOf("ok" to true))
-                } else call.respond(io.ktor.http.HttpStatusCode.NotFound)
-            }
-
+            post("/create-room") { val host = call.receive<Player>(); val code = (100000..999999).random().toString(); rooms[code] = Room(code, host.id, mutableListOf(host.copy(isReady = true))); call.respond(rooms[code]!!) }
+            post("/join-room/{code}") { val code = call.parameters["code"] ?: ""; val player = call.receive<Player>(); val room = rooms[code]; if (room != null) { if (room.players.none { it.id == player.id }) { room.players.add(player.copy(isReady = false)); broadcastPlayerList(room) }; call.respond(room) } else call.respond(io.ktor.http.HttpStatusCode.NotFound) }
+            post("/leave-room/{code}") { val code = call.parameters["code"] ?: ""; val id = call.receive<Map<String, String>>()["id"] ?: ""; val room = rooms[code]; if (room != null) { room.players.removeIf { it.id == id }; if (room.players.isEmpty()) rooms.remove(code) else broadcastPlayerList(room); call.respond(mapOf("ok" to true)) } else call.respond(io.ktor.http.HttpStatusCode.NotFound) }
             get("/room/{code}/distribute") {
-                val code = call.parameters["code"] ?: ""
-                val ratioParam = (call.parameters["ratio"] ?: "0.25").toDouble()
-                val room = rooms[code] ?: return@get call.respond(io.ktor.http.HttpStatusCode.NotFound)
-                if (room.players.size < 8 || room.players.any { !it.isReady }) return@get call.respond(io.ktor.http.HttpStatusCode.BadRequest, "Chưa đủ người hoặc chưa sẵn sàng!")
-                
-                room.wolfRatio = ratioParam
-                room.prophetUses = calculateProphetUses(room.players.size, ratioParam)
-
-                val assignments = moderator.distributeRoles(room.players, ratioParam)
-                room.assignments.putAll(assignments)
-                room.readyPlayers.clear()
-                room.phase = "PREPARING"
-                assignments.forEach { (pid, assign) -> launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) } }
-                room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING")) } }
+                val code = call.parameters["code"] ?: ""; val ratio = (call.parameters["ratio"] ?: "0.25").toDouble(); val room = rooms[code] ?: return@get call.respond(io.ktor.http.HttpStatusCode.NotFound)
+                if (room.players.size < 8 || room.players.any { !it.isReady }) return@get call.respond(io.ktor.http.HttpStatusCode.BadRequest, "Lỗi!")
+                room.wolfRatio = ratio; room.prophetUses = calculateProphetUses(room.players.size, ratio)
+                room.assignments.putAll(moderator.distributeRoles(room.players, ratio)); room.readyPlayers.clear(); room.phase = "PREPARING"
+                room.assignments.forEach { (pid, assign) -> GlobalScope.launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) } }
+                room.players.forEach { p -> GlobalScope.launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|300")) } }
                 call.respond(mapOf("ok" to true))
             }
-
-            post("/room/{code}/next-phase") {
-                val code = call.parameters["code"] ?: ""
-                val room = rooms[code] ?: return@post call.respond(io.ktor.http.HttpStatusCode.NotFound)
-                
-                when (room.phase) {
-                    "PREPARING" -> {
-                        room.phase = "NIGHT"
-                        room.nightActionList = getNightOrder(room)
-                        room.currentNightActionIndex = 0
-                    }
-                    "NIGHT" -> {
-                        // Nếu còn hành động trong đêm, chuyển sang hành động tiếp theo
-                        if (room.currentNightActionIndex < room.nightActionList.size - 1) {
-                            room.currentNightActionIndex++
-                        } else {
-                            processGameLogic(room)
-                            room.phase = "DAY"
-                            room.dayCount += 1
-                        }
-                    }
-                    "DAY" -> {
-                        val alivePlayers = room.players.filter { !it.isDead }
-                        val maxVotes = if (alivePlayers.isNotEmpty()) alivePlayers.maxOf { it.vote } else 0
-                        val topVoted = alivePlayers.filter { it.vote == maxVotes && maxVotes > 0 }
-                        
-                        if (topVoted.size == 1) {
-                            room.phase = "TRIAL_DEFENSE"
-                            room.trialTargetId = topVoted[0].id
-                        } else {
-                            processGameLogic(room)
-                            room.phase = "NIGHT"
-                        }
-                    }
-                    "TRIAL_DEFENSE" -> room.phase = "TRIAL_VOTING"
-                    "TRIAL_VOTING" -> {
-                        processGameLogic(room)
-                        room.phase = "NIGHT"
-                        room.trialTargetId = null
-                    }
-                    else -> room.phase = "NIGHT"
-                }
-
-                val duration = getPhaseDuration(room)
-                room.players.forEach { p -> 
-                    launch { 
-                        playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "${room.phase}|$duration|${room.russianStatus ?: ""}"))
-                    } 
-                }
-                broadcastPlayerList(room)
-                call.respond(mapOf("phase" to room.phase, "duration" to duration))
-            }
-
+            post("/room/{code}/next-phase") { val room = rooms[call.parameters["code"]] ?: return@post call.respond(io.ktor.http.HttpStatusCode.NotFound); triggerNextPhase(room); call.respond(mapOf("ok" to true)) }
             get("/room/{code}/players") { call.respond(rooms[call.parameters["code"]]?.players ?: emptyList<Player>()) }
         }
     }.start(wait = true)
 }
 
-fun getPhaseDuration(room: Room): Int {
-    val count = room.players.size
-    val isDay1 = room.dayCount <= 1
-    val lagBuffer = 5 // +5s phòng mạng ngáo
-
-    return when (room.phase) {
-        "DAY" -> {
-            val baseTime = when {
-                count >= 46 -> if (isDay1) 900 else 420
-                count >= 31 -> if (isDay1) 600 else 300
-                count >= 21 -> if (isDay1) 420 else 240
-                count >= 16 -> if (isDay1) 300 else 180
-                count >= 12 -> if (isDay1) 210 else 150
-                else -> if (isDay1) 120 else 90
+fun triggerNextPhase(room: Room) {
+    room.nightJob?.cancel()
+    GlobalScope.launch {
+        when (room.phase) {
+            "PREPARING" -> { room.phase = "NIGHT"; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0 }
+            "NIGHT" -> { if (room.currentNightActionIndex < room.nightActionList.size - 1) room.currentNightActionIndex++ else { processGameLogic(room); room.phase = "DAY"; room.dayCount++ } }
+            "DAY" -> {
+                val alive = room.players.filter { !it.isDead }; val max = if (alive.isNotEmpty()) alive.maxOf { it.vote } else 0
+                val top = alive.filter { it.vote == max && max > 0 }
+                if (top.size == 1) { room.phase = "TRIAL_DEFENSE"; room.trialTargetId = top[0].id } else { processGameLogic(room); room.phase = "NIGHT"; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0 }
             }
-            baseTime + lagBuffer
-        }
-        "TRIAL_DEFENSE" -> {
-            val baseTime = when {
-                count >= 21 -> 60
-                count >= 12 -> 45
-                else -> 30
+            "TRIAL_DEFENSE" -> room.phase = "TRIAL_VOTING"
+            "TRIAL_VOTING" -> { processGameLogic(room); if (room.phase != "HUNTER_REVENGE") { room.phase = "NIGHT"; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null } }
+            "HUNTER_REVENGE" -> { 
+                val alive = room.players.filter { !it.isDead }; if (alive.isNotEmpty()) { val target = alive.random(); target.heal = 0 }
+                processGameLogic(room); room.phase = "NIGHT"; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null
             }
-            baseTime + lagBuffer
+            else -> room.phase = "NIGHT"
         }
-        "TRIAL_VOTING" -> {
-            val baseTime = when {
-                count >= 46 -> 45
-                count >= 31 -> 30
-                count >= 21 -> 20
-                count >= 12 -> 15
-                else -> 10
-            }
-            baseTime + lagBuffer
-        }
-        "PREPARING" -> 300 // Mặc định cho giai đoạn chuẩn bị
-        else -> 0
+        val duration = if (room.phase == "NIGHT") getNightActionDuration(room, room.nightActionList[room.currentNightActionIndex]) else getPhaseDuration(room)
+        if (room.phase != "LOBBY") room.nightJob = launch { delay(duration * 1000L); triggerNextPhase(room) }
+        room.players.forEach { p -> launch { val cur = if (room.phase == "NIGHT") room.nightActionList[room.currentNightActionIndex] else room.phase; playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}")) } }
+        broadcastPlayerList(room)
     }
 }
 
 fun getNightOrder(room: Room): MutableList<String> {
-    val fullOrder = listOf(
-        "THIEF", "THREE_BROTHERS", "TWINS", "CUPID", "GUARDIAN", 
-        "WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF", "SEER", 
-        "CELESTIAL_FOX", "WITCH", "PIPER", "ELDER"
-    )
-    
-    val rolesInRoom = room.players.mapNotNull { it.role?.name }.toSet()
-    val order = fullOrder.filter { rolesInRoom.contains(it) }.toMutableList()
-    
-    // Đêm 2 trở đi xóa Ăn trộm, 3 anh em, Cupid
-    if (room.dayCount > 0) {
-        order.remove("THIEF")
-        order.remove("THREE_BROTHERS")
-        order.remove("CUPID")
-    }
-    
+    val full = listOf("THIEF", "THREE_BROTHERS", "TWINS", "CUPID", "MOON_MAIDEN", "GUARDIAN", "WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF", "SEER", "CELESTIAL_FOX", "WITCH", "PIPER", "ELDER")
+    val roles = room.players.mapNotNull { it.role?.name }.toSet(); val order = full.filter { roles.contains(it) }.toMutableList()
+    if (room.dayCount > 0) { order.remove("THIEF"); order.remove("THREE_BROTHERS"); order.remove("CUPID") }
     return order
 }
 
 fun processGameLogic(room: Room) {
-    if (room.phase == "TRIAL_VOTING") {
-        // 1. Xử lý kết quả treo cổ
-        val target = room.players.find { it.id == room.trialTargetId }
-        if (target != null && !target.isDead) {
-            if (target.killVote > target.saveVote) {
-                target.heal -= 1
-                if (target.role == Role.DERP_WOLF) {
-                    room.derpWolfRevengeList.clear()
-                    room.derpWolfRevengeList.addAll(target.killersVotedForMe)
-                }
-            }
-        }
-    }
-
-    if (room.phase == "DAY" || room.phase == "TRIAL_VOTING") {
-        room.players.forEach {
-            it.vote = 0
-            it.saveVote = 0
-            it.killVote = 0
-            it.killersVotedForMe.clear()
-        }
-    }
-
+    room.players.forEach { if (it.heal <= 0 && !it.isDead) room.tempDeadIds.add(it.id) else if (it.heal >= 1) room.tempDeadIds.remove(it.id) }
+    if (!room.elderIsDead) { val elder = room.players.find { it.role == Role.ELDER }; if (elder != null && elder.heal <= 0) room.elderIsDead = true }
+    if (room.phase == "TRIAL_VOTING") { val t = room.players.find { it.id == room.trialTargetId }; if (t != null && !t.isDead && t.killVote > t.saveVote) { t.heal -= 1; if (t.role == Role.DERP_WOLF) { room.derpWolfRevengeList.clear(); room.derpWolfRevengeList.addAll(t.killersVotedForMe) } } }
+    if (room.phase == "DAY" || room.phase == "TRIAL_VOTING") room.players.forEach { it.vote = 0; it.saveVote = 0; it.killVote = 0; it.killersVotedForMe.clear() }
     if (room.phase == "NIGHT") {
-        val aliveTargets = room.players.filter { !it.isDead && !((it.trulyTeam == "Sói" || it.trulyTeam == "cupid") && it.team == "Sói") }
-        if (aliveTargets.isNotEmpty()) {
-            val maxMarks = aliveTargets.maxOf { it.werewolfMark }
-            if (maxMarks > 0) {
-                val topMarked = aliveTargets.filter { it.werewolfMark == maxMarks }
-                if (topMarked.size == 1) {
-                    val target = topMarked[0]
-                    target.shield -= 1
-                    
-                    if (room.isCurseActiveThisNight && target.role != Role.LYCAN && target.shield == -1) {
-                        target.trulyTeam = "Sói"
-                        target.team = "Sói"
-                        target.shield = 0 
-                    }
-                }
-            }
-        }
+        val targets = room.players.filter { !it.isDead && !((it.trulyTeam == "Sói" || it.trulyTeam == "cupid") && it.team == "Sói") }
+        if (targets.isNotEmpty()) { val max = targets.maxOf { it.werewolfMark }; if (max > 0) { val top = targets.filter { it.werewolfMark == max }; if (top.size == 1) { top[0].shield -= 1; if (room.isCurseActiveThisNight && top[0].role != Role.LYCAN && top[0].shield == -1) { top[0].trulyTeam = "Sói"; top[0].team = "Sói"; top[0].shield = 0 } } } }
         room.isCurseActiveThisNight = false
-
-        // Kiểm tra Người Nga (The Russian) sau tiệc sói
         val russian = room.players.find { it.role == Role.RUSSIAN && !it.isDead }
-        if (russian != null) {
-            val idx = room.players.indexOf(russian)
-            val size = room.players.size
-            val leftIdx = if (idx == 0) size - 1 else idx - 1
-            val rightIdx = if (idx == size - 1) 0 else idx + 1
-            
-            val neighbors = listOf(room.players[leftIdx], russian, room.players[rightIdx])
-            val hasWolfNeighbor = neighbors.any { it.team == "Sói" && !it.isDead }
-            
-            room.russianStatus = if (hasWolfNeighbor) "RUSSIAN_VODKA" else "RUSSIAN_CALM"
-        } else { room.russianStatus = null }
+        if (russian != null) { val idx = room.players.indexOf(russian); val s = room.players.size; val l = if (idx == 0) s - 1 else idx - 1; val ri = if (idx == s - 1) 0 else idx + 1; room.russianStatus = if (listOf(room.players[l], room.players[ri]).any { it.team == "Sói" && !it.isDead }) "RUSSIAN_VODKA" else "RUSSIAN_CALM" } else room.russianStatus = null
     }
-
-    room.players.forEach { p ->
-        if (p.role == Role.LYCAN && p.shield == -1) {
-            p.team = "Sói"
-            p.shield = 0 
-        }
-
-        if (p.role != Role.LYCAN && p.shield < 0) {
-            p.heal += p.shield
-            p.shield = 0
-        }
-
-        if (room.phase == "NIGHT") {
-            if (p.role != Role.ELDER && p.shield > 0) p.shield = 0
-            p.vote = 0
-            p.werewolfMark = 0
-            p.killersVotedForMe.clear()
-        }
+    room.players.forEach { p -> if (p.role == Role.LYCAN && p.shield == -1) { p.team = "Sói"; p.shield = 0 }; if (p.role != Role.LYCAN && p.shield < 0) { p.heal += p.shield; p.shield = 0 }; if (room.phase == "NIGHT") { if (p.role != Role.ELDER && p.shield > 0) p.shield = 0; p.vote = 0; p.werewolfMark = 0; p.moonCurse = 0; p.killersVotedForMe.clear() } }
+    room.charmedPlayerIds.removeIf { id -> room.players.any { it.id == id && it.isDead } }
+    val couple = room.players.filter { it.linked == 2 }
+    if (couple.isNotEmpty() && couple.any { it.heal <= 0 }) couple.forEach { it.heal = 0; it.linked = 1 }
+    room.players.forEach { if (it.heal <= 0) it.isDead = true }
+    room.players.filter { it.isDead }.forEach { it.shield = 0; it.vote = 0; it.saveVote = 0; it.killVote = 0; it.werewolfMark = 0; if (it.linked == -1) it.linked = 1 }
+    val aliveCount = room.players.count { !it.isDead }; val isCoupleAlive = room.players.count { it.linked == 2 && !it.isDead } == 2
+    if (aliveCount == 4 && isCoupleAlive) room.winner = "CUPID"
+    val charmed = room.charmedPlayerIds.size; if (charmed == aliveCount && aliveCount > 0) room.winner = "PIPER"
+    if (room.winner == null) {
+        val wolves = room.players.filter { !it.isDead && it.trulyTeam == "Sói" }
+        val others = room.players.filter { !it.isDead && it.trulyTeam != "Sói" }
+        if (wolves.size >= others.size) room.winner = "WEREWOLF_TEAM"
+        else if (wolves.none { it.role == Role.WEREWOLF || it.role == Role.CURSER_WEREWOLF || it.role == Role.PROPHET_WEREWOLF }) room.winner = "VILLAGER_TEAM"
     }
-
-    val dyingLinked = room.players.filter { it.linked == 2 && it.heal <= 0 }
-    if (dyingLinked.isNotEmpty()) {
-        room.players.filter { it.linked == 2 }.forEach { p ->
-            p.heal = 0
-            p.linked = 1 
-        }
-    }
-
-    room.players.forEach { p -> if (p.heal <= 0) p.isDead = true }
-
-    // 7. Reset các biến cho người đã chết để tránh lỗi logic về sau
-    room.players.filter { it.isDead }.forEach { p ->
-        p.shield = 0
-        p.vote = 0
-        p.saveVote = 0
-        p.killVote = 0
-        p.werewolfMark = 0
-        // Nếu là một phần của cặp đôi đã chết, gán linked = 1
-        if (p.linked == -1) p.linked = 1 
-    }
-
-    // 8. Kiểm tra thắng cuộc (Cupid)
-    val aliveCount = room.players.count { !it.isDead }
-    val coupleAlive = room.players.count { it.linked == 2 && !it.isDead } == 2
-    if (aliveCount == 4 && coupleAlive) {
-        room.winner = "CUPID"
-    }
+    if (room.phase == "NIGHT" || room.phase == "DAY" || room.phase == "TRIAL_VOTING") room.tempDeadIds.clear()
+    val deadHunter = room.players.find { it.role == Role.HUNTER && it.isDead && it.canHunterPassive }
+    if (deadHunter != null && room.winner == null) room.phase = "HUNTER_REVENGE"
 }
 
 suspend fun broadcastPlayerList(room: Room) {
@@ -569,7 +297,50 @@ suspend fun broadcastPlayerList(room: Room) {
 }
 
 suspend fun broadcastAnnouncement(room: Room, text: String) {
-    room.players.forEach { p ->
-        playerSessions[p.id]?.sendSerialized(SocketMessage("ANNOUNCEMENT", text))
+    room.players.forEach { p -> playerSessions[p.id]?.sendSerialized(SocketMessage("ANNOUNCEMENT", text)) }
+}
+
+fun handleDevCommand(room: Room, cmd: String, devId: String) {
+    val parts = cmd.split(" ")
+    val action = parts[0].lowercase()
+    
+    GlobalScope.launch {
+        when (action) {
+            "/next" -> triggerNextPhase(room)
+            "/start" -> { room.players.forEach { it.isReady = true }; triggerNextPhase(room) }
+            "/setrole" -> {
+                if (parts.size >= 3) {
+                    val p = room.players.find { it.name.contains(parts[1], true) }
+                    val r = try { Role.valueOf(parts[2].uppercase()) } catch (e: Exception) { null }
+                    if (p != null && r != null) { 
+                        p.role = r
+                        // Cập nhật TrulyTeam dựa trên Role mới
+                        if (r.type == RoleType.WEREWOLF) { p.trulyTeam = "Sói"; p.team = "Sói" }
+                        else if (r == Role.LYCAN) { p.trulyTeam = "Sói"; p.team = "Dân" }
+                        else if (r == Role.PIPER) { p.trulyTeam = "piper"; p.team = "Dân" }
+                        else { p.trulyTeam = "Dân"; p.team = "Dân" }
+                        broadcastPlayerList(room) 
+                    }
+                }
+            }
+            "/kill" -> {
+                if (parts.size >= 2) {
+                    val p = room.players.find { it.name.contains(parts[1], true) }
+                    if (p != null) { p.heal = 0; processGameLogic(room); broadcastPlayerList(room) }
+                }
+            }
+            "/shield" -> { // Buff giáp ảo
+                if (parts.size >= 2) {
+                    val p = room.players.find { it.name.contains(parts[1], true) }
+                    if (p != null) { p.shield += 1; broadcastPlayerList(room) }
+                }
+            }
+            "/curse" -> { // Khóa chức năng ảo
+                if (parts.size >= 2) {
+                    val p = room.players.find { it.id == parts[1] || it.name.contains(parts[1], true) }
+                    if (p != null) { p.moonCurse = 1; broadcastPlayerList(room) }
+                }
+            }
+        }
     }
 }
