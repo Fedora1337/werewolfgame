@@ -51,7 +51,8 @@ data class Room(
     var wolfRatio: Double = 0.25, var prophetUses: Int = 0,
     var nightJob: Job? = null, val charmedPlayerIds: MutableSet<String> = mutableSetOf(),
     var witchSaveUsed: Boolean = false, var witchKillUsed: Boolean = false,
-    val tempDeadIds: MutableSet<String> = mutableSetOf(), var elderIsDead: Boolean = false
+    val tempDeadIds: MutableSet<String> = mutableSetOf(), var elderIsDead: Boolean = false,
+    var tickSpeed: Int = 1 // Tốc độ trôi thời gian (0: dừng, 1: thường, 2: x2...)
 )
 
 @Serializable
@@ -246,7 +247,12 @@ fun triggerNextPhase(room: Room) {
             else -> room.phase = "NIGHT"
         }
         val duration = if (room.phase == "NIGHT") getNightActionDuration(room, room.nightActionList[room.currentNightActionIndex]) else getPhaseDuration(room)
-        if (room.phase != "LOBBY") room.nightJob = launch { delay(duration * 1000L); triggerNextPhase(room) }
+        if (room.phase != "LOBBY" && room.tickSpeed > 0) {
+            room.nightJob = launch {
+                delay((duration * 1000L) / room.tickSpeed)
+                triggerNextPhase(room)
+            }
+        }
         room.players.forEach { p -> launch { val cur = if (room.phase == "NIGHT") room.nightActionList[room.currentNightActionIndex] else room.phase; playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}")) } }
         broadcastPlayerList(room)
     }
@@ -335,10 +341,34 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                     if (p != null) { p.shield += 1; broadcastPlayerList(room) }
                 }
             }
-            "/curse" -> { // Khóa chức năng ảo
+            "/curse" -> {
                 if (parts.size >= 2) {
                     val p = room.players.find { it.id == parts[1] || it.name.contains(parts[1], true) }
                     if (p != null) { p.moonCurse = 1; broadcastPlayerList(room) }
+                }
+            }
+            "/time" -> { // /time set day | /time set night
+                if (parts.size >= 3 && parts[1] == "set") {
+                    when (parts[2].lowercase()) {
+                        "day" -> {
+                            processGameLogic(room)
+                            room.phase = "DAY"
+                            room.dayCount++
+                            triggerNextPhase(room)
+                        }
+                        "night" -> {
+                            room.phase = "NIGHT"
+                            room.nightActionList = getNightOrder(room)
+                            room.currentNightActionIndex = 0
+                            triggerNextPhase(room)
+                        }
+                    }
+                }
+            }
+            "/tick" -> { // /tick set {int}
+                if (parts.size >= 3 && parts[1] == "set") {
+                    room.tickSpeed = parts[2].toIntOrNull() ?: 1
+                    triggerNextPhase(room) // Restart phase with new speed
                 }
             }
         }
