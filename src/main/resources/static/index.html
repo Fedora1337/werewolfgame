@@ -9,10 +9,10 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; text-align: center; }
 
         /* Layout */
-        header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-h); background: rgba(26,26,26,0.95); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; z-index: 2000; backdrop-filter: blur(10px); }
+        header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-h); background: rgba(26,26,26,0.95); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; z-index: 2000; backdrop-filter: blur(10px); transition: left 0.3s; }
         header h2 { color: var(--primary); margin: 0; font-size: 1.2em; text-transform: uppercase; letter-spacing: 2px; }
 
-        nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: #1a1a1a; display: none; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #333; z-index: 2000; }
+        nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: #1a1a1a; display: none; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #333; z-index: 2000; transition: left 0.3s; }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7em; color: #888; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item span { font-size: 1.5em; margin-bottom: 4px; }
@@ -60,8 +60,9 @@
         .action-overlay {
             position: fixed; bottom: 15px; left: 15px; right: 15px;
             display: flex; align-items: flex-end; justify-content: space-between;
-            pointer-events: none; z-index: 3000;
+            pointer-events: none; z-index: 3000; transition: bottom 0.3s, left 0.3s;
         }
+        body.has-nav .action-overlay { bottom: calc(var(--nav-h) + 15px); }
         .host-action-bar {
             background: rgba(20, 20, 20, 0.98); padding: 12px; border-radius: 20px;
             border: 2px solid #333; pointer-events: auto; display: none;
@@ -105,7 +106,7 @@
         /* PC Dev Sidebar */
         @media (min-width: 1200px) {
             #dev-bar {
-                left: 0; top: var(--header-h); bottom: 0; right: auto;
+                left: 0; top: 0; bottom: 0; right: auto;
                 width: 300px; border-top: none; border-right: 2px solid #27ae60;
                 display: flex; flex-direction: column; padding: 20px;
                 background: #111; transition: transform 0.3s;
@@ -116,6 +117,9 @@
             #dev-bar button { width: 100% !important; margin: 2px 0; }
             .container { transition: margin-left 0.3s; }
             body.dev-expanded .container { margin-left: 300px; max-width: calc(100% - 300px); }
+            body.dev-expanded header { left: 300px; }
+            body.dev-expanded nav { left: 300px; }
+            body.dev-expanded .action-overlay { left: 315px; }
 
             #dev-toggle {
                 position: fixed; left: 300px; top: 50%; background: #27ae60;
@@ -271,7 +275,15 @@
             { role: 'HUNTER', image: 'https://images.unsplash.com/photo-1590424753858-394a12a5ecba?q=80&w=400', description: 'Thợ Săn - Kéo theo người chết cùng.' },
             { role: 'CURSER WEREWOLF', image: 'https://images.unsplash.com/photo-1572059002053-8cc5ad2f4a38?q=80&w=400', description: 'Sói Nguyền - Biến nạn nhân thành Sói.' },
             { role: 'PROPHET WEREWOLF', image: 'https://images.unsplash.com/photo-1635332064176-3f33ab392413?q=80&w=400', description: 'Sói Tiên Tri - Soi chức năng đối phương.' },
-            { role: 'RUSSIAN', image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=400', description: 'Người Nga - Gấu nốc Vodka báo hiệu Sói.' }
+            { role: 'RUSSIAN', image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=400', description: 'Người Nga - Gấu nốc Vodka báo hiệu Sói.' },
+            { role: 'THIEF', image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=400', description: 'Ăn Trộm - Chọn 1 trong 2 lá bài dư.' },
+            { role: 'THREE_BROTHERS', image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=400', description: '3 Anh Em - Nhận mặt nhau đêm 1.' },
+            { role: 'TWINS', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400', description: '2 Chị Em - Nhận mặt nhau, báo thù khi 1 người chết.' },
+            { role: 'CUPID', image: 'https://images.unsplash.com/photo-1518131394553-c3fd6647990b?q=80&w=400', description: 'Thần Tình Yêu - Ghép đôi định mệnh.' },
+            { role: 'CELESTIAL_FOX', image: 'https://images.unsplash.com/photo-1557315360-6a350ab4f8ca?q=80&w=400', description: 'Hồ Ly - Soi 1 người + 2 hàng xóm.' },
+            { role: 'MOON_MAIDEN', image: 'https://images.unsplash.com/photo-1505506819647-681c40ad68bc?q=80&w=400', description: 'Nguyệt Nữ - Khóa chức năng mỗi đêm.' },
+            { role: 'PIPER', image: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=400', description: 'Thổi Sáo - Thôi miên cả làng để thắng.' },
+            { role: 'ELDER', image: 'https://images.unsplash.com/photo-1471018197922-2bad34197b9d?q=80&w=400', description: 'Già Làng - Tấm khiên của làng.' }
         ];
 
         function navigateTo(pageId) {
