@@ -6,41 +6,46 @@
     <title>Môn Sói Là</title>
     <style>
         :root { --primary: #e74c3c; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0; --nav-h: 70px; --header-h: 60px; --dev-w: 300px; }
-
         body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
 
-        /* ROOT LAYOUT */
-        #app-root { display: flex; width: 100vw; height: 100vh; }
+        #app-root { display: flex; width: 100vw; height: 100vh; overflow: hidden; position: relative; }
 
-        /* SIDEBAR */
+        /* DEV SIDEBAR */
         #dev-sidebar {
             width: var(--dev-w); background: #111; border-right: 2px solid #27ae60;
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
-            transition: all 0.3s ease; flex-shrink: 0; z-index: 4000;
+            transition: transform 0.3s ease; flex-shrink: 0; z-index: 4000;
+            position: absolute; left: 0; top: 0; bottom: 0;
+            transform: translateX(-100%);
         }
-        #dev-sidebar.collapsed { margin-left: calc(-1 * var(--dev-w)); }
+        #dev-sidebar.active { transform: translateX(0); }
 
         #dev-toggle {
-            position: fixed; left: var(--dev-w); top: 50%; transform: translateY(-50%);
+            position: absolute; left: 0; top: 50%; transform: translateY(-50%);
             background: #27ae60; width: 35px; height: 60px; display: none;
             align-items: center; justify-content: center; border-radius: 0 10px 10px 0;
-            cursor: pointer; z-index: 4001; transition: left 0.3s;
+            cursor: pointer; z-index: 4001; transition: left 0.3s; color: white;
         }
-        #dev-sidebar.collapsed + #dev-toggle { left: 0; }
+        body.dev-open #dev-toggle { left: var(--dev-w); display: flex; }
 
         /* MAIN CONTENT AREA */
-        #main-content { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        #main-content {
+            flex: 1; display: flex; flex-direction: column; position: relative;
+            overflow: hidden; transition: margin-left 0.3s ease;
+            width: 100%;
+        }
+        body.dev-open.dev-expanded #main-content { margin-left: var(--dev-w); }
 
         header {
             height: var(--header-h); background: rgba(26,26,26,0.95);
             display: flex; align-items: center; justify-content: center;
             border-bottom: 1px solid #333; flex-shrink: 0; backdrop-filter: blur(10px);
+            position: relative; width: 100%;
         }
         header h2 { color: var(--primary); margin: 0; font-size: 1.2em; text-transform: uppercase; letter-spacing: 2px; }
 
-        #scroll-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; }
-        #page-gallery.active .container { max-width: 1000px; }
+        #scroll-area { flex: 1; overflow-y: auto; padding: 20px; box-sizing: border-box; width: 100%; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; }
 
         nav#bottom-nav {
             height: var(--nav-h); background: #1a1a1a; border-top: 1px solid #333;
@@ -54,75 +59,78 @@
         .page { display: none; width: 100%; flex-direction: column; }
         .page.active { display: flex; }
 
-        /* UI COMPONENTS */
-        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; width: 100%; box-sizing: border-box; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; }
-        .secondary-btn { background: #2980b9; }
-        .ghost-btn { background: #333; font-size: 0.9em; padding: 8px; border: 1px solid #444; }
+        /* GRID SYSTEMS */
+        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; width: 100%; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; }
 
-        /* GAME GRID */
-        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
-        @media (min-width: 1000px) { .game-grid { grid-template-columns: repeat(9, 1fr); } }
+        @media (min-width: 1000px) {
+            .game-grid { grid-template-columns: repeat(9, 1fr); }
+            .gallery-grid { grid-template-columns: repeat(7, 1fr); }
+        }
+
         .game-player-card { background: #2a2a2a; border-radius: 12px; padding: 10px; border: 2px solid #444; cursor: pointer; position: relative; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .game-player-card.selected { border-color: var(--primary); box-shadow: 0 0 15px var(--primary); }
-        .game-player-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid #444; }
+        .game-player-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
         .game-player-card .player-num { position: absolute; top: 5px; right: 8px; color: #f1c40f; font-size: 0.7em; font-weight: bold; }
         .game-player-card p { font-size: 0.65em; margin: 8px 0 0 0; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .game-player-card.ready { border-color: #27ae60; }
-        .kick-btn { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #111; z-index: 5; }
+        .kick-btn { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #111; z-index: 5; cursor: pointer; }
 
-        /* ACTION OVERLAY (Floating in main-content) */
+        .gallery-card { background: #1a1a1a; border-radius: 12px; border: 2px solid #d4af37; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+        .gallery-card img { width: 100%; aspect-ratio: 0.7 / 1; object-fit: cover; object-position: bottom; border-bottom: 2px solid #d4af37; }
+        .gallery-card h4 { margin: 5px 0; color: #d4af37; font-size: 0.8em; font-family: 'Georgia', serif; }
+
+        /* FLOATING OVERLAYS */
         #action-overlay {
             position: absolute; bottom: 20px; left: 20px; right: 20px;
             display: none; align-items: flex-end; justify-content: space-between;
             pointer-events: none; z-index: 3000;
         }
         .host-action-bar { background: rgba(20, 20, 20, 0.98); padding: 12px; border-radius: 20px; border: 2px solid #333; pointer-events: auto; display: none; flex-direction: column; gap: 8px; width: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .action-buttons { display: flex; gap: 8px; flex-direction: column; pointer-events: auto; }
-        .action-btn { width: auto; padding: 10px 20px; font-size: 0.85em; margin: 0; border-radius: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); pointer-events: auto; }
+        .self-card-mini { background: rgba(26, 26, 26, 0.95); border: 2px solid var(--primary); border-radius: 20px; padding: 8px 15px; display: flex; align-items: center; gap: 12px; pointer-events: auto; min-width: 140px; backdrop-filter: blur(10px); box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+        .self-card-mini img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--primary); }
 
-        .self-card-mini {
-            background: rgba(26, 26, 26, 0.95); border: 2px solid var(--primary); border-radius: 20px;
-            padding: 8px 15px; display: flex; align-items: center; gap: 12px;
-            pointer-events: auto; min-width: 140px; backdrop-filter: blur(10px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        /* CARD VIEWER OVERLAY */
+        #card-viewer {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(15px); z-index: 6000; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
         }
-        .self-card-mini img { width: 40px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid var(--primary); }
-        .self-card-mini div { text-align: left; }
-        .self-card-mini h5 { margin: 0; font-size: 0.9em; color: var(--primary); }
-        .self-card-mini p { margin: 0; font-size: 0.8em; color: white; font-weight: bold; }
+        .viewer-content { position: relative; height: 90vh; width: 90%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .viewer-card { background: #1a1a1a; border: 4px solid #d4af37; border-radius: 20px; overflow: hidden; width: 100%; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); }
+        .viewer-card img { width: 100%; aspect-ratio: 0.7 / 1; object-fit: cover; object-position: bottom; border-bottom: 3px solid #d4af37; }
+        .viewer-info { padding: 20px; text-align: center; }
+        .viewer-info h2 { color: #d4af37; margin: 0; font-family: 'Georgia', serif; }
+        .viewer-info p { font-size: 0.9em; color: #ccc; font-style: italic; margin-top: 10px; line-height: 1.5; }
+        .viewer-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 130%; display: flex; justify-content: space-between; pointer-events: none; }
+        .nav-btn { background: rgba(255,255,255,0.1); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2em; cursor: pointer; pointer-events: auto; border: 1px solid #d4af37; }
+        .close-viewer { position: absolute; top: -50px; right: 0; color: white; font-size: 2.5em; cursor: pointer; pointer-events: auto; }
 
-        /* OVERLAYS */
-        #night-overlay { position: fixed; inset: 0; background: black; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .role-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 4500; display: none; padding: 40px 20px; overflow-y: auto; }
-        .role-card-big { background: #1a1a1a; border: 4px solid #d4af37; border-radius: 20px; overflow: hidden; max-width: 350px; margin: 40px auto; }
-        .role-card-big img { width: 100%; height: 300px; object-fit: cover; margin-top: -10px; border-bottom: 3px solid #d4af37; }
+        /* ROLE POPUP */
+        .role-card-big { background: #1a1a1a; border: 4px solid #d4af37; border-radius: 20px; overflow: hidden; max-width: 350px; margin: 40px auto; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); }
+        .role-card-big img { width: 100%; aspect-ratio: 0.7 / 1; object-fit: cover; object-position: bottom; border-bottom: 3px solid #d4af37; }
+        .role-card-content { padding: 25px; }
 
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; text-align: left; width: 100%; }
-        .gallery-card { background: #1a1a1a; border-radius: 12px; border: 2px solid #d4af37; overflow: hidden; }
-        .gallery-card img { width: 100%; height: 380px; object-fit: cover; margin-top: -12px; border-bottom: 2px solid #d4af37; }
-        .card-info { padding: 15px; }
-        .card-info h4 { margin: 0; color: #d4af37; font-family: 'Georgia', serif; }
+        input { padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
+        button { padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; }
+        #timer-display { position: fixed; top: 70px; left: 10px; background: rgba(231, 76, 60, 0.2); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--primary); font-size: 0.8em; z-index: 2500; }
     </style>
 </head>
 <body>
     <div id="app-root">
-        <!-- SIDEBAR -->
-        <aside id="dev-sidebar" class="collapsed">
+        <aside id="dev-sidebar">
             <label style="color:#27ae60; font-size: 0.7em; font-weight: bold; margin-bottom: 10px; display: block;">DEVELOPER CONSOLE</label>
             <div id="dev-logs" style="background: black; color: #27ae60; font-family: monospace; padding: 10px; flex: 1; overflow-y: auto; font-size: 0.7em; border-radius: 8px; margin-bottom: 15px; text-align: left; border: 1px solid #222;">> Sẵn sàng...</div>
-            <input type="text" id="devConsole" placeholder="Lệnh /..." style="margin-bottom: 15px;" onkeydown="if(event.key==='Enter') executeDevCommand()">
+            <input type="text" id="devConsole" placeholder="Lệnh /..." onkeydown="if(event.key==='Enter') executeDevCommand()">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button onclick="addBot()" style="background: #27ae60; padding: 10px; margin: 0;">+BOT</button>
-                <button onclick="devCommand('/next')" style="background: #f39c12; padding: 10px; margin: 0;">NEXT</button>
-                <button onclick="devCommand('/start')" style="background: #2980b9; padding: 10px; margin: 0;">START</button>
-                <button onclick="location.reload()" style="background: #555; padding: 10px; margin: 0;">REFRESH</button>
+                <button onclick="addBot()" style="background:#27ae60; padding:10px; margin:0">+BOT</button>
+                <button onclick="devCommand('/next')" style="background:#f39c12; padding:10px; margin:0">NEXT</button>
+                <button onclick="devCommand('/start')" style="background:#2980b9; padding:10px; margin:0">START</button>
+                <button onclick="location.reload()" style="background:#555; padding:10px; margin:0">REFRESH</button>
             </div>
         </aside>
         <div id="dev-toggle" onclick="toggleDevBar()">⚙️</div>
 
-        <!-- MAIN CONTENT AREA -->
         <div id="main-content">
             <header>
                 <div id="back-btn" onclick="goBack()" style="position: absolute; left: 15px; cursor: pointer; display: none; font-size: 1.5em;">←</div>
@@ -133,11 +141,11 @@
             <main id="scroll-area">
                 <div class="container">
                     <div id="page-home" class="page active"><div id="home-auth-section" class="card"><h3>Đang tải...</h3></div></div>
-                    <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng (6 số)..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
-                    <div id="page-profile" class="page"><div class="card"><img id="profile-ava-preview" src="" width="100" height="100" style="border-radius:50%; border:4px solid var(--primary); object-fit:cover;"><div style="text-align:left"><label style="font-size:0.8em;color:#888">TÊN HIỂN THỊ</label><input type="text" id="editName"><label style="font-size:0.8em;color:#888">TẢI ẢNH LÊN</label><input type="file" id="fileAvatar"><label style="font-size:0.8em;color:#888">HOẶC URL ẢNH</label><input type="text" id="editAvatar"></div><button onclick="saveProfile()" style="background:#27ae60">LƯU HỒ SƠ</button><button onclick="logout()" class="ghost-btn">Đăng xuất</button></div></div>
+                    <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
+                    <div id="page-profile" class="page"><div class="card"><img id="profile-ava-preview" src="" width="100" height="100" style="border-radius:50%; border:4px solid var(--primary); object-fit:cover;"><div style="text-align:left"><label>TÊN</label><input type="text" id="editName"><label>FILE</label><input type="file" id="fileAvatar"><label>URL</label><input type="text" id="editAvatar"></div><button onclick="saveProfile()" style="background:#27ae60">LƯU</button><button onclick="logout()" class="ghost-btn" style="color:#e74c3c">Đăng xuất</button></div></div>
                     <div id="page-lobby" class="page"><div class="card" style="flex:1; overflow-y:auto"><h2>Mã: <span id="displayRoomCode" style="color:#f1c40f">######</span></h2><div id="player-count-badge" style="background:#333;padding:5px 10px;border-radius:10px;font-size:0.8em;margin-bottom:10px">Đang chờ...</div><div id="game-grid" class="game-grid"></div></div><button id="btnReady" onclick="toggleReady()" style="display:none; background:#2980b9">SẴN SÀNG</button><button onclick="leaveRoom()" class="ghost-btn" style="color:#e74c3c">RỜI PHÒNG</button></div>
                     <div id="page-gallery" class="page"><h2 style="color:#f1c40f">Bộ Bài Môn Sói Là</h2><div class="gallery-grid" id="galleryList"></div></div>
-                    <div id="page-dev-login" class="page"><div class="card"><h3>Developer Portal</h3><input type="password" id="devPassword" placeholder="Mật khẩu..."><button onclick="checkDevPassword()">Kích hoạt</button></div></div>
+                    <div id="page-dev-login" class="page"><div class="card"><h3>Dev Portal</h3><input type="password" id="devPassword"><button onclick="checkDevPassword()">Truy cập</button></div></div>
                 </div>
             </main>
 
@@ -147,20 +155,34 @@
                 <div class="nav-item" onclick="navigateTo('page-profile')"><span>👤</span>Hồ sơ</div>
             </nav>
 
-            <!-- ACTION OVERLAY -->
             <div id="action-overlay">
                 <div id="host-action-bar" class="host-action-bar">
-                    <select id="ratioSelect" style="width:100%; background:#222; color:white; border-radius:8px; padding:8px;"><option value="0.25">Newbie</option><option value="0.33">Standard</option></select>
+                    <select id="ratioSelect" style="width:100%; background:#222; color:white; border-radius:8px; padding:5px;"><option value="0.25">Newbie</option><option value="0.33">Standard</option></select>
                     <button id="btnStartGame" onclick="distributeRoles()" style="background:#27ae60; padding:10px; margin:0;">BẮT ĐẦU</button>
                     <button id="btnNextPhase" onclick="nextPhase()" style="display:none; background:#f39c12; padding:10px; margin:0;">TIẾP TỤC</button>
                 </div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
                     <div id="action-buttons" class="action-buttons"></div>
-                    <div class="self-card-mini">
-                        <img id="self-mini-ava" src="https://robohash.org/default">
-                        <div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">Name</p></div>
-                    </div>
+                    <div class="self-card-mini"><img id="self-mini-ava" src=""><div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">Name</p></div></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULLSCREEN CARD VIEWER -->
+    <div id="card-viewer">
+        <div class="viewer-content">
+            <div class="close-viewer" onclick="closeCardViewer()">×</div>
+            <div class="viewer-card">
+                <img id="viewer-img" src="">
+                <div class="viewer-info">
+                    <h2 id="viewer-title">ROLE</h2>
+                    <p id="viewer-desc">Description</p>
+                </div>
+            </div>
+            <div class="viewer-nav">
+                <div class="nav-btn" onclick="prevCard()">‹</div>
+                <div class="nav-btn" onclick="nextCard()">›</div>
             </div>
         </div>
     </div>
@@ -171,23 +193,26 @@
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [];
+        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0;
         const allRoles = [
-            { role: 'WEREWOLF', image: 'https://images.unsplash.com/photo-1550747528-cdb8d030f302?q=80&w=400', description: 'Ma Sói - Ăn thịt dân làng.' },
-            { role: 'VILLAGER', image: 'images/roles/thevillager.png', description: 'Dân Làng - Không chức năng.' },
-            { role: 'SEER', image: 'images/roles/theseer.png', description: 'Tiên Tri - Soi phe 1 người.' },
-            { role: 'GUARDIAN', image: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&w=400', description: 'Bảo Vệ - Chặn Sói cắn.' },
+            { role: 'WEREWOLF', image: 'images/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
+            { role: 'VILLAGER', image: 'images/roles/thevillager.png', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
+            { role: 'SEER', image: 'images/roles/theseer.png', description: 'Tiên Tri - Soi phe 1 người mỗi đêm.' },
+            { role: 'GUARDIAN', image: 'images/roles/theguardian.png', description: 'Bảo Vệ - Miễn nhiễm với Sói đêm đó.' },
             { role: 'WITCH', image: 'images/roles/thewitch.png', description: 'Phù Thủy - Độc và Cứu.' },
-            { role: 'HUNTER', image: 'https://images.unsplash.com/photo-1590424753858-394a12a5ecba?q=80&w=400', description: 'Thợ Săn - Kéo người chết cùng.' },
-            { role: 'RUSSIAN', image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=400', description: 'Người Nga - Gấu báo Sói.' },
+            { role: 'HUNTER', image: 'images/roles/thehunter.png', description: 'Thợ Săn - Kéo theo người chết cùng.' },
+            { role: 'RUSSIAN', image: 'images/roles/therussianpng.png', description: 'Người Nga - Gấu báo Sói.' },
             { role: 'THIEF', image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=400', description: 'Ăn Trộm - Chọn bài dư.' },
             { role: 'THREE_BROTHERS', image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=400', description: '3 Anh Em - Nhận mặt đêm 1.' },
-            { role: 'TWINS', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400', description: '2 Chị Em - Báo thù.' },
-            { role: 'CUPID', image: 'https://images.unsplash.com/photo-1518131394553-c3fd6647990b?q=80&w=400', description: 'Cupid - Ghép đôi.' },
-            { role: 'CELESTIAL_FOX', image: 'https://images.unsplash.com/photo-1557315360-6a350ab4f8ca?q=80&w=400', description: 'Hồ Ly - Soi 3 người.' },
+            { role: 'TWINS', image: 'images/roles/thetwins.png', description: '2 Chị Em - Báo thù.' },
+            { role: 'CUPID', image: 'images/roles/thecupid.png', description: 'Cupid - Ghép đôi.' },
+            { role: 'CELESTIAL_FOX', image: 'images/roles/thecelestialfox.png', description: 'Hồ Ly - Soi 3 người.' },
             { role: 'MOON_MAIDEN', image: 'https://images.unsplash.com/photo-1505506819647-681c40ad68bc?q=80&w=400', description: 'Nguyệt Nữ - Khóa chức năng.' },
             { role: 'PIPER', image: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=400', description: 'Thổi Sáo - Thôi miên.' },
-            { role: 'ELDER', image: 'https://images.unsplash.com/photo-1471018197922-2bad34197b9d?q=80&w=400', description: 'Già Làng - Giáp 1 mạng.' }
+            { role: 'ELDER', image: 'images/roles/theelder.png', description: 'Già Làng - Giáp 1 mạng.' },
+            { role: 'CURSER_WEREWOLF', image: 'images/roles/thecurserwerewolf.png', description: 'Sói Nguyền - Biến nạn nhân thành Sói.' },
+            { role: 'PROPHET_WEREWOLF', image: 'images/roles/theprophetwerewolf.png', description: 'Sói Tiên Tri - Soi chức năng đối phương.' },
+            { role: 'DERP_WOLF', image: 'images/roles/thederpwolf.png', description: 'Sói Ngu - Có quyền báo thù.' }
         ];
 
         function navigateTo(pId) {
@@ -206,20 +231,19 @@
         function handleCredentialResponse(res) { const p=JSON.parse(atob(res.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); myId=p.sub; myName=p.name; myAvatar=p.picture; const s=localStorage.getItem('werewolf_user'); if(s){ const u=JSON.parse(s); myName=u.name; myAvatar=u.avatar; } updateProfileUI(); localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateHomeUI(); }
 
         function updateProfileUI() {
-            const names=['dash-name','myName','editName','self-mini-name'];
-            names.forEach(id=>{const e=document.getElementById(id); if(e)(e.value!==undefined?e.value=myName:e.innerText=myName);});
-            const avas=['myAvatar','profile-ava-preview','self-mini-ava'];
-            avas.forEach(id=>{const e=document.getElementById(id); if(e)e.src=myAvatar;});
+            const names=['dash-name','myName','editName','self-mini-name']; names.forEach(id=>{const e=document.getElementById(id); if(e)(e.value!==undefined?e.value=myName:e.innerText=myName);});
+            const avas=['myAvatar','profile-ava-preview','self-mini-ava']; avas.forEach(id=>{const e=document.getElementById(id); if(e)e.src=myAvatar;});
             const ed=document.getElementById('editAvatar'); if(ed)ed.value=myAvatar;
         }
 
         function updateHomeUI() { const s=document.getElementById('home-auth-section'); if(!s) return; if(myId){ s.innerHTML=`<img src="${myAvatar}" width="80" style="border-radius:50%; border:3px solid var(--primary);"><h3 style="margin:10px 0;">${myName}</h3><button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer;">Đăng xuất</p>`; } else { s.innerHTML=`<h3>Vào game ngay</h3><div id="google-btn"></div>`; if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'rectangular'}); } } }
         function logout() { localStorage.removeItem('werewolf_user'); myId=null; updateHomeUI(); navigateTo('page-home'); }
         function showDevLogin() { navigateTo('page-dev-login'); }
-        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; document.getElementById('dev-sidebar').style.display='flex'; document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.getElementById('dev-sidebar').classList.remove('collapsed'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
-        function toggleDevBar() { const b=document.getElementById('dev-sidebar'); b.classList.toggle('collapsed'); document.body.classList.toggle('dev-open'); }
+        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
+        function toggleDevBar() { const b = document.getElementById('dev-sidebar'); b.classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
         window.onload=()=>{ const s=localStorage.getItem('werewolf_user'); if(s){ const u=JSON.parse(s); myId=u.id; myName=u.name; myAvatar=u.avatar; updateProfileUI(); } updateHomeUI(); navigateTo('page-home'); };
+
         function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); alert("Lưu!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
         async function createRoom() { const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); setupRoom(await res.json(), true); }
         async function joinRoom() { const c=document.getElementById('roomCodeInput').value; const res=await fetch(`/join-room/${c}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); if(res.ok) setupRoom(await res.json(), false); else alert("Lỗi!"); }
@@ -228,29 +252,45 @@
         function connectWebSocket() { const p=window.location.protocol==='https:'?'wss:':'ws:'; socket=new WebSocket(`${p}//${window.location.host}/ws/${myId}`); socket.onmessage=(e)=>{ const m=JSON.parse(e.data); if(m.type==="PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(m.data)); else if(m.type==="YOUR_ROLE") { myRoleData=JSON.parse(m.data); displayMyRole(myRoleData); } else if(m.type==="PHASE_UPDATE") handlePhaseUpdate(m.data); else if(m.type==="ANNOUNCEMENT") { announce(m.data); logDev(m.data); } else if(m.type==="KICKED"){ alert(m.data); window.location.reload(); } }; }
 
         function updatePlayerListUI(ps) {
-            playersCache=ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
+            playersCache = ps.filter(p => !p.isDead);
+            const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
             g.innerHTML=ps.map((p,i)=>`<div class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''}" onclick="selectPlayer('${p.id}')">${isHost&&p.id!==myId?`<div class="kick-btn" onclick="event.stopPropagation(); kickPlayer('${p.id}')">×</div>`:''}<div class="player-num">#${i+1}</div><img src="${p.avatar}"><p>${p.name}</p>${p.isDead?'<div style="position:absolute; inset:0; background:rgba(255,0,0,0.3); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:white; z-index:5;">RIP</div>':''}</div>`).join('');
             if(mi!==-1) document.getElementById('self-mini-num').innerText=`#${mi+1}`;
             const b=document.getElementById('player-count-badge'); const c=ps.length; const rc=ps.filter(p=>p.isReady).length;
             if(c<8) b.innerText=`Cần ${8-c} nữa`; else if(rc<c) b.innerText=`Chờ (${rc}/${c})`; else b.innerText="Đủ!";
             if(isHost){ const btn=document.getElementById('btnStartGame'); if(c>=8&&rc===c){ btn.disabled=false; btn.innerText="BẮT ĐẦU"; } else { btn.disabled=true; btn.innerText=c<8?`CẦN THÊM ${8-c}`:`CHỜ ${c-rc} SẴN SÀNG`; } }
-            else { const me=ps.find(p=>p.id===myId); const btn=document.getElementById('btnReady'); if(me?.isReady){ btn.innerText="HUỶ"; btn.style.background="#e74c3c"; } else { btn.innerText="SẴN SÀNG"; btn.style.background="#2980b9"; } }
             updateActionButtons();
         }
 
         function kickPlayer(id) { if(confirm("Kick?")) socket.send(JSON.stringify({type:"KICK_PLAYER", data:id})); }
         function selectPlayer(id) { selectedPlayerId=(selectedPlayerId===id)?null:id; updatePlayerListUI(playersCache); }
-        function updateActionButtons() { const c=document.getElementById('action-buttons'); const o=document.getElementById('action-overlay'); const ap=document.querySelector('.page.active').id; if(ap!=='page-lobby'){ o.style.display='none'; return; } o.style.display='flex'; c.innerHTML=''; if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`; }
+        function updateActionButtons() { const c=document.getElementById('action-buttons'); const o=document.getElementById('action-overlay'); if(document.querySelector('.page.active').id!=='page-lobby'){ o.style.display='none'; return; } o.style.display='flex'; c.innerHTML=''; if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`; }
         function sendAction(t) { if(!selectedPlayerId) return; socket.send(JSON.stringify({type:t, data:selectedPlayerId})); selectedPlayerId=null; updatePlayerListUI(playersCache); }
         async function refreshPlayers() { if(currentRoomCode){ const res=await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
-        function showGallery() { document.getElementById('galleryList').innerHTML = allRoles.map(r => `<div class="gallery-card"><img src="${r.image}"> <div class="card-info"><h4>${r.role}</h4><p>${r.description}</p></div></div>`).join(''); }
-        function backFromGallery() { navigateTo(lastPage); }
+
+        function showGallery() {
+            const list = document.getElementById('galleryList');
+            list.innerHTML = allRoles.map((r, i) => `<div class="gallery-card" onclick="openCardViewer(${i})"><img src="${r.image}"><h4>${r.role}</h4></div>`).join('');
+        }
+
+        function openCardViewer(idx) {
+            currentViewerIndex = idx;
+            const r = allRoles[idx];
+            document.getElementById('viewer-img').src = r.image;
+            document.getElementById('viewer-title').innerText = r.role;
+            document.getElementById('viewer-desc').innerText = r.description;
+            document.getElementById('card-viewer').style.display = 'flex';
+        }
+        function closeCardViewer() { document.getElementById('card-viewer').style.display = 'none'; }
+        function nextCard() { currentViewerIndex = (currentViewerIndex + 1) % allRoles.length; openCardViewer(currentViewerIndex); }
+        function prevCard() { currentViewerIndex = (currentViewerIndex - 1 + allRoles.length) % allRoles.length; openCardViewer(currentViewerIndex); }
+
         function displayMyRole(role) { document.getElementById('role-popup').style.display='block'; const rData=allRoles.find(r=>r.role===role.role)||allRoles[1]; document.getElementById('result').innerHTML=`<div class="role-card-big"><img src="${rData.image}"><div class="role-card-content"><h2 style="color:#d4af37;">VAI DIỄN</h2><h1 style="color:${role.role.includes('WEREWOLF')?'#ff4d4d':'#4da6ff'};">${role.role}</h1><p>"${role.description}"</p><button id="btnUnderstand" onclick="confirmUnderstand()" style="background:#e74c3c;">XÁC NHẬN</button></div></div>`; }
         function confirmUnderstand() { document.getElementById('btnUnderstand').style.background='#7f8c8d'; document.getElementById('btnUnderstand').innerText='OK'; document.getElementById('btnUnderstand').disabled=true; socket.send(JSON.stringify({type:"I_UNDERSTAND", data:""})); }
         function handlePhaseUpdate(data) { const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; if(ph==="NIGHT"){ clearInterval(countdownInterval); document.getElementById('timer-display').style.display='none'; document.getElementById('role-popup').style.display='none'; document.getElementById('night-overlay').style.display='flex'; announce("Tối rồi."); } else if(ph==="DAY"){ document.getElementById('night-overlay').style.display='none'; startCountdown(du); let m="Sáng rồi."; if(rs==="RUSSIAN_VODKA") m="Gấu nốc rượu! "+m; announce(m); } else { startCountdown(du); } if(isHost){ document.getElementById('host-action-bar').style.display='flex'; document.getElementById('btnNextPhase').style.display=(ph!=="LOBBY")?'block':'none'; document.getElementById('btnStartGame').style.display=(ph==="LOBBY")?'block':'none'; } }
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
         async function distributeRoles() { const r = await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if (!r.ok) alert("Lỗi!"); }
-        function startCountdown(s) { clearInterval(countdownInterval); let t=s; document.getElementById('timer-display').style.display='block'; document.getElementById('seconds').innerText = t; countdownInterval=setInterval(()=>{t--; document.getElementById('seconds').innerText=t; if(t<=0){clearInterval(countdownInterval); if(isHost)nextPhase();}},1000); }
+        function startCountdown(s) { clearInterval(countdownInterval); let t=s; document.getElementById('timer-display').style.display='block'; document.getElementById('seconds').innerText = t; countdownInterval=setInterval(()=>{t--; document.getElementById('seconds').innerText=t; if(t <= 0){clearInterval(countdownInterval); if(isHost)nextPhase();}},1000); }
         function announce(t) { if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const m=new SpeechSynthesisUtterance(t); m.lang='vi-VN'; m.rate=0.9; window.speechSynthesis.speak(m); }
         async function requestMediaPermissions() { try { const s=await navigator.mediaDevices.getUserMedia({audio:true}); s.getTracks().forEach(t=>t.stop()); } catch (err){} }
         async function addBot() { const bc=playersCache.filter(p=>p.name.startsWith("Bot_")).length+1; await fetch(`/join-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:"bot_"+Date.now()+"_"+bc, name:"Bot_"+bc, avatar:"https://robohash.org/bot_"+bc, isReady:true})}); }

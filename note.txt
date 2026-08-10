@@ -3,6 +3,10 @@ thổi sáo: 20+
 sói ngu: 17+
 già làng: 18+
 
+#char mới: charbuild: nữ, tuổi 39, tóc đen, hơi ngà ngà bạc vài cọng, 2 tay dương những con rối gỗ được treo bằng sợi chỉ trắng
+kẻ múa rối The Puppet Master)Kỹ năng (Đêm): Thức dậy và chọn hai người chơi (Người A và Người B).
+Hiệu ứng: Nếu đêm đó Ma sói cắn Người A, thì Người B sẽ chết thay. Ngược lại, nếu Phù thủy cứu Người A, Người B sẽ được hưởng ké (nếu chết trước đó) hoặc tài nguyên bị lãng phí.
+Điểm hay: Ép phe Sói phải tính toán xem mục tiêu của mình có bị "chuyển hướng" hay không.
 
 
 #tiến độ thiết kế các char (chưa frontend)
