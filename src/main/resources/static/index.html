@@ -2,57 +2,74 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Môn Sói Là - Game Ma Sói Online</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Môn Sói Là</title>
     <style>
-        :root { --primary: #e74c3c; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; text-align: center; overflow-x: hidden; }
-        .container { max-width: 1000px; margin: 0 auto; padding: 20px; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; }
+        :root { --primary: #e74c3c; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0; --nav-h: 70px; --header-h: 60px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; text-align: center; }
+
+        /* Layout */
+        header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-h); background: rgba(26,26,26,0.95); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; z-index: 2000; backdrop-filter: blur(10px); }
+        header h2 { color: var(--primary); margin: 0; font-size: 1.2em; text-transform: uppercase; letter-spacing: 2px; }
+
+        nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: #1a1a1a; display: none; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #333; z-index: 2000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7em; color: #888; cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item span { font-size: 1.5em; margin-bottom: 4px; }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: calc(var(--header-h) + 20px) 20px calc(var(--nav-h) + 20px) 20px; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; }
 
         .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333; }
-        h1 { color: var(--primary); font-size: 2.5em; margin-bottom: 10px; }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
         button { width: 100%; padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; transition: transform 0.1s; }
         button:active { transform: scale(0.98); }
-        button:disabled { background: #555; cursor: not-allowed; opacity: 0.7; }
+        button:disabled { background: #555; opacity: 0.7; }
         .secondary-btn { background: #2980b9; }
         .ghost-btn { background: #333; font-size: 0.9em; padding: 8px; border: 1px solid #444; }
 
         .page { display: none; flex: 1; flex-direction: column; justify-content: center; max-width: 500px; margin: 0 auto; width: 100%; }
         .page.active { display: flex; }
-        #page-gallery { max-width: 1000px; }
+        #page-gallery { max-width: 1000px; justify-content: flex-start; }
 
-        .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px; margin-top: 20px; }
+        /* Gallery & Cards */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 10px; text-align: left; }
+        .gallery-card { background: #1a1a1a; border-radius: 12px; border: 2px solid #d4af37; overflow: hidden; display: flex; flex-direction: column; }
+        .gallery-card img { width: 100%; height: 380px; object-fit: cover; margin-top: -12px; border-bottom: 2px solid #d4af37; }
+        .card-info { padding: 15px; }
+        .card-info h4 { margin: 0; color: #d4af37; font-family: 'Georgia', serif; }
+
+        .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px; margin-top: 15px; }
         .player-card { background: #2a2a2a; padding: 10px; border-radius: 12px; border: 1px solid #444; position: relative; }
-        .player-card.ready { border-color: #27ae60; box-shadow: 0 0 10px rgba(39, 174, 96, 0.4); }
+        .player-card.ready { border-color: #27ae60; }
         .player-card.ready::after { content: '✓'; position: absolute; top: -5px; right: -5px; background: #27ae60; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); }
-        .player-card img { border-radius: 50%; width: 50px; height: 50px; object-fit: cover; border: 2px solid #555; }
+        .player-card img { border-radius: 50%; width: 50px; height: 50px; object-fit: cover; }
 
+        #dev-bar { position: fixed; bottom: var(--nav-h); left: 0; right: 0; background: #000; padding: 10px; border-top: 2px solid #27ae60; z-index: 4000; display: none; }
+        #timer-display { position: fixed; top: 70px; left: 10px; background: rgba(231, 76, 60, 0.2); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--primary); font-size: 0.8em; z-index: 2500; }
         #night-overlay { position: fixed; inset: 0; background: black; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .role-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1500; display: none; padding: 40px 20px; overflow-y: auto; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; text-align: left; }
-        .gallery-card { background: #1a1a1a; padding: 0; border-radius: 12px; border: 2px solid #d4af37; display: flex; flex-direction: column; align-items: stretch; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.8); }
-        .gallery-card .card-img { width: 100%; height: 415px; object-fit: cover; margin-top: -15px; border-bottom: 2px solid #d4af37; }
-        .gallery-card .card-info { padding: 15px; flex: 1; }
-        .gallery-card h4 { margin: 0; color: #d4af37; font-family: 'Georgia', serif; font-size: 1.2em; text-transform: uppercase; }
-        .gallery-card p { margin: 8px 0 0 0; font-size: 0.85em; color: #ccc; line-height: 1.5; font-style: italic; }
-
-        #dev-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #000; padding: 10px; border-top: 2px solid #27ae60; z-index: 4000; display: none; }
-        #timer-display { position: fixed; top: 10px; left: 10px; background: rgba(231, 76, 60, 0.2); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--primary); font-size: 0.8em; z-index: 2500; }
-
-        .role-card-big { background: #1a1a1a; border: 4px solid #d4af37; border-radius: 20px; padding: 0; overflow: hidden; max-width: 350px; margin: 50px auto; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); }
-        .role-card-big img { width: 100%; height: 310px; object-fit: cover; margin-top: -10px; border-bottom: 3px solid #d4af37; }
-        .role-card-content { padding: 25px; }
+        .role-card-big { background: #1a1a1a; border: 4px solid #d4af37; border-radius: 20px; overflow: hidden; max-width: 350px; margin: 40px auto; }
+        .role-card-big img { width: 100%; height: 300px; object-fit: cover; margin-top: -10px; border-bottom: 3px solid #d4af37; }
     </style>
 </head>
 <body>
+    <header>
+        <h2>Môn Sói Là</h2>
+        <div onclick="showDevLogin()" style="position: absolute; right: 15px; opacity: 0.2; cursor: pointer;">🛠️</div>
+    </header>
+
+    <nav id="main-nav">
+        <div class="nav-item active" onclick="navigateTo('page-dashboard')"><span>🏠</span>Sảnh</div>
+        <div class="nav-item" onclick="navigateTo('page-gallery')"><span>📖</span>Bộ bài</div>
+        <div class="nav-item" onclick="navigateTo('page-profile')"><span>👤</span>Hồ sơ</div>
+    </nav>
+
     <div id="night-overlay"><h1>🌙</h1><h2>Trời tối rồi...</h2><p style="color: #888;">Mọi người nhắm mắt lại!</p><button onclick="document.getElementById('night-overlay').style.display='none'" class="ghost-btn" style="width: auto; margin-top: 40px;">Lén xem vai</button></div>
     <div id="timer-display" style="display: none;">🕒 <span id="seconds">300</span>s</div>
-    <div onclick="showDevLogin()" style="position: fixed; top: 10px; right: 10px; width: 20px; height: 20px; cursor: pointer; z-index: 3000; opacity: 0.1;">🛠️</div>
 
     <div id="dev-bar">
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="devConsole" placeholder="Dev Command /..." style="margin: 0; font-family: monospace;" onkeydown="if(event.key==='Enter') executeDevCommand()">
+            <input type="text" id="devConsole" placeholder="Lệnh /..." style="margin: 0;" onkeydown="if(event.key==='Enter') executeDevCommand()">
             <button onclick="addBot()" style="width: auto; padding: 0 20px; margin: 0; background: #27ae60;">+BOT</button>
         </div>
     </div>
@@ -60,48 +77,47 @@
     <div class="container">
         <!-- PAGE: HOME -->
         <div id="page-home" class="page active">
-            <h1>Môn Sói Là</h1>
             <div id="home-auth-section" class="card">
-                <!-- Sẽ được cập nhật bằng JS -->
                 <h3>Đang tải...</h3>
-            </div>
-            <button onclick="showGallery()" class="ghost-btn" style="width: auto; margin: 20px auto;">📖 Xem bộ bài</button>
-        </div>
-
-        <!-- PAGE: DEV LOGIN -->
-        <div id="page-dev-login" class="page">
-            <div class="card">
-                <h3>Developer Portal</h3>
-                <input type="password" id="devPassword" placeholder="Mật khẩu bí mật...">
-                <button onclick="checkDevPassword()">Kích hoạt quyền năng</button>
-                <button onclick="navigateTo(lastPage)" class="ghost-btn">Hủy</button>
             </div>
         </div>
 
         <!-- PAGE: DASHBOARD -->
         <div id="page-dashboard" class="page">
-            <div class="card">
-                <div id="profile-display">
-                    <img id="myAvatar" src="" width="80" height="80" style="border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
-                    <h2 id="myName">User Name</h2>
-                    <button onclick="toggleEdit(true)" class="ghost-btn">Chỉnh sửa Profile</button>
-                </div>
-                <div id="profile-edit" style="display: none;">
-                    <input type="text" id="editName" placeholder="Tên hiển thị..."><input type="file" id="fileAvatar" accept="image/*" style="font-size: 0.8em;"><input type="text" id="editAvatar" placeholder="URL ảnh đại diện...">
-                    <div style="display: flex; gap: 10px;"><button onclick="saveProfile()" style="background: #27ae60;">Lưu</button><button onclick="toggleEdit(false)" class="ghost-btn">Hủy</button></div>
-                </div>
+            <div class="card" style="background: linear-gradient(145deg, #1e1e1e, #252525);">
+                <h3>Xin chào, <span id="dash-name" style="color: var(--primary);">User</span>!</h3>
+                <p style="font-size: 0.8em; color: #777;">Sẵn sàng cho một ván đấu kịch tính?</p>
             </div>
-            <button onclick="createRoom()" class="secondary-btn">Tạo Phòng Mới</button>
-            <div style="margin: 10px;">— HOẶC —</div>
+            <button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button>
+            <div style="margin: 15px; color: #444; font-weight: bold;">— HOẶC —</div>
             <input type="text" id="roomCodeInput" inputmode="numeric" placeholder="Mã phòng (6 số)...">
-            <button onclick="joinRoom()">Gia Nhập Phòng</button>
-            <button onclick="showGallery()" class="ghost-btn" style="width: auto; margin-top: 20px;">📖 Thư viện bài</button>
+            <button onclick="joinRoom()">GIA NHẬP PHÒNG</button>
+        </div>
+
+        <!-- PAGE: PROFILE -->
+        <div id="page-profile" class="page">
+            <div class="card">
+                <img id="profile-ava-preview" src="" width="100" height="100" style="border-radius: 50%; border: 4px solid var(--primary); margin-bottom: 15px; object-fit: cover;">
+                <div style="text-align: left;">
+                    <label style="font-size: 0.8em; color: #888;">TÊN HIỂN THỊ</label>
+                    <input type="text" id="editName">
+                    <label style="font-size: 0.8em; color: #888;">TẢI ẢNH LÊN</label>
+                    <input type="file" id="fileAvatar" accept="image/*">
+                    <label style="font-size: 0.8em; color: #888;">HOẶC URL ẢNH</label>
+                    <input type="text" id="editAvatar">
+                </div>
+                <button onclick="saveProfile()" style="background: #27ae60; margin-top: 10px;">LƯU HỒ SƠ</button>
+                <button onclick="logout()" class="ghost-btn" style="color: #e74c3c;">Đăng xuất</button>
+            </div>
         </div>
 
         <!-- PAGE: LOBBY -->
         <div id="page-lobby" class="page">
-            <h2 style="margin: 0;">Mã Phòng: <span id="displayRoomCode" style="color: #f1c40f;">######</span></h2>
-            <div class="card" style="flex: 1; overflow-y: auto;"><div id="player-count-badge" style="background: #333; padding: 5px 10px; border-radius: 10px; font-size: 0.8em; margin-bottom: 10px;">Đang chờ...</div><div class="player-grid" id="playerList"></div></div>
+            <div class="card" style="flex: 1; overflow-y: auto;">
+                <h2 style="margin: 0 0 10px 0;">Mã: <span id="displayRoomCode" style="color: #f1c40f;">######</span></h2>
+                <div id="player-count-badge" style="background: #333; padding: 5px 10px; border-radius: 10px; font-size: 0.8em;">Đang chờ...</div>
+                <div class="player-grid" id="playerList"></div>
+            </div>
             <div id="host-controls" style="display: none;">
                 <select id="ratioSelect" style="width: 100%; padding: 12px; border-radius: 8px; background: #222; color: white; margin-bottom: 10px; border: 1px solid #444;">
                     <option value="0.25">Tỷ lệ Sói: 25% (Newbie)</option><option value="0.33">Tỷ lệ Sói: 33% (Standard)</option>
@@ -109,12 +125,15 @@
                 <button id="btnStartGame" onclick="distributeRoles()" style="background: #27ae60;">BẮT ĐẦU GAME</button>
             </div>
             <button id="btnReady" onclick="toggleReady()" style="display: none; background: #2980b9;">SẴN SÀNG</button>
-            <button id="btnNextPhase" onclick="nextPhase()" style="display: none; background: #f39c12;">SANG NGÀY/ĐÊM TIẾP THEO</button>
-            <button onclick="leaveRoom()" class="ghost-btn" style="border-color: #e74c3c; color: #e74c3c; margin-top: 20px;">RỜI PHÒNG</button>
+            <button id="btnNextPhase" onclick="nextPhase()" style="display: none; background: #f39c12;">CHUYỂN GIAI ĐOẠN</button>
+            <button onclick="leaveRoom()" class="ghost-btn" style="border-color: #e74c3c; color: #e74c3c; margin-top: 10px;">RỜI PHÒNG</button>
         </div>
 
         <!-- PAGE: GALLERY -->
-        <div id="page-gallery" class="page"><h2 style="color: #f1c40f;">Bộ Bài Môn Sói Là</h2><div class="card" style="flex: 1; overflow-y: auto;"><div class="gallery-grid" id="galleryList"></div></div><button onclick="backFromGallery()" class="ghost-btn">Quay lại</button></div>
+        <div id="page-gallery" class="page"><div class="gallery-grid" id="galleryList"></div></div>
+
+        <!-- PAGE: DEV LOGIN -->
+        <div id="page-dev-login" class="page"><div class="card"><h3>Developer Portal</h3><input type="password" id="devPassword" placeholder="Mật khẩu..."><button onclick="checkDevPassword()">Truy cập</button><button onclick="navigateTo(lastPage)" class="ghost-btn">Hủy</button></div></div>
     </div>
 
     <div id="role-popup" class="role-popup"><div id="result"></div></div>
@@ -135,112 +154,71 @@
             { role: 'RUSSIAN', image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=400', description: 'Người Nga - Gấu nốc Vodka báo hiệu Sói.' }
         ];
 
-        function navigateTo(pageId) { if (pageId !== 'page-gallery' && pageId !== 'page-dev-login') lastPage = pageId; document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(pageId).classList.add('active'); }
+        function navigateTo(pageId) {
+            if (pageId !== 'page-gallery' && pageId !== 'page-dev-login' && pageId !== 'page-profile') lastPage = pageId;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            // Cập nhật trạng thái Nav Bar
+            const nav = document.getElementById('main-nav');
+            if (pageId === 'page-lobby' || pageId === 'page-home') nav.style.display = 'none';
+            else nav.style.display = 'grid';
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.onclick.toString().includes(pageId)) item.classList.add('active');
+            });
+            if (pageId === 'page-gallery') showGallery();
+        }
 
         function handleCredentialResponse(res) {
             const p = JSON.parse(atob(res.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
             myId = p.sub; myName = p.name; myAvatar = p.picture;
             const saved = localStorage.getItem('werewolf_user');
             if (saved) { const u = JSON.parse(saved); myName = u.name; myAvatar = u.avatar; }
-            updateProfileUI();
-            localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar}));
+            updateProfileUI(); localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar}));
             updateHomeUI();
         }
 
         function updateProfileUI() {
-            const nameElem = document.getElementById('myName');
-            const avatarElem = document.getElementById('myAvatar');
-            if (nameElem) nameElem.innerText = myName;
-            if (avatarElem) avatarElem.src = myAvatar;
-            const editName = document.getElementById('editName');
-            const editAvatar = document.getElementById('editAvatar');
-            if (editName) editName.value = myName;
-            if (editAvatar) editAvatar.value = myAvatar;
+            const names = ['dash-name', 'myName', 'editName'];
+            names.forEach(id => { const e = document.getElementById(id); if (e) (e.value !== undefined ? e.value = myName : e.innerText = myName); });
+            const avas = ['myAvatar', 'profile-ava-preview'];
+            avas.forEach(id => { const e = document.getElementById(id); if (e) e.src = myAvatar; });
+            const editAva = document.getElementById('editAvatar'); if (editAva) editAva.value = myAvatar;
         }
 
         function updateHomeUI() {
-            const section = document.getElementById('home-auth-section');
-            if (!section) return;
+            const s = document.getElementById('home-auth-section'); if (!s) return;
             if (myId) {
-                section.innerHTML = `
-                    <img src="${myAvatar}" width="60" style="border-radius: 50%; border: 2px solid var(--primary); margin-bottom: 10px;">
-                    <h3>Chào mừng, ${myName}!</h3>
-                    <button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button>
-                    <p onclick="logout()" style="font-size: 0.8em; color: #888; cursor: pointer; text-decoration: underline;">Đăng xuất</p>
-                `;
+                s.innerHTML = `<img src="${myAvatar}" width="80" style="border-radius:50%; border:3px solid var(--primary);"><h3 style="margin:10px 0;">${myName}</h3><button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer;">Đăng xuất</p>`;
             } else {
-                section.innerHTML = `
-                    <h3>Vào game ngay</h3>
-                    <div id="google-btn-container"></div>
-                `;
-                // Khởi tạo lại nút Google programmatically
-                if (window.google) {
-                    google.accounts.id.initialize({
-                        client_id: "10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com",
-                        callback: handleCredentialResponse
-                    });
-                    google.accounts.id.renderButton(
-                        document.getElementById("google-btn-container"),
-                        { type: 'standard', shape: 'rectangular' }
-                    );
-                }
+                s.innerHTML = `<h3>Môn Sói Là</h3><div id="google-btn"></div>`;
+                if (window.google) { google.accounts.id.initialize({ client_id: "10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback: handleCredentialResponse }); google.accounts.id.renderButton(document.getElementById("google-btn"), { type: 'standard', shape: 'rectangular' }); }
             }
         }
 
-        function logout() {
-            localStorage.removeItem('werewolf_user');
-            myId = null;
-            updateHomeUI();
-            navigateTo('page-home');
-        }
+        function logout() { localStorage.removeItem('werewolf_user'); myId = null; updateHomeUI(); navigateTo('page-home'); }
+        function showDevLogin() { navigateTo('page-dev-login'); }
+        function checkDevPassword() { if (document.getElementById('devPassword').value === 'N3Tyevcl') { isDev = true; document.getElementById('dev-bar').style.display = 'block'; navigateTo(lastPage); } else alert("Sai!"); }
 
         window.onload = () => {
             const saved = localStorage.getItem('werewolf_user');
-            if (saved) {
-                const u = JSON.parse(saved);
-                myId = u.id; myName = u.name; myAvatar = u.avatar;
-                updateProfileUI();
-            }
-            updateHomeUI();
-            navigateTo('page-home'); // Luôn bắt đầu ở Home
+            if (saved) { const u = JSON.parse(saved); myId = u.id; myName = u.name; myAvatar = u.avatar; updateProfileUI(); }
+            updateHomeUI(); navigateTo('page-home');
         };
 
-        function showDevLogin() { navigateTo('page-dev-login'); }
-        function checkDevPassword() {
-            if (document.getElementById('devPassword').value === 'N3Tyevcl') {
-                isDev = true; document.getElementById('dev-bar').style.display = 'block';
-                alert("Quyền Developer đã được kích hoạt!"); navigateTo(lastPage);
-            } else alert("Sai mật khẩu!");
-        }
-
-        async function addBot() {
-            const botId = "bot_" + Date.now();
-            await fetch(`/join-room/${currentRoomCode}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: botId, name: "Bot_" + Math.floor(Math.random()*100), avatar: "https://robohash.org/" + botId, isReady: true})});
-        }
-
-        function executeDevCommand() {
-            const input = document.getElementById('devConsole'); const cmd = input.value.trim(); if (!cmd.startsWith('/')) return;
-            if (cmd.startsWith('/access')) {
-                const idx = parseInt(cmd.split(' ')[1]) - 1;
-                fetch(`/room/${currentRoomCode}/players`).then(r => r.json()).then(ps => {
-                    const t = ps[idx]; if (t) { myId = t.id; myName = t.name; myAvatar = t.avatar; connectWebSocket(); updateProfileUI(); navigateTo('page-lobby'); }
-                });
-            } else if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "DEV_COMMAND", data: cmd}));
-            input.value = '';
-        }
-
-        function toggleEdit(show) { document.getElementById('profile-display').style.display = show ? 'none' : 'block'; document.getElementById('profile-edit').style.display = show ? 'block' : 'none'; }
         function saveProfile() {
             const n = document.getElementById('editName').value.trim(); const url = document.getElementById('editAvatar').value.trim(); const file = document.getElementById('fileAvatar').files[0];
-            const finalize = (ava) => { myName = n; myAvatar = ava; localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar})); updateProfileUI(); toggleEdit(false); if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "UPDATE_PROFILE", data: JSON.stringify({name: myName, avatar: myAvatar})})); };
+            const finalize = (ava) => { myName = n; myAvatar = ava; localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar})); updateProfileUI(); if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "UPDATE_PROFILE", data: JSON.stringify({name: myName, avatar: myAvatar})})); alert("Đã lưu!"); };
             if (file) { const r = new FileReader(); r.onload = (e) => finalize(e.target.result); r.readAsDataURL(file); } else finalize(url || myAvatar);
         }
 
         async function createRoom() { const res = await fetch('/create-room', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId, name: myName, avatar: myAvatar})}); setupRoom(await res.json(), true); }
-        async function joinRoom() { const code = document.getElementById('roomCodeInput').value; const res = await fetch(`/join-room/${code}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId, name: myName, avatar: myAvatar})}); if (res.ok) { setupRoom(await res.json(), false); requestMediaPermissions(); } else alert("Lỗi!"); }
-        async function leaveRoom() { await fetch(`/leave-room/${currentRoomCode}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId})}); currentRoomCode = null; if (socket) socket.close(); navigateTo('page-dashboard'); }
+        async function joinRoom() { const code = document.getElementById('roomCodeInput').value; const res = await fetch(`/join-room/${code}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId, name: myName, avatar: myAvatar})}); if (res.ok) setupRoom(await res.json(), false); else alert("Lỗi!"); }
+        function leaveRoom() { if (currentRoomCode) fetch(`/leave-room/${currentRoomCode}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId})}); currentRoomCode = null; if (socket) socket.close(); navigateTo('page-dashboard'); }
 
-        function setupRoom(room, host) { currentRoomCode = room.code; isHost = host; document.getElementById('displayRoomCode').innerText = room.code; document.getElementById('host-controls').style.display = isHost ? 'block' : 'none'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; connectWebSocket(); navigateTo('page-lobby'); refreshPlayers(); if (isHost) requestMediaPermissions(); }
+        function setupRoom(room, host) { currentRoomCode = room.code; isHost = host; document.getElementById('displayRoomCode').innerText = room.code; document.getElementById('host-controls').style.display = isHost ? 'block' : 'none'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; connectWebSocket(); navigateTo('page-lobby'); refreshPlayers(); }
 
         function connectWebSocket() {
             const p = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -252,18 +230,19 @@
                 else if (msg.type === "PHASE_UPDATE") handlePhaseUpdate(msg.data);
                 else if (msg.type === "ANNOUNCEMENT") announce(msg.data);
             };
-            socket.onclose = () => setTimeout(connectWebSocket, 1000);
         }
 
         function updatePlayerListUI(ps) {
-            document.getElementById('playerList').innerHTML = ps.map(p => `<div class="player-card ${p.isReady ? 'ready' : ''}"><img src="${p.avatar}"><p style="font-size: 0.7em; margin: 5px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</p></div>`).join('');
+            document.getElementById('playerList').innerHTML = ps.map(p => `<div class="player-card ${p.isReady ? 'ready' : ''}"><img src="${p.avatar}"><p style="font-size: 0.6em; margin: 5px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</p></div>`).join('');
             const b = document.getElementById('player-count-badge'); const cnt = ps.length; const rCount = ps.filter(p => p.isReady).length;
-            if (cnt < 8) b.innerText = `Cần ít nhất 8 người. Còn thiếu: ${8 - cnt}`; else if (rCount < cnt) b.innerText = `Chờ sẵn sàng (${rCount}/${cnt})`; else b.innerText = "Đủ người chơi có thể bắt đầu!";
+            if (cnt < 8) b.innerText = `Cần ${8 - cnt} người nữa`; else if (rCount < cnt) b.innerText = `Chờ sẵn sàng (${rCount}/${cnt})`; else b.innerText = "Đủ người!";
             if (isHost) { const btn = document.getElementById('btnStartGame'); if (cnt >= 8 && rCount === cnt) { btn.disabled = false; btn.innerText = "BẮT ĐẦU GAME"; } else { btn.disabled = true; btn.innerText = cnt < 8 ? `CẦN THÊM ${8-cnt} NGƯỜI` : `CHỜ ${cnt-rCount} NGƯỜI SẴN SÀNG`; } }
             else { const me = ps.find(p => p.id === myId); const btn = document.getElementById('btnReady'); if (me?.isReady) { btn.innerText = "HUỶ SẴN SÀNG"; btn.style.background = "#e74c3c"; } else { btn.innerText = "SẴN SÀNG"; btn.style.background = "#2980b9"; } }
         }
 
-        async function refreshPlayers() { const res = await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); }
+        async function refreshPlayers() { if (currentRoomCode) { const res = await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
+        function showGallery() { document.getElementById('galleryList').innerHTML = allRoles.map(r => `<div class="gallery-card"><img src="${r.image}"> <div class="card-info"><h4>${r.role}</h4><p>${r.description}</p></div></div>`).join(''); }
+        function backFromGallery() { navigateTo(lastPage); }
 
         function displayMyRole(role) {
             document.getElementById('role-popup').style.display = 'block';
@@ -275,11 +254,9 @@
 
         function handlePhaseUpdate(data) {
             const parts = data.split('|'); const phase = parts[0]; const duration = parts.length > 1 ? parseInt(parts[1]) : 0; const rStatus = parts.length > 2 ? parts[2] : "";
-            document.getElementById('current-phase').innerText = "Giai đoạn: " + phase;
-            if (phase === "PREPARING") { startCountdown(300); announce("Trận đấu bắt đầu."); }
-            else if (phase === "NIGHT") { clearInterval(countdownInterval); document.getElementById('timer-display').style.display = 'none'; document.getElementById('role-popup').style.display = 'none'; document.getElementById('night-overlay').style.display = 'flex'; announce("Trời tối rồi."); }
-            else if (phase === "DAY") { document.getElementById('night-overlay').style.display = 'none'; startCountdown(duration); let m = "Trời đã sáng."; if (rStatus === "RUSSIAN_VODKA") m = "Gấu của người Nga nốc vodka! " + m; announce(m); }
-            else if (phase.includes("TRIAL")) { startCountdown(duration); announce("Vòng xét xử."); }
+            if (phase === "NIGHT") { clearInterval(countdownInterval); document.getElementById('timer-display').style.display = 'none'; document.getElementById('role-popup').style.display = 'none'; document.getElementById('night-overlay').style.display = 'flex'; announce("Trời tối rồi."); }
+            else if (phase === "DAY") { document.getElementById('night-overlay').style.display = 'none'; startCountdown(duration); let m = "Trời đã sáng."; if (rStatus === "RUSSIAN_VODKA") m = "Gấu nốc vodka! " + m; announce(m); }
+            else if (phase.includes("TRIAL") || phase === "HUNTER_REVENGE") { startCountdown(duration); announce("Hành động đặc biệt."); }
             if (isHost) { document.getElementById('host-controls').style.display = phase === "LOBBY" ? "block" : "none"; document.getElementById('btnNextPhase').style.display = phase !== "LOBBY" ? "block" : "none"; }
         }
 
@@ -288,8 +265,9 @@
         function startCountdown(s) { clearInterval(countdownInterval); let t = s; document.getElementById('timer-display').style.display = 'block'; document.getElementById('seconds').innerText = t; countdownInterval = setInterval(() => { t--; document.getElementById('seconds').innerText = t; if (t <= 0) { clearInterval(countdownInterval); if (isHost) nextPhase(); } }, 1000); }
         function announce(text) { if (!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(text); m.lang = 'vi-VN'; m.rate = 0.9; window.speechSynthesis.speak(m); }
         async function requestMediaPermissions() { try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach(t => t.stop()); } catch (err) {} }
-        function showGallery() { document.getElementById('galleryList').innerHTML = allRoles.map(r => `<div class="gallery-card"><img src="${r.image}" class="card-img"><div class="card-info"><h4>${r.role}</h4><p>${r.description}</p></div></div>`).join(''); navigateTo('page-gallery'); }
-        function backFromGallery() { navigateTo(lastPage); }
+
+        async function addBot() { const botId = "bot_" + Date.now(); await fetch(`/join-room/${currentRoomCode}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: botId, name: "Bot_" + Math.floor(Math.random()*100), avatar: "https://robohash.org/" + botId, isReady: true})}); }
+        function executeDevCommand() { const i = document.getElementById('devConsole'); const c = i.value.trim(); if (!c.startsWith('/')) return; if (c.startsWith('/access')) { const idx = parseInt(c.split(' ')[1]) - 1; fetch(`/room/${currentRoomCode}/players`).then(r => r.json()).then(ps => { const t = ps[idx]; if (t) { myId = t.id; myName = t.name; myAvatar = t.avatar; connectWebSocket(); updateProfileUI(); navigateTo('page-lobby'); } }); } else if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "DEV_COMMAND", data: c})); i.value = ''; }
     </script>
 </body>
 </html>
