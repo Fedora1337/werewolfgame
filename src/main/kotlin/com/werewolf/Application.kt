@@ -204,6 +204,16 @@ fun main() {
                                 "DEV_COMMAND" -> handleDevCommand(room, msg.data, playerId)
                                 "SKIP_DEFENSE" -> if (room.phase == "TRIAL_DEFENSE" && room.trialTargetId == playerId) triggerNextPhase(room)
                                 "DERP_REVENGE_KILL" -> if (room.derpWolfRevengeList.contains(msg.data)) { room.players.find { it.id == msg.data }?.heal = 0; room.derpWolfRevengeList.clear(); broadcastPlayerList(room) }
+                                "KICK_PLAYER" -> { // Host kick người chơi
+                                    if (room.hostId == playerId && room.phase == "LOBBY") {
+                                        val targetId = msg.data
+                                        if (targetId != room.hostId) {
+                                            room.players.removeIf { it.id == targetId }
+                                            launch { playerSessions[targetId]?.sendSerialized(SocketMessage("KICKED", "Bạn đã bị mời ra khỏi phòng!")) }
+                                            broadcastPlayerList(room)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
