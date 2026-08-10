@@ -61,10 +61,9 @@
         <!-- PAGE: HOME -->
         <div id="page-home" class="page active">
             <h1>Môn Sói Là</h1>
-            <div class="card">
-                <h3>Vào game ngay</h3>
-                <div id="g_id_onload" data-client_id="10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
-                <div class="g_id_signin" data-type="standard" data-shape="rectangular"></div>
+            <div id="home-auth-section" class="card">
+                <!-- Sẽ được cập nhật bằng JS -->
+                <h3>Đang tải...</h3>
             </div>
             <button onclick="showGallery()" class="ghost-btn" style="width: auto; margin: 20px auto;">📖 Xem bộ bài</button>
         </div>
@@ -143,15 +142,47 @@
             myId = p.sub; myName = p.name; myAvatar = p.picture;
             const saved = localStorage.getItem('werewolf_user');
             if (saved) { const u = JSON.parse(saved); myName = u.name; myAvatar = u.avatar; }
-            updateProfileUI(); localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar}));
-            navigateTo('page-dashboard');
+            updateProfileUI();
+            localStorage.setItem('werewolf_user', JSON.stringify({id: myId, name: myName, avatar: myAvatar}));
+            updateHomeUI(); // Chỉ cập nhật giao diện tại Home, không nhảy trang
         }
 
-        function updateProfileUI() { document.getElementById('myName').innerText = myName; document.getElementById('myAvatar').src = myAvatar; document.getElementById('editName').value = myName; document.getElementById('editAvatar').value = myAvatar; }
+        function updateHomeUI() {
+            const section = document.getElementById('home-auth-section');
+            if (myId) {
+                section.innerHTML = `
+                    <img src="${myAvatar}" width="60" style="border-radius: 50%; border: 2px solid var(--primary); margin-bottom: 10px;">
+                    <h3>Chào mừng, ${myName}!</h3>
+                    <button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button>
+                    <p onclick="logout()" style="font-size: 0.8em; color: #888; cursor: pointer; text-decoration: underline;">Đăng xuất</p>
+                `;
+            } else {
+                section.innerHTML = `
+                    <h3>Vào game ngay</h3>
+                    <div id="g_id_onload" data-client_id="10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
+                    <div class="g_id_signin" data-type="standard" data-shape="rectangular"></div>
+                `;
+                // Re-init Google Sign-in if needed
+                if (window.google) google.accounts.id.renderButton(document.querySelector('.g_id_signin'), {type: 'standard'});
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('werewolf_user');
+            myId = null;
+            updateHomeUI();
+            navigateTo('page-home');
+        }
 
         window.onload = () => {
             const saved = localStorage.getItem('werewolf_user');
-            if (saved) { const u = JSON.parse(saved); myId = u.id; myName = u.name; myAvatar = u.avatar; updateProfileUI(); navigateTo('page-dashboard'); }
+            if (saved) {
+                const u = JSON.parse(saved);
+                myId = u.id; myName = u.name; myAvatar = u.avatar;
+                updateProfileUI();
+            }
+            updateHomeUI();
+            navigateTo('page-home'); // Luôn bắt đầu ở Home
         };
 
         function showDevLogin() { navigateTo('page-dev-login'); }
