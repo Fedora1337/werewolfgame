@@ -54,6 +54,7 @@
 </head>
 <body>
     <header>
+        <div id="back-btn" onclick="goBack()" style="position: absolute; left: 15px; cursor: pointer; display: none; font-size: 1.5em;">←</div>
         <h2>Môn Sói Là</h2>
         <div onclick="showDevLogin()" style="position: absolute; right: 15px; opacity: 0.2; cursor: pointer;">🛠️</div>
     </header>
@@ -155,7 +156,10 @@
         ];
 
         function navigateTo(pageId) {
-            if (pageId !== 'page-gallery' && pageId !== 'page-dev-login' && pageId !== 'page-profile') lastPage = pageId;
+            const backBtn = document.getElementById('back-btn');
+            if (backBtn) backBtn.style.display = (pageId === 'page-home' || pageId === 'page-dashboard') ? 'none' : 'block';
+
+            if (pageId !== 'page-gallery' && pageId !== 'page-dev-login' && pageId !== 'page-profile' && pageId !== 'page-lobby') lastPage = pageId;
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
 
@@ -169,6 +173,15 @@
                 if (item.onclick.toString().includes(pageId)) item.classList.add('active');
             });
             if (pageId === 'page-gallery') showGallery();
+        }
+
+        function goBack() {
+            const activePage = document.querySelector('.page.active').id;
+            if (activePage === 'page-lobby') {
+                if (confirm("Rời khỏi phòng chơi?")) leaveRoom();
+            } else {
+                navigateTo(lastPage || 'page-dashboard');
+            }
         }
 
         function handleCredentialResponse(res) {
