@@ -17,9 +17,9 @@
         .nav-item.active { color: var(--primary); }
         .nav-item span { font-size: 1.5em; margin-bottom: 4px; }
 
-        .container { max-width: 1000px; margin: 0 auto; padding: calc(var(--header-h) + 20px) 20px calc(var(--nav-h) + 20px) 20px; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; }
+        .container { max-width: 1200px; margin: 0 auto; padding: calc(var(--header-h) + 20px) 20px calc(var(--nav-h) + 20px) 20px; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; transition: margin-left 0.3s, max-width 0.3s; }
 
-        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333; width: 100%; box-sizing: border-box; }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
         button { width: 100%; padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; transition: transform 0.1s; }
         button:active { transform: scale(0.98); }
@@ -103,7 +103,6 @@
 
         #dev-bar { position: fixed; bottom: var(--nav-h); left: 0; right: 0; background: #000; padding: 10px; border-top: 2px solid #27ae60; z-index: 4000; display: none; }
 
-        /* PC Dev Sidebar */
         @media (min-width: 1200px) {
             #dev-bar {
                 left: 0; top: 0; bottom: 0; right: auto;
@@ -115,11 +114,11 @@
             #dev-bar div { flex-direction: column; gap: 10px !important; }
             #dev-bar input { width: 100% !important; margin-bottom: 5px; }
             #dev-bar button { width: 100% !important; margin: 2px 0; }
-            .container { transition: margin-left 0.3s; }
+
             body.dev-expanded .container { margin-left: 300px; max-width: calc(100% - 300px); }
-            body.dev-expanded header { left: 300px; }
-            body.dev-expanded nav { left: 300px; }
-            body.dev-expanded .action-overlay { left: 315px; }
+            body.dev-expanded header { left: 300px; width: calc(100% - 300px); }
+            body.dev-expanded nav { left: 300px; width: calc(100% - 300px); }
+            body.dev-expanded .action-overlay { left: 315px; width: calc(100% - 330px); }
 
             #dev-toggle {
                 position: fixed; left: 300px; top: 50%; background: #27ae60;
