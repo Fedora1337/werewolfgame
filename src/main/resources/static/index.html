@@ -86,6 +86,21 @@
         .player-card img { border-radius: 50%; width: 50px; height: 50px; object-fit: cover; }
 
         #dev-bar { position: fixed; bottom: var(--nav-h); left: 0; right: 0; background: #000; padding: 10px; border-top: 2px solid #27ae60; z-index: 4000; display: none; }
+
+        /* PC Dev Sidebar */
+        @media (min-width: 1200px) {
+            #dev-bar {
+                left: 0; top: var(--header-h); bottom: 0; right: auto;
+                width: 250px; border-top: none; border-right: 2px solid #27ae60;
+                display: flex; flex-direction: column; padding: 20px;
+                background: #111;
+            }
+            #dev-bar div { flex-direction: column; gap: 15px !important; }
+            #dev-bar input { width: 100% !important; }
+            #dev-bar button { width: 100% !important; }
+            .container { margin-left: 250px; max-width: calc(100% - 250px); }
+        }
+
         #timer-display { position: fixed; top: 70px; left: 10px; background: rgba(231, 76, 60, 0.2); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--primary); font-size: 0.8em; z-index: 2500; }
         #night-overlay { position: fixed; inset: 0; background: black; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .role-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1500; display: none; padding: 40px 20px; overflow-y: auto; }
@@ -408,7 +423,16 @@
         function announce(text) { if (!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(text); m.lang = 'vi-VN'; m.rate = 0.9; window.speechSynthesis.speak(m); }
         async function requestMediaPermissions() { try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach(t => t.stop()); } catch (err) {} }
 
-        async function addBot() { const botId = "bot_" + Date.now(); await fetch(`/join-room/${currentRoomCode}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: botId, name: "Bot_" + Math.floor(Math.random()*100), avatar: "https://robohash.org/" + botId, isReady: true})}); }
+        async function addBot() {
+            const botCount = playersCache.filter(p => p.name.startsWith("Bot_")).length + 1;
+            const botName = "Bot_" + botCount;
+            const botId = "bot_" + Date.now() + "_" + botCount;
+            await fetch(`/join-room/${currentRoomCode}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: botId, name: botName, avatar: "https://robohash.org/" + botId, isReady: true})
+            });
+        }
         function executeDevCommand() { const i = document.getElementById('devConsole'); const c = i.value.trim(); if (!c.startsWith('/')) return; if (c.startsWith('/access')) { const idx = parseInt(c.split(' ')[1]) - 1; fetch(`/room/${currentRoomCode}/players`).then(r => r.json()).then(ps => { const t = ps[idx]; if (t) { myId = t.id; myName = t.name; myAvatar = t.avatar; connectWebSocket(); updateProfileUI(); navigateTo('page-lobby'); } }); } else if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "DEV_COMMAND", data: c})); i.value = ''; }
     </script>
 </body>
