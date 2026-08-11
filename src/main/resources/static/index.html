@@ -80,7 +80,7 @@
 
         /* GALLERY & CARD VIEWER */
         .gallery-card { background: #1a1a1a; border-radius: 12px; border: 2px solid #d4af37; overflow: hidden; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .gallery-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: bottom; border-bottom: 2px solid #d4af37; }
+        .gallery-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: center 95%; border-bottom: 2px solid #d4af37; }
         .gallery-card h4 { margin: 10px 0; color: #d4af37; font-size: 0.8em; font-family: 'Georgia', serif; text-transform: uppercase; padding: 0 5px; }
 
         #card-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center; }
@@ -246,6 +246,17 @@
             '/dev-login': 'page-dev-login'
         };
 
+        async function getCachedImageUrl(url) {
+            if (!('caches' in window)) return url;
+            const cache = await caches.open('monsoila-assets-v1');
+            const response = await cache.match(url);
+            if (response) {
+                const blob = await response.blob();
+                return URL.createObjectURL(blob);
+            }
+            return url;
+        }
+
         async function preloadImages() {
             if (!('caches' in window)) return;
             const cacheName = 'monsoila-assets-v1';
@@ -371,65 +382,73 @@
         function sendAction(t) { if(!selectedPlayerId) return; socket.send(JSON.stringify({type:t, data:selectedPlayerId})); selectedPlayerId=null; updatePlayerListUI(playersCache); }
         async function refreshPlayers() { if(currentRoomCode){ const res=await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
 
-        function showGallery() {
+        async function showGallery() {
             const villagers = allRoles.filter(r => !r.role.includes('WOLF') && r.role !== 'CUPID' && r.role !== 'PIPER');
             const wolves = allRoles.filter(r => r.role.includes('WOLF'));
             const third = allRoles.filter(r => r.role === 'CUPID' || r.role === 'PIPER');
 
-            const renderGrid = (list, targetId) => {
-                document.getElementById(targetId).innerHTML = list.map((r) => {
+            const renderGrid = async (list, targetId) => {
+                const htmlParts = await Promise.all(list.map(async (r) => {
                     const originalIdx = allRoles.indexOf(r);
+                    const displayUrl = await getCachedImageUrl(r.image);
                     return `<div class="gallery-card" onclick="openCardViewer(${originalIdx})">
-                        <img src="${r.image}">
+                        <img src="${displayUrl}">
                         <h4>${r.role.replace(/_/g, ' ')}</h4>
                     </div>`;
-                }).join('');
+                }));
+                document.getElementById(targetId).innerHTML = htmlParts.join('');
             };
 
-            renderGrid(villagers, 'gallery-villagers');
-            renderGrid(wolves, 'gallery-wolves');
-            renderGrid(third, 'gallery-3rd');
+            await renderGrid(villagers, 'gallery-villagers');
+            await renderGrid(wolves, 'gallery-wolves');
+            await renderGrid(third, 'gallery-3rd');
         }
 
-        function openCardViewer(idx) {
+        async function openCardViewer(idx) {
             currentViewerIndex = idx; const r = allRoles[idx];
             const card = document.getElementById('mainViewerCard');
             card.classList.remove('flipped'); // Reset xoay
 
-            // Cập nhật thông tin mặt trước
-            document.getElementById('viewer-img').src = r.image;
+            // Cập nhật thông tin mặt trước (Lấy từ Cache thật)
+            const displayUrl = await getCachedImageUrl(r.image);
+            const img = document.getElementById('viewer-img');
+            img.src = displayUrl;
+
+            // ĂN GIAN: Chỉ lật khi ảnh đã nạp xong vào RAM
+            try { await img.decode(); } catch(e) {}
+
             document.getElementById('viewer-title').innerText = r.role.replace(/_/g, ' ');
             document.getElementById('viewer-desc').innerText = r.description;
-
             document.getElementById('card-viewer').style.display = 'flex';
 
-            // Ăn gian thời gian render bằng cách lật sau 100ms
-            setTimeout(() => card.classList.add('flipped'), 100);
+            setTimeout(() => card.classList.add('flipped'), 50);
         }
         function closeCardViewer() { document.getElementById('card-viewer').style.display = 'none'; }
 
-        function nextCard() {
+        async function nextCard() {
             currentViewerIndex = (currentViewerIndex + 1) % allRoles.length;
             const card = document.getElementById('mainViewerCard');
             card.classList.remove('flipped'); // Lật về mặt sau để đổi ảnh
             setTimeout(() => openCardViewer(currentViewerIndex), 300);
         }
 
-        function prevCard() {
+        async function prevCard() {
             currentViewerIndex = (currentViewerIndex - 1 + allRoles.length) % allRoles.length;
             const card = document.getElementById('mainViewerCard');
             card.classList.remove('flipped');
             setTimeout(() => openCardViewer(currentViewerIndex), 300);
         }
 
-        function displayMyRole(role) {
+        async function displayMyRole(role) {
             document.getElementById('role-popup').style.display='block';
             const rData=allRoles.find(r=>r.role===role.role)||allRoles[1];
+            const displayUrl = await getCachedImageUrl(rData.image);
+
             document.getElementById('result').innerHTML=`
                 <div class="role-card-big" id="myRoleCard">
                     <div class="viewer-back"></div>
                     <div class="viewer-front">
-                        <img src="${rData.image}">
+                        <img id="my-role-img" src="${displayUrl}">
                         <div class="role-card-content">
                             <h2 style="color:#d4af37;">VAI DIỄN</h2>
                             <h1 style="color:${role.role.includes('WEREWOLF')?'#ff4d4d':'#4da6ff'};">${role.role.replace(/_/g, ' ')}</h1>
@@ -438,9 +457,12 @@
                         </div>
                     </div>
                 </div>`;
-            // Hiệu ứng lật bài khi nhận vai
+
+            const img = document.getElementById('my-role-img');
+            try { await img.decode(); } catch(e) {}
+
             const card = document.getElementById('myRoleCard');
-            card.classList.add('viewer-card'); // Dùng chung class perspective
+            card.classList.add('viewer-card');
             setTimeout(() => card.classList.add('flipped'), 500);
         }
         function confirmUnderstand() { document.getElementById('btnUnderstand').style.background='#7f8c8d'; document.getElementById('btnUnderstand').innerText='OK'; document.getElementById('btnUnderstand').disabled=true; socket.send(JSON.stringify({type:"I_UNDERSTAND", data:""})); }
