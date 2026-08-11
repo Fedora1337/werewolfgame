@@ -224,7 +224,25 @@
             '/dev-login': 'page-dev-login'
         };
 
+        async function preloadImages() {
+            if (!('caches' in window)) return;
+            const cacheName = 'monsoila-assets-v1';
+            const urlsToCache = allRoles.map(r => r.image);
+            try {
+                const cache = await caches.open(cacheName);
+                const keys = await cache.keys();
+                if (keys.length >= urlsToCache.length) {
+                    logDev("Assets sẵn sàng! ⚡");
+                    return;
+                }
+                logDev("Đang tải bộ bài (Persistent)... 📥");
+                await cache.addAll(urlsToCache);
+                logDev("Bộ bài đã được lưu vĩnh cửu! ✅");
+            } catch (e) { console.warn("Cache error:", e); }
+        }
+
         function navigateTo(pId, updateHistory = true) {
+            preloadImages(); // Tranh thủ tải khi chuyển trang
             const b = document.getElementById('back-btn'); if(b) b.style.display = (pId==='page-home'||pId==='page-dashboard')?'none':'block';
             if(pId!=='page-gallery'&&pId!=='page-dev-login'&&pId!=='page-profile'&&pId!=='page-lobby') lastPage=pId;
 
