@@ -100,14 +100,19 @@
         }
         .viewer-back::after { content: "MÔN SÓI LÀ"; color: #d4af37; font-family: 'Georgia', serif; letter-spacing: 4px; font-weight: bold; border: 2px solid #d4af37; padding: 20px; }
 
-        .viewer-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: bottom; border-bottom: 3px solid #d4af37; }
+        .viewer-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: center 95%; border-bottom: 3px solid #d4af37; }
         .viewer-info { padding: 20px; text-align: center; }
         .viewer-info h2 { color: #d4af37; margin: 0; font-family: 'Georgia', serif; text-transform: uppercase; }
         .viewer-info p { font-size: 0.95em; color: #ccc; font-style: italic; margin-top: 10px; line-height: 1.5; }
 
         /* FIXED NAV BUTTONS FOR MOBILE */
         .viewer-nav { position: absolute; top: 40%; width: 100%; display: flex; justify-content: space-between; padding: 0 10px; box-sizing: border-box; pointer-events: none; z-index: 6005; }
-        .nav-btn { background: rgba(0,0,0,0.6); color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8em; cursor: pointer; pointer-events: auto; border: 1px solid #d4af37; backdrop-filter: blur(5px); }
+        .nav-btn {
+            background: rgba(0,0,0,0.6); color: white; width: 45px; height: 45px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.8em;
+            cursor: pointer; pointer-events: auto; border: 1px solid #d4af37; backdrop-filter: blur(5px);
+            padding-bottom: 5px;
+        }
         .close-viewer { position: absolute; top: -50px; right: 0; color: white; font-size: 2.5em; cursor: pointer; pointer-events: auto; }
 
         /* ACTION OVERLAY */
