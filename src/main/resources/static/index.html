@@ -90,8 +90,10 @@
         .viewer-info { padding: 20px; }
         .viewer-info h2 { color: #d4af37; margin: 0; font-family: 'Georgia', serif; text-transform: uppercase; }
         .viewer-info p { font-size: 0.95em; color: #ccc; font-style: italic; margin-top: 10px; line-height: 1.5; }
-        .viewer-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 130%; display: flex; justify-content: space-between; pointer-events: none; }
-        .nav-btn { background: rgba(255,255,255,0.1); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2em; cursor: pointer; pointer-events: auto; border: 1px solid #d4af37; }
+
+        /* FIXED NAV BUTTONS FOR MOBILE */
+        .viewer-nav { position: absolute; top: 40%; width: 100%; display: flex; justify-content: space-between; padding: 0 10px; box-sizing: border-box; pointer-events: none; z-index: 6005; }
+        .nav-btn { background: rgba(0,0,0,0.6); color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8em; cursor: pointer; pointer-events: auto; border: 1px solid #d4af37; backdrop-filter: blur(5px); }
         .close-viewer { position: absolute; top: -50px; right: 0; color: white; font-size: 2.5em; cursor: pointer; pointer-events: auto; }
 
         /* ACTION OVERLAY */
