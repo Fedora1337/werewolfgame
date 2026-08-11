@@ -136,7 +136,18 @@
                     <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng (6 số)..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
                     <div id="page-profile" class="page"><div class="card"><img id="profile-ava-preview" src="" width="100" height="100" style="border-radius:50%; border:4px solid var(--primary); object-fit:cover;"><div style="text-align:left"><label style="font-size:0.8em;color:#888">TÊN HIỂN THỊ</label><input type="text" id="editName"><label style="font-size:0.8em;color:#888">TẢI ẢNH LÊN</label><input type="file" id="fileAvatar"><label style="font-size:0.8em;color:#888">HOẶC URL ẢNH</label><input type="text" id="editAvatar"></div><button onclick="saveProfile()" style="background:#27ae60">LƯU HỒ SƠ</button><button onclick="logout()" class="ghost-btn" style="color:#e74c3c">Đăng xuất</button></div></div>
                     <div id="page-lobby" class="page"><div class="card" style="flex:1; overflow-y:auto"><h2>Mã: <span id="displayRoomCode" style="color:#f1c40f">######</span></h2><div id="player-count-badge" style="background:#333;padding:5px 10px;border-radius:10px;font-size:0.8em;margin-bottom:10px">Đang chờ...</div><div id="game-grid" class="game-grid"></div></div><button id="btnReady" onclick="toggleReady()" style="display:none; background:#2980b9">SẴN SÀNG</button><button onclick="leaveRoom()" class="ghost-btn" style="color:#e74c3c">RỜI PHÒNG</button></div>
-                    <div id="page-gallery" class="page"><h2 style="color:#f1c40f">Bộ Bài Môn Sói Là</h2><div class="gallery-grid" id="galleryList"></div></div>
+                    <div id="page-gallery" class="page">
+                        <h2 style="color:#f1c40f; margin-bottom: 30px;">Bộ Bài Môn Sói Là</h2>
+
+                        <h3 style="color: #4da6ff; text-align: left; border-left: 5px solid #4da6ff; padding-left: 15px; margin: 20px 0;">PHE DÂN LÀNG</h3>
+                        <div class="gallery-grid" id="gallery-villagers"></div>
+
+                        <h3 style="color: #ff4d4d; text-align: left; border-left: 5px solid #ff4d4d; padding-left: 15px; margin: 40px 0 20px 0;">PHE MA SÓI</h3>
+                        <div class="gallery-grid" id="gallery-wolves"></div>
+
+                        <h3 style="color: #f1c40f; text-align: left; border-left: 5px solid #f1c40f; padding-left: 15px; margin: 40px 0 20px 0;">PHE THỨ 3</h3>
+                        <div class="gallery-grid" id="gallery-3rd"></div>
+                    </div>
                     <div id="page-dev-login" class="page"><div class="card"><h3>Developer Portal</h3><input type="password" id="devPassword" placeholder="Mật khẩu..."><button onclick="checkDevPassword()">Kích hoạt</button></div></div>
                 </div>
             </main>
@@ -276,13 +287,23 @@
         function updateHomeUI() { const s=document.getElementById('home-auth-section'); if(!s) return; if(myId){ s.innerHTML=`<img src="${myAvatar}" width="80" style="border-radius:50%; border:3px solid var(--primary);"><h3 style="margin:10px 0;">${myName}</h3><button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer;">Đăng xuất</p>`; } else { s.innerHTML=`<h3>Vào game ngay</h3><div id="google-btn"></div>`; if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'rectangular'}); } } }
         function logout() { localStorage.removeItem('werewolf_user'); myId=null; updateHomeUI(); navigateTo('page-home'); }
         function showDevLogin() { navigateTo('page-dev-login'); }
-        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
+        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
         function toggleDevBar() { const b = document.getElementById('dev-sidebar'); b.classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
 
         window.onload=()=>{
             const s=localStorage.getItem('werewolf_user');
             if(s){ const u=JSON.parse(s); myId=u.id; myName=u.name; myAvatar=u.avatar; updateProfileUI(); }
+
+            // RESTORE DEV BAR IF AUTHORIZED
+            if(localStorage.getItem('werewolf_dev_auth') === 'true'){
+                isDev = true;
+                document.getElementById('dev-sidebar').classList.add('active');
+                document.getElementById('dev-toggle').style.display = 'flex';
+                document.body.classList.add('dev-open');
+                document.body.classList.add('dev-expanded');
+            }
+
             updateHomeUI();
             handleInitialRoute();
         };
@@ -311,8 +332,23 @@
         async function refreshPlayers() { if(currentRoomCode){ const res=await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
 
         function showGallery() {
-            const list = document.getElementById('galleryList');
-            list.innerHTML = allRoles.map((r, i) => `<div class="gallery-card" onclick="openCardViewer(${i})"><img src="${r.image}"><h4>${r.role.replace(/_/g, ' ')}</h4></div>`).join('');
+            const villagers = allRoles.filter(r => !r.role.includes('WOLF') && r.role !== 'CUPID' && r.role !== 'PIPER');
+            const wolves = allRoles.filter(r => r.role.includes('WOLF'));
+            const third = allRoles.filter(r => r.role === 'CUPID' || r.role === 'PIPER');
+
+            const renderGrid = (list, targetId) => {
+                document.getElementById(targetId).innerHTML = list.map((r) => {
+                    const originalIdx = allRoles.indexOf(r);
+                    return `<div class="gallery-card" onclick="openCardViewer(${originalIdx})">
+                        <img src="${r.image}">
+                        <h4>${r.role.replace(/_/g, ' ')}</h4>
+                    </div>`;
+                }).join('');
+            };
+
+            renderGrid(villagers, 'gallery-villagers');
+            renderGrid(wolves, 'gallery-wolves');
+            renderGrid(third, 'gallery-3rd');
         }
 
         function openCardViewer(idx) {
