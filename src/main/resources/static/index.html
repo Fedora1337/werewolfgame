@@ -59,6 +59,10 @@
         .nav-item.active::after { content: ""; position: absolute; bottom: 0; left: 20%; right: 20%; height: 4px; background: var(--primary); border-radius: 4px 4px 0 0; box-shadow: 0 -2px 10px var(--primary); }
         .nav-item span { font-size: 1.6em; margin-bottom: 4px; }
 
+        /* PAGE SYSTEM - FIX "LOẠN CÀO CÀO" */
+        .page { display: none !important; width: 100%; flex-direction: column; }
+        .page.active { display: flex !important; }
+
         /* GRID SYSTEMS */
         .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; width: 100%; }
         .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; }
@@ -90,22 +94,16 @@
         .nav-btn { background: rgba(255,255,255,0.1); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2em; cursor: pointer; pointer-events: auto; border: 1px solid #d4af37; }
         .close-viewer { position: absolute; top: -50px; right: 0; color: white; font-size: 2.5em; cursor: pointer; pointer-events: auto; }
 
-        /* POPUPS */
-        .role-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 4500; display: none; padding: 40px 20px; overflow-y: auto; text-align: center; }
-        .role-card-big { background: #1a1a1a; border: 4px solid #d4af37; border-radius: 20px; overflow: hidden; max-width: 350px; margin: 40px auto; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); }
-        .role-card-big img { width: 100%; aspect-ratio: 0.68 / 1; object-fit: cover; object-position: bottom; border-bottom: 3px solid #d4af37; }
-        .role-card-content { padding: 25px; }
-
         /* ACTION OVERLAY */
         #action-overlay { position: absolute; bottom: 20px; left: 20px; right: 20px; display: none; align-items: flex-end; justify-content: space-between; pointer-events: none; z-index: 3000; }
         .host-action-bar { background: rgba(20, 20, 20, 0.98); padding: 12px; border-radius: 20px; border: 2px solid #333; pointer-events: auto; display: none; flex-direction: column; gap: 8px; width: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .self-card-mini { background: rgba(26, 26, 26, 0.95); border: 2px solid var(--primary); border-radius: 20px; padding: 8px 15px; display: flex; align-items: center; gap: 12px; pointer-events: auto; min-width: 140px; backdrop-filter: blur(10px); box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
         .self-card-mini img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--primary); }
 
-        .kick-btn { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #111; z-index: 5; cursor: pointer; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; width: 100%; box-sizing: border-box; }
         input { padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
         button { padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; }
-        #timer-display { position: fixed; top: 70px; left: 10px; background: rgba(231, 76, 60, 0.2); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--primary); font-size: 0.8em; z-index: 2500; }
+        .kick-btn { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #111; z-index: 5; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -161,7 +159,7 @@
         </div>
     </div>
 
-    <!-- CARD VIEWER -->
+    <!-- FULLSCREEN CARD VIEWER -->
     <div id="card-viewer">
         <div class="viewer-content">
             <div class="close-viewer" onclick="closeCardViewer()">×</div>
@@ -203,21 +201,68 @@
             { role: 'DERP_WOLF', image: 'images/roles/thederpwolf.png', description: 'Sói Ngu - Có quyền báo thù.' }
         ];
 
-        function navigateTo(pId) {
+        // MAPPING VIRTUAL ROUTES TO PAGE IDs
+        const routes = {
+            '/home': 'page-home',
+            '/dashboard': 'page-dashboard',
+            '/gallery': 'page-gallery',
+            '/lobby': 'page-lobby',
+            '/profile': 'page-profile',
+            '/dev-login': 'page-dev-login'
+        };
+
+        function navigateTo(pId, updateHistory = true) {
             const b = document.getElementById('back-btn'); if(b) b.style.display = (pId==='page-home'||pId==='page-dashboard')?'none':'block';
             if(pId!=='page-gallery'&&pId!=='page-dev-login'&&pId!=='page-profile'&&pId!=='page-lobby') lastPage=pId;
-            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(pId).classList.add('active');
+
+            // HIDE ALL PAGES FIRST
+            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+
+            // SHOW TARGET PAGE
+            const target = document.getElementById(pId);
+            if (target) target.classList.add('active');
+
+            // NAVBAR HIGHLIGHT
             document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
             if(pId==='page-dashboard') document.getElementById('nav-dash').classList.add('active');
             if(pId==='page-gallery') document.getElementById('nav-gall').classList.add('active');
             if(pId==='page-profile') document.getElementById('nav-prof').classList.add('active');
-            const nav=document.getElementById('bottom-nav'); if(pId==='page-lobby'||pId==='page-home') nav.style.display='none'; else nav.style.display='grid';
+
+            const nav=document.getElementById('bottom-nav');
+            if(pId==='page-lobby'||pId==='page-home') nav.style.display='none'; else nav.style.display='grid';
+
             document.getElementById('action-overlay').style.display = (pId==='page-lobby') ? 'flex' : 'none';
             if(pId==='page-gallery') showGallery();
             updateProfileUI();
+
+            // HISTORY API
+            if (updateHistory) {
+                const path = Object.keys(routes).find(key => routes[key] === pId) || '/home';
+                history.pushState({ pageId: pId }, '', path);
+            }
         }
 
-        function goBack() { const cur=document.querySelector('.page.active').id; if(cur==='page-lobby'){ if(confirm("Rời?")) leaveRoom(); } else navigateTo(lastPage); }
+        window.onpopstate = (event) => {
+            if (event.state && event.state.pageId) {
+                navigateTo(event.state.pageId, false);
+            } else {
+                handleInitialRoute();
+            }
+        };
+
+        function handleInitialRoute() {
+            const path = window.location.pathname;
+            const pId = routes[path] || 'page-home';
+            navigateTo(pId, false);
+        }
+
+        function goBack() {
+            const cur=document.querySelector('.page.active').id;
+            if(cur==='page-lobby'){ if(confirm("Rời?")) leaveRoom(); }
+            else if (history.length > 1) { history.back(); }
+            else { navigateTo(lastPage); }
+        }
+
         function handleCredentialResponse(res) { const p=JSON.parse(atob(res.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); myId=p.sub; myName=p.name; myAvatar=p.picture; const s=localStorage.getItem('werewolf_user'); if(s){ const u=JSON.parse(s); myName=u.name; myAvatar=u.avatar; } updateProfileUI(); localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateHomeUI(); }
 
         function updateProfileUI() {
@@ -232,7 +277,13 @@
         function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
         function toggleDevBar() { const b = document.getElementById('dev-sidebar'); b.classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
-        window.onload=()=>{ const s=localStorage.getItem('werewolf_user'); if(s){ const u=JSON.parse(s); myId=u.id; myName=u.name; myAvatar=u.avatar; updateProfileUI(); } updateHomeUI(); navigateTo('page-home'); };
+
+        window.onload=()=>{
+            const s=localStorage.getItem('werewolf_user');
+            if(s){ const u=JSON.parse(s); myId=u.id; myName=u.name; myAvatar=u.avatar; updateProfileUI(); }
+            updateHomeUI();
+            handleInitialRoute();
+        };
 
         function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); alert("Lưu!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
         async function createRoom() { const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); setupRoom(await res.json(), true); }

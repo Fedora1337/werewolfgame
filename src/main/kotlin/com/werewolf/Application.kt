@@ -137,6 +137,19 @@ fun main() {
         val moderator = Moderator()
         routing {
             staticResources("/", "static")
+            
+            // FALLBACK ROUTES FOR SPA VIRTUAL NAVIGATION
+            listOf("/home", "/dashboard", "/gallery", "/lobby", "/profile", "/dev-login").forEach { path ->
+                get(path) {
+                    val html = javaClass.classLoader.getResource("static/index.html")?.readBytes()
+                    if (html != null) {
+                        call.respondBytes(html, io.ktor.http.ContentType.Text.Html)
+                    } else {
+                        call.respond(io.ktor.http.HttpStatusCode.NotFound)
+                    }
+                }
+            }
+
             webSocket("/ws/{playerId}") {
                 val playerId = call.parameters["playerId"] ?: return@webSocket
                 playerSessions[playerId] = this
