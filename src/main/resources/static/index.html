@@ -9,33 +9,32 @@
 
         body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
 
-        /* ROOT LAYOUT */
-        #app-root { display: flex; width: 100vw; height: 100vh; overflow: hidden; position: relative; }
+        /* ROOT LAYOUT - FLEX IS KEY */
+        #app-root { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
 
         /* DEV SIDEBAR */
         #dev-sidebar {
             width: var(--dev-w); background: #111; border-right: 2px solid #27ae60;
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
-            transition: transform 0.3s ease; flex-shrink: 0; z-index: 4000;
-            position: absolute; left: 0; top: 0; bottom: 0;
-            transform: translateX(-100%);
+            transition: margin-left 0.3s ease; flex-shrink: 0; z-index: 4000;
+            margin-left: calc(-1 * var(--dev-w)); /* Hidden by default */
         }
-        #dev-sidebar.active { transform: translateX(0); }
+        #dev-sidebar.active { margin-left: 0; }
 
         #dev-toggle {
-            position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            position: fixed; left: 0; top: 50%; transform: translateY(-50%);
             background: #27ae60; width: 35px; height: 60px; display: none;
             align-items: center; justify-content: center; border-radius: 0 10px 10px 0;
             cursor: pointer; z-index: 4001; transition: left 0.3s; color: white;
         }
-        body.dev-open #dev-toggle { display: flex; left: var(--dev-w); }
+        body.dev-open #dev-toggle { display: flex; }
+        body.dev-open.dev-expanded #dev-toggle { left: var(--dev-w); }
 
         /* MAIN CONTENT AREA */
         #main-content {
             flex: 1; display: flex; flex-direction: column; position: relative;
-            overflow: hidden; transition: all 0.3s ease; width: 100%;
+            overflow: hidden; width: 100%; background: var(--bg);
         }
-        body.dev-open.dev-expanded #main-content { margin-left: var(--dev-w); width: calc(100% - var(--dev-w)); }
 
         header {
             height: var(--header-h); background: rgba(26,26,26,0.95);
