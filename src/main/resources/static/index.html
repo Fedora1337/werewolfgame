@@ -229,7 +229,7 @@
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0;
+        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [];
         const allRoles = [
             { role: 'WEREWOLF', image: 'images/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
             { role: 'VILLAGER', image: 'images/roles/thevillager.png', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
@@ -416,11 +416,14 @@
             const wolves = allRoles.filter(r => r.role.includes('WOLF'));
             const third = allRoles.filter(r => r.role === 'CUPID' || r.role === 'PIPER');
 
+            // Cập nhật danh sách hiển thị theo trình tự mới
+            displayRoles = [...villagers, ...wolves, ...third];
+
             const renderGrid = async (list, targetId) => {
                 const htmlParts = await Promise.all(list.map(async (r) => {
-                    const originalIdx = allRoles.indexOf(r);
+                    const idxInDisplay = displayRoles.indexOf(r);
                     const displayUrl = await getCachedImageUrl(r.image);
-                    return `<div class="gallery-card" onclick="openCardViewer(${originalIdx})">
+                    return `<div class="gallery-card" onclick="openCardViewer(${idxInDisplay})">
                         <img src="${displayUrl}">
                         <h4>${r.role.replace(/_/g, ' ')}</h4>
                     </div>`;
@@ -434,7 +437,7 @@
         }
 
         async function openCardViewer(idx) {
-            currentViewerIndex = idx; const r = allRoles[idx];
+            currentViewerIndex = idx; const r = displayRoles[idx];
             const card = document.getElementById('mainViewerCard');
             card.classList.remove('flipped'); // Reset xoay
 
@@ -455,14 +458,14 @@
         function closeCardViewer() { document.getElementById('card-viewer').style.display = 'none'; }
 
         async function nextCard() {
-            currentViewerIndex = (currentViewerIndex + 1) % allRoles.length;
+            currentViewerIndex = (currentViewerIndex + 1) % displayRoles.length;
             const card = document.getElementById('mainViewerCard');
             card.classList.remove('flipped'); // Lật về mặt sau để đổi ảnh
             setTimeout(() => openCardViewer(currentViewerIndex), 300);
         }
 
         async function prevCard() {
-            currentViewerIndex = (currentViewerIndex - 1 + allRoles.length) % allRoles.length;
+            currentViewerIndex = (currentViewerIndex - 1 + displayRoles.length) % displayRoles.length;
             const card = document.getElementById('mainViewerCard');
             card.classList.remove('flipped');
             setTimeout(() => openCardViewer(currentViewerIndex), 300);

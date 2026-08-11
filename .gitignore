@@ -1,7 +1,20 @@
-.gradle
-build
-out
-.idea
+.gradle/
+build/
+out/
+.idea/
 *.iml
+*.iws
+*.ipr
 local.properties
 .DS_Store
+
+# Gradle wrapper
+!gradle/wrapper/gradle-wrapper.jar
+
+# Log files
+*.log
+
+# OS generated files
+Thumbs.db
+db.crypt
+desktop.ini
