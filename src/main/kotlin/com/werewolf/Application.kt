@@ -131,6 +131,25 @@ class Moderator {
 
 fun main() {
     val port = System.getenv("PORT")?.toInt() ?: 8080
+    
+    // KEEP-ALIVE SYSTEM (LÁCH LUẬT RENDER)
+    GlobalScope.launch {
+        while (true) {
+            try {
+                // Cứ 10 phút tự "khều" mình một cái để không bị ngủ đông
+                delay(600000) 
+                val url = java.net.URL("https://monsoila.onrender.com/home")
+                val connection = url.openConnection() as java.net.HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 5000
+                val code = connection.responseCode
+                println("> [Keep-Alive] Ping server thành công: $code")
+            } catch (e: Exception) {
+                println("> [Keep-Alive] Ping lỗi (Có thể server đang khởi động): ${e.message}")
+            }
+        }
+    }
+
     embeddedServer(Netty, port = port, host = "0.0.0.0") {
         install(ContentNegotiation) { json() }
         install(WebSockets) { pingPeriod = Duration.ofSeconds(15); timeout = Duration.ofSeconds(15); contentConverter = KotlinxWebsocketSerializationConverter(Json) }
