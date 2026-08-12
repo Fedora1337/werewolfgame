@@ -257,14 +257,14 @@
     <script>
         let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [];
         const allRoles = [
-            //{ role: 'WEREWOLF', image: 'images/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
+            { role: 'WEREWOLF', image: 'images/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
             { role: 'VILLAGER', image: 'images/roles/thevillager.png', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
             { role: 'SEER', image: 'images/roles/theseer.png', description: 'Tiên Tri - Soi phe 1 người mỗi đêm.' },
             { role: 'GUARDIAN', image: 'images/roles/theguardian.png', description: 'Bảo Vệ - Miễn nhiễm with Sói đêm đó.' },
             { role: 'WITCH', image: 'images/roles/thewitch.png', description: 'Phù Thủy - Độc và Cứu.' },
             { role: 'HUNTER', image: 'images/roles/thehunter.png', description: 'Thợ Săn - Kéo theo người chết cùng.' },
             { role: 'RUSSIAN', image: 'images/roles/therussianpng.png', description: 'Người Nga - Gấu báo Sói.' },
-            { role: 'THIEF', image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=400', description: 'Ăn Trộm - Chọn bài dư.' },
+            //{ role: 'THIEF', image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=400', description: 'Ăn Trộm - Chọn bài dư.' },
             { role: 'THREE_BROTHERS', image: 'images/roles/thethreebrothers.png', description: '3 Anh Em - Nhận mặt đêm 1.' },
             { role: 'TWINS', image: 'images/roles/thetwins.png', description: '2 Chị Em - Báo thù.' },
             { role: 'CUPID', image: 'images/roles/thecupid.png', description: 'Cupid - Ghép đôi.' },
