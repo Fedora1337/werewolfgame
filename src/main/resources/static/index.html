@@ -427,7 +427,7 @@
 
         function goBack() {
             const cur=document.querySelector('.page.active').id;
-            if(cur==='page-lobby'){ if(confirm("Rời?")) leaveRoom(); }
+            if(cur==='page-lobby'){ showConfirm("Rời?", leaveRoom); }
             else if (history.length > 1) { history.back(); }
             else { navigateTo(lastPage); }
         }
@@ -447,6 +447,24 @@
             overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.3s ease;';
             overlay.innerHTML = `<div class="card" style="max-width:320px; text-align:center; border:2px solid var(--primary); box-shadow: 0 0 30px var(--primary);"><h3 style="color:var(--primary); margin-top:0;">THÔNG BÁO</h3><p style="margin:20px 0; font-size:0.9em; line-height:1.5;">${message}</p><button onclick="this.parentElement.parentElement.remove()" style="margin:0; padding:12px;">XÁC NHẬN</button></div>`;
             document.body.appendChild(overlay);
+        }
+        function showConfirm(message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.3s ease;';
+            overlay.innerHTML = `
+                <div class="card" style="max-width:320px; text-align:center; border:2px solid var(--primary); box-shadow: 0 0 30px var(--primary);">
+                    <h3 style="color:var(--primary); margin-top:0;">XÁC NHẬN</h3>
+                    <p style="margin:20px 0; font-size:0.9em; line-height:1.5;">${message}</p>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="margin:0; padding:12px; background:#555;">HỦY</button>
+                        <button id="confirmBtn" style="margin:0; padding:12px;">ĐỒNG Ý</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('#confirmBtn').onclick = () => {
+                overlay.remove();
+                onConfirm();
+            };
         }
         function showDevLogin() { navigateTo('page-dev-login'); }
         function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
@@ -559,7 +577,7 @@
             updateActionButtons();
         }
 
-        function kickPlayer(id) { if(confirm("Kick?")) socket.send(JSON.stringify({type:"KICK_PLAYER", data:id})); }
+        function kickPlayer(id) { showConfirm("Kick?", () => socket.send(JSON.stringify({type:"KICK_PLAYER", data:id}))); }
         function selectPlayer(id) { selectedPlayerId=(selectedPlayerId===id)?null:id; updatePlayerListUI(playersCache); }
         function updateActionButtons() { const c=document.getElementById('action-buttons'); const o=document.getElementById('action-overlay'); if(document.querySelector('.page.active').id!=='page-lobby'){ o.style.display='none'; return; } o.style.display='flex'; c.innerHTML=''; if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`; }
         function sendAction(t) { if(!selectedPlayerId) return; socket.send(JSON.stringify({type:t, data:selectedPlayerId})); selectedPlayerId=null; updatePlayerListUI(playersCache); }
