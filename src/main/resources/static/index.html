@@ -373,9 +373,28 @@
                 if (overlay) {
                     overlay.style.opacity = '0';
                     overlay.style.visibility = 'hidden';
-                    setTimeout(() => overlay.remove(), 600);
+                    // Không remove nữa để tái sử dụng
+                    setTimeout(() => { overlay.style.display = 'none'; }, 600);
                 }
             }
+        }
+
+        function showLoading(title, statusMsg) {
+            const overlay = document.getElementById('loading-overlay');
+            if (!overlay) return;
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '1';
+            overlay.style.visibility = 'visible';
+            overlay.querySelector('h3').innerHTML = title + '<span class="dots"></span>';
+            document.getElementById('loading-status').innerHTML = statusMsg + '<span class="dots"></span>';
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if (!overlay) return;
+            overlay.style.opacity = '0';
+            overlay.style.visibility = 'hidden';
+            setTimeout(() => { overlay.style.display = 'none'; }, 600);
         }
 
         function navigateTo(pId, updateHistory = true) {
@@ -488,15 +507,27 @@
         };
 
         function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); alert("Lưu!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
-        async function createRoom() { const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); setupRoom(await res.json(), true); }
+        async function createRoom() {
+            showLoading("ĐANG KHỞI TẠO", "Đang thiết lập không gian sảnh");
+            const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})});
+            setupRoom(await res.json(), true);
+            setTimeout(hideLoading, 500);
+        }
         async function joinRoom() {
             const c=document.getElementById('roomCodeInput').value;
+            showLoading("ĐANG GIA NHẬP", "Đang kết nối đến phòng " + c);
             const res=await fetch(`/join-room/${c}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})});
-            if(res.ok) setupRoom(await res.json(), false);
-            else showNotification("Mã phòng không chính xác hoặc phòng đã đầy!");
+            if(res.ok) {
+                setupRoom(await res.json(), false);
+                setTimeout(hideLoading, 500);
+            } else {
+                hideLoading();
+                showNotification("Mã phòng không chính xác hoặc phòng đã đầy!");
+            }
         }
 
         async function attemptAutoJoin(code) {
+            showLoading("TỰ ĐỘNG GIA NHẬP", "Đang tìm kiếm phòng " + code);
             // Chờ myId sẵn sàng (từ localStorage)
             if (!myId) {
                 const s = localStorage.getItem('werewolf_user');
@@ -509,6 +540,7 @@
             }
 
             if (!myId) {
+                hideLoading();
                 showNotification("Vui lòng đăng nhập trước khi tham gia phòng!");
                 navigateTo('page-home');
                 return;
@@ -522,7 +554,9 @@
 
             if (res.ok) {
                 setupRoom(await res.json(), false);
+                setTimeout(hideLoading, 500);
             } else {
+                hideLoading();
                 showNotification("Không thể tự động gia nhập phòng này!");
                 navigateTo('page-dashboard');
             }
