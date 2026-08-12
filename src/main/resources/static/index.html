@@ -230,7 +230,7 @@
                     <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng (6 số)..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
                     <div id="page-profile" class="page">
                         <div class="card" style="align-items: center; display: flex; flex-direction: column;">
-                            <div style="position: relative; cursor: pointer;" onclick="document.getElementById('avatar-options').style.display='flex'; document.getElementById('profile-ava-preview').style.borderRadius='20px'">
+                            <div style="position: relative; cursor: pointer;" onclick="toggleAvatarEdit()">
                                 <img id="profile-ava-preview" src="" width="200" height="200" style="border-radius: 50%; border: 5px solid var(--primary); object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: border-radius 0.3s ease;">
                                 <div style="position: absolute; bottom: 10px; right: 10px; background: var(--primary); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; border: 3px solid var(--card);">📷</div>
                             </div>
@@ -240,7 +240,7 @@
                                 <label style="font-size:0.7em; color:#888; text-align: left;">CẬP NHẬT ẢNH ĐẠI DIỆN</label>
                                 <input type="file" id="fileAvatar" onchange="previewFileAvatar(this)" style="font-size: 0.8em; padding: 8px;">
                                 <input type="text" id="editAvatar" placeholder="Dán URL ảnh vào đây..." style="margin-top: 0;">
-                                <button onclick="document.getElementById('avatar-options').style.display='none'; document.getElementById('profile-ava-preview').style.borderRadius='50%'" class="ghost-btn" style="padding: 10px; font-size: 0.8em;">Đóng</button>
+                                <button onclick="toggleAvatarEdit()" class="ghost-btn" style="padding: 10px; font-size: 0.8em;">Đóng</button>
                             </div>
 
                             <div style="text-align:left; width: 100%; margin-top: 25px;">
@@ -506,6 +506,18 @@
         function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
         function toggleDevBar() { const b = document.getElementById('dev-sidebar'); b.classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
+
+        function toggleAvatarEdit() {
+            const options = document.getElementById('avatar-options');
+            const img = document.getElementById('profile-ava-preview');
+            if (options.style.display === 'none' || options.style.display === '') {
+                options.style.display = 'flex';
+                img.style.borderRadius = '20px';
+            } else {
+                options.style.display = 'none';
+                img.style.borderRadius = '50%';
+            }
+        }
 
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
