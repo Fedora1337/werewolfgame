@@ -63,7 +63,8 @@ val playerSessions = ConcurrentHashMap<String, DefaultWebSocketServerSession>()
 
 enum class RoleType { WEREWOLF, VILLAGER, SPECIAL }
 enum class Role(val type: RoleType) {
-    THIEF(RoleType.SPECIAL), THREE_BROTHERS(RoleType.SPECIAL), TWINS(RoleType.SPECIAL), CUPID(RoleType.SPECIAL),
+    //THIEF(RoleType.SPECIAL),
+    THREE_BROTHERS(RoleType.SPECIAL), TWINS(RoleType.SPECIAL), CUPID(RoleType.SPECIAL),
     MOON_MAIDEN(RoleType.SPECIAL), GUARDIAN(RoleType.SPECIAL), WEREWOLF(RoleType.WEREWOLF), CURSER_WEREWOLF(RoleType.WEREWOLF),
     PROPHET_WEREWOLF(RoleType.WEREWOLF), SEER(RoleType.SPECIAL), CELESTIAL_FOX(RoleType.SPECIAL), WITCH(RoleType.SPECIAL),
     PIPER(RoleType.SPECIAL), ELDER(RoleType.SPECIAL), VILLAGER(RoleType.VILLAGER), LYCAN(RoleType.SPECIAL),
@@ -301,9 +302,11 @@ fun triggerNextPhase(room: Room) {
 }
 
 fun getNightOrder(room: Room): MutableList<String> {
-    val full = listOf("THIEF", "THREE_BROTHERS", "TWINS", "CUPID", "MOON_MAIDEN", "GUARDIAN", "WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF", "SEER", "CELESTIAL_FOX", "WITCH", "PIPER", "ELDER")
+    val full = listOf(//"THIEF",
+        "THREE_BROTHERS", "TWINS", "CUPID", "MOON_MAIDEN", "GUARDIAN", "WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF", "SEER", "CELESTIAL_FOX", "WITCH", "PIPER", "ELDER")
     val roles = room.players.mapNotNull { it.role?.name }.toSet(); val order = full.filter { roles.contains(it) }.toMutableList()
-    if (room.dayCount > 0) { order.remove("THIEF"); order.remove("THREE_BROTHERS"); order.remove("CUPID") }
+    if (room.dayCount > 0) { //order.remove("THIEF");
+        order.remove("THREE_BROTHERS"); order.remove("CUPID") }
     return order
 }
 
