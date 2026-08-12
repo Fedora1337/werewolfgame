@@ -170,6 +170,16 @@ fun main() {
                 }
             }
 
+            // Route cho phòng Lobby cụ thể: /lobby/code=xxxxxx
+            get("/lobby/code={code}") {
+                val html = javaClass.classLoader.getResource("static/index.html")?.readBytes()
+                if (html != null) {
+                    call.respondBytes(html, io.ktor.http.ContentType.Text.Html)
+                } else {
+                    call.respond(io.ktor.http.HttpStatusCode.NotFound)
+                }
+            }
+
             webSocket("/ws/{playerId}") {
                 val playerId = call.parameters["playerId"] ?: return@webSocket
                 playerSessions[playerId] = this

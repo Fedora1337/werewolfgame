@@ -405,8 +405,11 @@
 
             // HISTORY API
             if (updateHistory) {
-                const path = Object.keys(routes).find(key => routes[key] === pId) || '/home';
-                history.pushState({ pageId: pId }, '', path);
+                let path = Object.keys(routes).find(key => routes[key] === pId) || '/home';
+                if (pId === 'page-lobby' && currentRoomCode) {
+                    path = `/lobby/code=${currentRoomCode}`;
+                }
+                history.pushState({ pageId: pId, roomCode: currentRoomCode }, '', path);
             }
         }
 
@@ -420,6 +423,11 @@
 
         function handleInitialRoute() {
             const path = window.location.pathname;
+            if (path.startsWith('/lobby/code=')) {
+                const code = path.split('code=')[1];
+                attemptAutoJoin(code);
+                return;
+            }
             const pId = routes[path] || 'page-home';
             navigateTo(pId, false);
         }
@@ -481,9 +489,55 @@
 
         function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); alert("Lưu!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
         async function createRoom() { const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); setupRoom(await res.json(), true); }
-        async function joinRoom() { const c=document.getElementById('roomCodeInput').value; const res=await fetch(`/join-room/${c}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); if(res.ok) setupRoom(await res.json(), false); else showNotification("Mã phòng không chính xác hoặc phòng đã đầy!"); }
+        async function joinRoom() {
+            const c=document.getElementById('roomCodeInput').value;
+            const res=await fetch(`/join-room/${c}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})});
+            if(res.ok) setupRoom(await res.json(), false);
+            else showNotification("Mã phòng không chính xác hoặc phòng đã đầy!");
+        }
+
+        async function attemptAutoJoin(code) {
+            // Chờ myId sẵn sàng (từ localStorage)
+            if (!myId) {
+                const s = localStorage.getItem('werewolf_user');
+                if (s) {
+                    const u = JSON.parse(s);
+                    myId = u.id; myName = u.name; myAvatar = u.avatar;
+                    updateProfileUI();
+                    updateHomeUI();
+                }
+            }
+
+            if (!myId) {
+                showNotification("Vui lòng đăng nhập trước khi tham gia phòng!");
+                navigateTo('page-home');
+                return;
+            }
+
+            const res = await fetch(`/join-room/${code}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: myId, name: myName, avatar: myAvatar })
+            });
+
+            if (res.ok) {
+                setupRoom(await res.json(), false);
+            } else {
+                showNotification("Không thể tự động gia nhập phòng này!");
+                navigateTo('page-dashboard');
+            }
+        }
         function leaveRoom() { if(currentRoomCode) fetch(`/leave-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId})}); currentRoomCode=null; if(socket) socket.close(); navigateTo('page-dashboard'); }
-        function setupRoom(r, h) { currentRoomCode=r.code; isHost=h; document.getElementById('displayRoomCode').innerText=r.code; document.getElementById('host-action-bar').style.display=isHost?'flex':'none'; document.getElementById('btnReady').style.display=isHost?'none':'block'; connectWebSocket(); navigateTo('page-lobby'); refreshPlayers(); }
+        function setupRoom(r, h) {
+            currentRoomCode=r.code;
+            isHost=h;
+            document.getElementById('displayRoomCode').innerText=r.code;
+            document.getElementById('host-action-bar').style.display=isHost?'flex':'none';
+            document.getElementById('btnReady').style.display=isHost?'none':'block';
+            connectWebSocket();
+            navigateTo('page-lobby', true); // TRUE để đẩy URL phòng lên trình duyệt
+            refreshPlayers();
+        }
         function connectWebSocket() { const p=window.location.protocol==='https:'?'wss:':'ws:'; socket=new WebSocket(`${p}//${window.location.host}/ws/${myId}`); socket.onmessage=(e)=>{ const m=JSON.parse(e.data); if(m.type==="PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(m.data)); else if(m.type==="YOUR_ROLE") { myRoleData=JSON.parse(m.data); displayMyRole(myRoleData); } else if(m.type==="PHASE_UPDATE") handlePhaseUpdate(m.data); else if(m.type==="ANNOUNCEMENT") { announce(m.data); logDev(m.data); } else if(m.type==="KICKED"){ showNotification(m.data); setTimeout(() => window.location.reload(), 2000); } }; }
 
         function updatePlayerListUI(ps) {
