@@ -165,7 +165,10 @@
 
         .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; width: 100%; box-sizing: border-box; }
         input { padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
-        button { padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; }
+        button { padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; transition: transform 0.1s; }
+        button:active { transform: scale(0.98); }
+        .ghost-btn { background: rgba(255,255,255,0.05) !important; color: var(--primary) !important; border: 1px solid rgba(231, 76, 60, 0.3) !important; }
+        .ghost-btn:hover { background: rgba(255,255,255,0.1) !important; }
         .kick-btn { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #111; z-index: 5; cursor: pointer; }
 
         /* LOADING OVERLAY */
@@ -251,7 +254,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="page-lobby" class="page"><div class="card" style="flex:1; overflow-y:auto"><h2>Mã: <span id="displayRoomCode" style="color:#f1c40f">######</span></h2><div id="player-count-badge" style="background:#333;padding:5px 10px;border-radius:10px;font-size:0.8em;margin-bottom:10px">Đang chờ...</div><div id="game-grid" class="game-grid"></div></div><button id="btnReady" onclick="toggleReady()" style="display:none; background:#2980b9">SẴN SÀNG</button><button onclick="leaveRoom()" class="ghost-btn" style="color:#e74c3c">RỜI PHÒNG</button></div>
+                    <div id="page-lobby" class="page"><div class="card" style="flex:1; overflow-y:auto"><h2>Mã: <span id="displayRoomCode" style="color:#f1c40f">######</span></h2><div id="player-count-badge" style="background:#333;padding:5px 10px;border-radius:10px;font-size:0.8em;margin-bottom:10px">Đang chờ...</div><div id="game-grid" class="game-grid"></div></div><button id="btnReady" onclick="toggleReady()" style="display:none; background:#2980b9">SẴN SÀNG</button><button onclick="goBack()" class="ghost-btn" style="color:var(--primary); font-size: 0.9em; margin-top: 5px;">RỜI PHÒNG</button></div>
                     <div id="page-gallery" class="page">
                         <h2 style="color:#f1c40f; margin-bottom: 30px;">Bộ Bài Môn Sói Là</h2>
 
