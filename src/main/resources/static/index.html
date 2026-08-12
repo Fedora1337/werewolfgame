@@ -2,15 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Môn Sói Là</title>
     <style>
-        :root { --primary: #e74c3c; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0; --nav-h: 75px; --header-h: 60px; --dev-w: 300px; }
+        :root {
+            --primary: #e74c3c; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0;
+            --nav-h: calc(75px + env(safe-area-inset-bottom));
+            --header-h: calc(60px + env(safe-area-inset-top));
+            --dev-w: 300px;
+        }
 
         body, html {
-            margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text);
+            margin: 0; padding: 0; height: 100dvh; background: var(--bg); color: var(--text);
             font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden;
-            user-select: none; -webkit-user-select: none; /* Ngăn bôi đen toàn bộ app */
+            user-select: none; -webkit-user-select: none;
         }
 
         /* CUSTOM SCROLLBAR - MAKE IT PRO */
@@ -58,9 +63,9 @@
 
         header {
             height: var(--header-h); background: rgba(26,26,26,0.95);
-            display: flex; align-items: center; justify-content: center;
+            display: flex; align-items: flex-end; justify-content: center;
             border-bottom: 1px solid #333; flex-shrink: 0; backdrop-filter: blur(10px);
-            position: relative; width: 100%;
+            position: relative; width: 100%; padding-bottom: 15px; box-sizing: border-box;
         }
         header h2 { color: var(--primary); margin: 0; font-size: 1.2em; text-transform: uppercase; letter-spacing: 2px; }
 
@@ -71,7 +76,7 @@
         nav#bottom-nav {
             height: var(--nav-h); background: #151515; border-top: 1px solid #333;
             display: none; grid-template-columns: repeat(3, 1fr); flex-shrink: 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5); padding-bottom: env(safe-area-inset-bottom);
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75em; color: #666; cursor: pointer; transition: all 0.3s; position: relative; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
@@ -208,9 +213,12 @@
 
         <div id="main-content">
             <header>
-                <div id="back-btn" onclick="goBack()" style="position: absolute; left: 15px; cursor: pointer; display: none; font-size: 1.5em;">←</div>
+                <div id="back-btn" onclick="goBack()" style="position: absolute; left: 15px; bottom: 15px; cursor: pointer; display: none; font-size: 1.5em;">←</div>
                 <h2>Môn Sói Là</h2>
-                <div onclick="showDevLogin()" style="position: absolute; right: 15px; opacity: 0.2; cursor: pointer;">🛠️</div>
+                <div style="position: absolute; right: 15px; bottom: 15px; display: flex; gap: 15px; align-items: center;">
+                    <div onclick="toggleFullscreen()" style="opacity: 0.2; cursor: pointer; font-size: 1.2em;">⛶</div>
+                    <div onclick="showDevLogin()" style="opacity: 0.05; cursor: pointer;">🛠️</div>
+                </div>
             </header>
 
             <main id="scroll-area">
@@ -470,6 +478,16 @@
         function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
         function toggleDevBar() { const b = document.getElementById('dev-sidebar'); b.classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Fullscreen error: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
 
         function previewFileAvatar(input) {
             if (input.files && input.files[0]) {
