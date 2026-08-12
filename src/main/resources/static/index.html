@@ -445,12 +445,12 @@
         async function refreshPlayers() { if(currentRoomCode){ const res=await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
 
         async function showGallery() {
-            const villagers = allRoles.filter(r => !r.role.includes('WOLF') && r.role !== 'CUPID' && r.role !== 'PIPER');
-            const wolves = allRoles.filter(r => r.role.includes('WOLF'));
+            const villagers = allRoles.filter(r => !r.role.includes('WOLF') && r.role !== 'LYCAN' && r.role !== 'CUPID' && r.role !== 'PIPER');
+            const wolves = allRoles.filter(r => r.role.includes('WOLF') || r.role === 'LYCAN');
             const third = allRoles.filter(r => r.role === 'CUPID' || r.role === 'PIPER');
 
-            // Cập nhật danh sách hiển thị theo trình tự mới
-            displayRoles = [...villagers, ...wolves, ...third];
+            // Cập nhật danh sách hiển thị theo trình tự mới (Loại bỏ các role bị comment out)
+            displayRoles = [...villagers, ...wolves, ...third].filter(r => r !== undefined);
 
             const renderGrid = async (list, targetId) => {
                 const htmlParts = await Promise.all(list.map(async (r) => {
