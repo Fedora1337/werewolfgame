@@ -359,7 +359,7 @@
                 const keys = await cache.keys();
 
                 if (keys.length >= urlsToCache.length) {
-                    logDev("Assets sẵn sàng! ⚡");
+                    //logDev("Assets sẵn sàng! ⚡"); // Tắt log này để tránh nhiễu
                 } else {
                     if (status) status.innerText = "Đang tải bộ bài vĩnh cửu...";
                     logDev("Đang tải bộ bài (Persistent)... 📥");
@@ -398,7 +398,6 @@
         }
 
         function navigateTo(pId, updateHistory = true) {
-            preloadImages(); // Tranh thủ tải khi chuyển trang
             const b = document.getElementById('back-btn'); if(b) b.style.display = (pId==='page-home'||pId==='page-dashboard')?'none':'block';
             if(pId!=='page-gallery'&&pId!=='page-dev-login'&&pId!=='page-profile'&&pId!=='page-lobby') lastPage=pId;
 
@@ -504,6 +503,7 @@
 
             updateHomeUI();
             handleInitialRoute();
+            preloadImages(); // Chạy một lần duy nhất khi load/refresh trang
         };
 
         function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); alert("Lưu!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
