@@ -186,21 +186,35 @@
         .role-card-content p { font-size: 0.95em; color: #ccc; font-style: italic; margin-bottom: 20px; line-height: 1.5; }
 
         /* ACTION OVERLAY */
-        #action-overlay { position: absolute; bottom: 20px; left: 20px; right: 20px; display: none; align-items: flex-end; justify-content: space-between; pointer-events: none; z-index: 3000; }
-        .host-action-bar { background: rgba(20, 20, 20, 0.98); padding: 12px; border-radius: 20px; border: 2px solid #333; pointer-events: auto; display: none; flex-direction: column; gap: 8px; width: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .self-card-mini { background: rgba(26, 26, 26, 0.95); border: 2px solid white; border-radius: 20px; padding: 5px 12px; display: flex; align-items: center; gap: 10px; pointer-events: auto; min-width: 130px; backdrop-filter: blur(10px); box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+        #action-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 0; pointer-events: none; z-index: 3000; }
+
+        .host-action-bar {
+            position: absolute; bottom: 20px; left: 20px;
+            background: rgba(20, 20, 20, 0.98); padding: 12px; border-radius: 20px; border: 2px solid #333;
+            pointer-events: auto; display: none; flex-direction: column; gap: 8px; width: 160px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .player-action-panel {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+            pointer-events: none;
+        }
+        .player-action-panel > * { pointer-events: auto; }
+
+        .self-card-mini { background: rgba(26, 26, 26, 0.95); border: 2px solid white; border-radius: 20px; padding: 5px 12px; display: flex; align-items: center; gap: 10px; min-width: 130px; backdrop-filter: blur(10px); box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
         .self-card-mini img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid white; }
         #self-mini-num { margin: 0; font-size: 1.1em; color: #27ae60; font-weight: bold; text-decoration: underline; }
 
         .role-badge-mini {
             background: rgba(0,0,0,0.8); border: 1px solid #d4af37; border-radius: 12px;
             padding: 4px 12px; color: #d4af37; font-size: 0.7em; font-weight: bold;
-            cursor: pointer; pointer-events: auto; display: none; margin-bottom: 5px;
+            cursor: pointer; display: none; margin-bottom: 5px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-transform: uppercase;
         }
 
-        .game-player-card.is-me { border-color: white !important; }
-        .game-player-card.is-me .player-num { color: #27ae60 !important; font-weight: bold; text-decoration: underline; font-size: 0.85em; }
+        .game-player-card.is-me { border: 3px solid white !important; }
+        .game-player-card p { font-size: 0.75em; margin: 8px 0 0 0; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
 
         .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; width: 100%; box-sizing: border-box; }
         input { padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
@@ -340,7 +354,8 @@
                     <button id="btnStartGame" onclick="distributeRoles()" style="background:#27ae60; padding:10px; margin:0;">BẮT ĐẦU</button>
                     <button id="btnNextPhase" onclick="nextPhase()" style="display:none; background:#f39c12; padding:10px; margin:0;">TIẾP TỤC</button>
                 </div>
-                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px; margin-left: auto;">
+
+                <div class="player-action-panel">
                     <div id="action-buttons" class="action-buttons"></div>
                     <!-- LOBBY FLOATING ACTIONS -->
                     <div id="lobby-controls" style="display:none; flex-direction:column; gap:8px; width: 140px;">
@@ -730,7 +745,17 @@
 
         function kickPlayer(id) { showConfirm("Kick?", () => socket.send(JSON.stringify({type:"KICK_PLAYER", data:id}))); }
         function selectPlayer(id) { selectedPlayerId=(selectedPlayerId===id)?null:id; updatePlayerListUI(playersCache); }
-        function updateActionButtons() { const c=document.getElementById('action-buttons'); const o=document.getElementById('action-overlay'); if(document.querySelector('.page.active').id!=='page-lobby'){ o.style.display='none'; return; } o.style.display='flex'; c.innerHTML=''; if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`; }
+        function updateActionButtons() {
+            const c=document.getElementById('action-buttons');
+            const o=document.getElementById('action-overlay');
+            if(document.querySelector('.page.active').id!=='page-lobby'){
+                o.style.display='none';
+                return;
+            }
+            o.style.display='block';
+            c.innerHTML='';
+            if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`;
+        }
         function sendAction(t) { if(!selectedPlayerId) return; socket.send(JSON.stringify({type:t, data:selectedPlayerId})); selectedPlayerId=null; updatePlayerListUI(playersCache); }
         async function refreshPlayers() { if(currentRoomCode){ const res=await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
 
