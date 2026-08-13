@@ -305,7 +305,13 @@
                             </div>
                         </div>
                     </div>
-                    <div id="page-lobby" class="page"><div class="card" style="flex:1; overflow-y:auto"><h2>Mã: <span id="displayRoomCode" style="color:#f1c40f">######</span></h2><div id="player-count-badge" style="background:#333;padding:5px 10px;border-radius:10px;font-size:0.8em;margin-bottom:10px">Đang chờ...</div><div id="game-grid" class="game-grid"></div></div><button id="btnReady" onclick="toggleReady()" style="display:none; background:#2980b9">SẴN SÀNG</button><button onclick="goBack()" class="ghost-btn" style="color:var(--primary); font-size: 0.9em; margin-top: 5px;">RỜI PHÒNG</button></div>
+                    <div id="page-lobby" class="page">
+                        <div class="card" style="flex:1; overflow-y:auto; margin-bottom: 80px;">
+                            <h2>Mã: <span id="displayRoomCode" style="color:#f1c40f">######</span></h2>
+                            <div id="player-count-badge" style="background:#333;padding:5px 10px;border-radius:10px;font-size:0.8em;margin-bottom:10px">Đang chờ...</div>
+                            <div id="game-grid" class="game-grid"></div>
+                        </div>
+                    </div>
                     <div id="page-gallery" class="page">
                         <h2 style="color:#f1c40f; margin-bottom: 30px;">Bộ Bài Môn Sói Là</h2>
 
@@ -336,6 +342,11 @@
                 </div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
                     <div id="action-buttons" class="action-buttons"></div>
+                    <!-- LOBBY FLOATING ACTIONS -->
+                    <div id="lobby-controls" style="display:none; flex-direction:column; gap:8px; width: 140px;">
+                        <button id="btnReady" onclick="toggleReady()" style="background:#2980b9; margin:0; padding:12px; font-size: 0.85em; box-shadow: 0 5px 15px rgba(41, 128, 185, 0.4);">SẴN SÀNG</button>
+                        <button onclick="goBack()" class="ghost-btn" style="color:var(--primary); font-size: 0.85em; margin:0; padding:8px; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(0,0,0,0.6) !important;">RỜI PHÒNG</button>
+                    </div>
                     <div id="role-badge-mini" class="role-badge-mini" onclick="displayMyRole(myRoleData)">Xem vai</div>
                     <div class="self-card-mini"><img id="self-mini-ava" src=""><div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">Name</p></div></div>
                 </div>
@@ -660,9 +671,11 @@
         function setupRoom(r, h) {
             currentRoomCode=r.code;
             isHost=h;
+            currentPhase = r.phase || 'LOBBY';
             document.getElementById('displayRoomCode').innerText=r.code;
             document.getElementById('host-action-bar').style.display=isHost?'flex':'none';
-            document.getElementById('btnReady').style.display=isHost?'none':'block';
+            document.getElementById('lobby-controls').style.display = 'flex';
+            document.getElementById('btnReady').style.display = isHost ? 'none' : 'block';
             connectWebSocket();
             navigateTo('page-lobby', true); // TRUE để đẩy URL phòng lên trình duyệt
             refreshPlayers();
@@ -842,9 +855,12 @@
             if (ph === "LOBBY") {
                 left.style.display = 'none'; right.style.display = 'none';
                 clearInterval(countdownInterval);
+                document.getElementById('lobby-controls').style.display = 'flex';
+                document.getElementById('btnReady').style.display = isHost ? 'none' : 'block';
             }
             else {
                 left.style.display = 'flex'; right.style.display = 'flex';
+                document.getElementById('lobby-controls').style.display = 'none';
                 if (ph === "NIGHT" || ph.includes("WOLF") || ph === "SEER" || ph === "WITCH" || ph === "GUARDIAN") { pIcon.innerText = "🌙"; pText.innerText = `Đêm ${day}`; }
                 else if (ph === "DAY") { pIcon.innerText = "☀️"; pText.innerText = `Ngày ${day}`; }
                 else if (ph === "TRIAL_DEFENSE" || ph === "TRIAL_VOTING") { pIcon.innerText = "⚖️"; pText.innerText = "Biện hộ"; }
