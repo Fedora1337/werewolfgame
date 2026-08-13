@@ -31,6 +31,7 @@ data class Player(
     var count: String = "", var foxPower: Int = 1,
     var hunterBullets: Int = 0, var canHunterPassive: Boolean = false,
     var isBloodlust: Boolean = false,
+    var isHost: Boolean = false,
     val killersVotedForMe: MutableList<String> = mutableListOf()
 )
 
@@ -39,7 +40,7 @@ data class GameAssignment(val playerName: String, val role: String, val descript
 
 @Serializable
 data class Room(
-    val code: String, val hostId: String, val players: MutableList<Player> = mutableListOf(),
+    val code: String, var hostId: String, val players: MutableList<Player> = mutableListOf(),
     val assignments: MutableMap<String, GameAssignment> = mutableMapOf(),
     val readyPlayers: MutableSet<String> = mutableSetOf(),
     var phase: String = "LOBBY", var dayCount: Int = 0,
@@ -279,7 +280,23 @@ fun main() {
             }
             post("/create-room") { val host = call.receive<Player>(); val code = (100000..999999).random().toString(); rooms[code] = Room(code, host.id, mutableListOf(host.copy(isReady = true))); call.respond(rooms[code]!!) }
             post("/join-room/{code}") { val code = call.parameters["code"] ?: ""; val player = call.receive<Player>(); val room = rooms[code]; if (room != null) { if (room.players.none { it.id == player.id }) { room.players.add(player.copy(isReady = true)); broadcastPlayerList(room) }; call.respond(room) } else call.respond(io.ktor.http.HttpStatusCode.NotFound) }
-            post("/leave-room/{code}") { val code = call.parameters["code"] ?: ""; val id = call.receive<Map<String, String>>()["id"] ?: ""; val room = rooms[code]; if (room != null) { room.players.removeIf { it.id == id }; if (room.players.isEmpty()) rooms.remove(code) else broadcastPlayerList(room); call.respond(mapOf("ok" to true)) } else call.respond(io.ktor.http.HttpStatusCode.NotFound) }
+            post("/leave-room/{code}") { 
+                val code = call.parameters["code"] ?: ""; val id = call.receive<Map<String, String>>()["id"] ?: ""
+                val room = rooms[code]
+                if (room != null) {
+                    room.players.removeIf { it.id == id }
+                    if (room.players.isEmpty() || room.players.none { !it.id.startsWith("bot_") }) {
+                        rooms.remove(code)
+                    } else {
+                        if (room.hostId == id) {
+                            val nextHost = room.players.find { !it.id.startsWith("bot_") }
+                            if (nextHost != null) room.hostId = nextHost.id
+                        }
+                        broadcastPlayerList(room)
+                    }
+                    call.respond(mapOf("ok" to true))
+                } else call.respond(io.ktor.http.HttpStatusCode.NotFound)
+            }
             get("/room/{code}/distribute") {
                 val code = call.parameters["code"] ?: ""; val ratio = (call.parameters["ratio"] ?: "0.25").toDouble(); val room = rooms[code] ?: return@get call.respond(io.ktor.http.HttpStatusCode.NotFound)
                 if (room.players.size < 8 || room.players.any { !it.isReady }) return@get call.respond(io.ktor.http.HttpStatusCode.BadRequest, "Lỗi!")
@@ -368,6 +385,7 @@ fun processGameLogic(room: Room) {
 }
 
 suspend fun broadcastPlayerList(room: Room) {
+    room.players.forEach { it.isHost = (it.id == room.hostId) }
     val json = Json.encodeToString(room.players)
     room.players.forEach { p -> playerSessions[p.id]?.sendSerialized(SocketMessage("PLAYER_LIST_UPDATE", json)) }
 }

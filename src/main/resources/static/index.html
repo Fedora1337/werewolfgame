@@ -684,6 +684,17 @@
 
         function updatePlayerListUI(ps) {
             playersCache = ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
+
+            // KẾ THỪA HOST: Cập nhật quyền Host ngay tại Frontend
+            const me = ps.find(p => p.id === myId);
+            if (me) {
+                isHost = me.isHost;
+                const hostBar = document.getElementById('host-action-bar');
+                if (hostBar) hostBar.style.display = isHost ? 'flex' : 'none';
+                const readyBtn = document.getElementById('btnReady');
+                if (readyBtn) readyBtn.style.display = isHost ? 'none' : 'block';
+            }
+
             if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
 
             let html = ps.map((p,i)=>`
