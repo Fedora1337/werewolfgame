@@ -416,16 +416,12 @@
 
             try {
                 const cache = await caches.open(cacheName);
-                // Tải từng lá bài một ở chế độ chạy ngầm để không gây treo UI
-                for (const url of urlsToCache) {
-                    const match = await cache.match(url);
-                    if (!match) {
-                        cache.add(url).catch(e => {});
-                    }
-                }
-            } catch (e) {
-                console.warn("Cache background error:", e);
-            }
+                urlsToCache.forEach(url => {
+                    cache.match(url).then(match => {
+                        if (!match) cache.add(url).catch(e => {});
+                    });
+                });
+            } catch (e) {}
         }
 
         function showLoading(title, statusMsg) {
@@ -466,7 +462,7 @@
             const nav=document.getElementById('bottom-nav');
             if(pId==='page-lobby'||pId==='page-home') nav.style.display='none'; else nav.style.display='grid';
 
-            document.getElementById('action-overlay').style.display = (pId==='page-lobby') ? 'flex' : 'none';
+            updateActionButtons();
             if(pId==='page-gallery') showGallery();
             updateProfileUI();
 
@@ -848,7 +844,11 @@
             else if(ph==="DAY"){ document.getElementById('night-overlay').style.display='none'; startCountdown(du); let m="Sáng rồi."; if(rs==="RUSSIAN_VODKA") m="Gấu nốc rượu! "+m; announce(m); }
             else { startCountdown(du); }
 
-            if(isHost){ document.getElementById('host-action-bar').style.display='flex'; document.getElementById('btnNextPhase').style.display=(ph!=="LOBBY")?'block':'none'; document.getElementById('btnStartGame').style.display=(ph==="LOBBY")?'block':'none'; }
+            if(isHost){
+                document.getElementById('host-action-bar').style.display= (document.querySelector('.page.active').id==='page-lobby') ? 'flex' : 'none';
+                document.getElementById('btnNextPhase').style.display=(ph!=="LOBBY")?'block':'none';
+                document.getElementById('btnStartGame').style.display=(ph==="LOBBY")?'block':'none';
+            }
         }
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
         async function distributeRoles() { const r = await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if (!r.ok) showNotification("Không thể bắt đầu. Cần ít nhất 8 người chơi sẵn sàng!"); }
