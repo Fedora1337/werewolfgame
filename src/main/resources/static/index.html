@@ -788,16 +788,19 @@
             const rData = allRoles.find(r => r.role === role.role) || allRoles[1];
             const displayUrl = await getCachedImageUrl(rData.image);
 
+            // SỬ DỤNG CHÍNH XÁC CẤU TRÚC VÀ WRAPPER CỦA GALLERY VIEWER
             document.getElementById('result').innerHTML = `
-                <div class="viewer-card" id="myRoleCard" style="width: 90%; max-width: 400px;">
-                    <div class="viewer-back"></div>
-                    <div class="viewer-front">
-                        <img id="my-role-img" src="${displayUrl}">
-                        <div class="viewer-info">
-                            <h3 style="color:#d4af37; margin:0; font-size: 0.7em; font-family: 'Georgia', serif;">VAI DIỄN CỦA BẠN</h3>
-                            <h2 style="color:${role.role.includes('WOLF') ? '#ff4d4d' : '#4da6ff'}; margin: 5px 0;">${role.role.replace(/_/g, ' ')}</h2>
-                            <p style="font-size: 0.85em;">"${role.description}"</p>
-                            <button id="btnUnderstand" onclick="confirmUnderstand()" style="background:#e74c3c; width: 100%; margin-top: 15px; padding: 12px;">XÁC NHẬN</button>
+                <div class="viewer-content">
+                    <div class="viewer-card" id="myRoleCard">
+                        <div class="viewer-back"></div>
+                        <div class="viewer-front">
+                            <img id="my-role-img" src="${displayUrl}">
+                            <div class="viewer-info">
+                                <h3 style="color:#d4af37; margin:0; font-size: 0.7em; font-family: 'Georgia', serif;">VAI DIỄN CỦA BẠN</h3>
+                                <h2 style="color:${role.role.includes('WOLF') ? '#ff4d4d' : '#4da6ff'}; margin: 5px 0;">${role.role.replace(/_/g, ' ')}</h2>
+                                <p style="font-size: 0.85em;">"${role.description}"</p>
+                                <button id="btnUnderstand" onclick="confirmUnderstand()" style="background:#e74c3c; width: 100%; margin-top: 15px; padding: 12px;">XÁC NHẬN</button>
+                            </div>
                         </div>
                     </div>
                 </div>`;
