@@ -421,12 +421,10 @@
                 const keys = await cache.keys();
 
                 if (keys.length >= urlsToCache.length) {
-                    //logDev("Assets sẵn sàng! ⚡"); // Tắt log này để tránh nhiễu
+                    // Assets đã có sẵn
                 } else {
                     if (status) status.innerText = "Đang tải bộ bài vĩnh cửu...";
-                    logDev("Đang tải bộ bài (Persistent)... 📥");
                     await cache.addAll(urlsToCache);
-                    logDev("Bộ bài đã được lưu vĩnh cửu! ✅");
                 }
             } catch (e) {
                 console.warn("Cache error:", e);
@@ -435,7 +433,6 @@
                 if (overlay) {
                     overlay.style.opacity = '0';
                     overlay.style.visibility = 'hidden';
-                    // Không remove nữa để tái sử dụng
                     setTimeout(() => { overlay.style.display = 'none'; }, 600);
                 }
             }
