@@ -278,8 +278,23 @@ fun main() {
                     }
                 } finally { playerSessions.remove(playerId) }
             }
-            post("/create-room") { val host = call.receive<Player>(); val code = (100000..999999).random().toString(); rooms[code] = Room(code, host.id, mutableListOf(host.copy(isReady = true))); call.respond(rooms[code]!!) }
-            post("/join-room/{code}") { val code = call.parameters["code"] ?: ""; val player = call.receive<Player>(); val room = rooms[code]; if (room != null) { if (room.players.none { it.id == player.id }) { room.players.add(player.copy(isReady = true)); broadcastPlayerList(room) }; call.respond(room) } else call.respond(io.ktor.http.HttpStatusCode.NotFound) }
+            post("/create-room") { 
+                val host = call.receive<Player>(); 
+                val code = (100000..999999).random().toString(); 
+                val newPlayer = host.copy(isReady = true, isHost = true)
+                rooms[code] = Room(code, host.id, mutableListOf(newPlayer)); 
+                call.respond(rooms[code]!!) 
+            }
+            post("/join-room/{code}") { 
+                val code = call.parameters["code"] ?: ""; val player = call.receive<Player>(); val room = rooms[code]
+                if (room != null) { 
+                    if (room.players.none { it.id == player.id }) { 
+                        room.players.add(player.copy(isReady = true, isHost = (player.id == room.hostId)))
+                        broadcastPlayerList(room) 
+                    }; 
+                    call.respond(room) 
+                } else call.respond(io.ktor.http.HttpStatusCode.NotFound) 
+            }
             post("/leave-room/{code}") { 
                 val code = call.parameters["code"] ?: ""; val id = call.receive<Map<String, String>>()["id"] ?: ""
                 val room = rooms[code]
@@ -290,7 +305,10 @@ fun main() {
                     } else {
                         if (room.hostId == id) {
                             val nextHost = room.players.find { !it.id.startsWith("bot_") }
-                            if (nextHost != null) room.hostId = nextHost.id
+                            if (nextHost != null) {
+                                room.hostId = nextHost.id
+                                room.players.forEach { it.isHost = (it.id == room.hostId) }
+                            }
                         }
                         broadcastPlayerList(room)
                     }
@@ -307,7 +325,11 @@ fun main() {
                 call.respond(mapOf("ok" to true))
             }
             post("/room/{code}/next-phase") { val room = rooms[call.parameters["code"]] ?: return@post call.respond(io.ktor.http.HttpStatusCode.NotFound); triggerNextPhase(room); call.respond(mapOf("ok" to true)) }
-            get("/room/{code}/players") { call.respond(rooms[call.parameters["code"]]?.players ?: emptyList<Player>()) }
+            get("/room/{code}/players") { 
+                val room = rooms[call.parameters["code"]]
+                room?.players?.forEach { it.isHost = (it.id == room.hostId) }
+                call.respond(room?.players ?: emptyList<Player>()) 
+            }
         }
     }.start(wait = true)
 }
