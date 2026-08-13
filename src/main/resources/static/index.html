@@ -192,6 +192,13 @@
         .self-card-mini img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid white; }
         #self-mini-num { margin: 0; font-size: 1.1em; color: #27ae60; font-weight: bold; text-decoration: underline; }
 
+        .role-badge-mini {
+            background: rgba(0,0,0,0.8); border: 1px solid #d4af37; border-radius: 12px;
+            padding: 4px 12px; color: #d4af37; font-size: 0.7em; font-weight: bold;
+            cursor: pointer; pointer-events: auto; display: none; margin-bottom: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-transform: uppercase;
+        }
+
         .game-player-card.is-me { border-color: white !important; }
         .game-player-card.is-me .player-num { color: #27ae60 !important; font-weight: bold; text-decoration: underline; font-size: 0.85em; }
 
@@ -329,6 +336,7 @@
                 </div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
                     <div id="action-buttons" class="action-buttons"></div>
+                    <div id="role-badge-mini" class="role-badge-mini" onclick="displayMyRole(myRoleData)">Xem vai</div>
                     <div class="self-card-mini"><img id="self-mini-ava" src=""><div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">Name</p></div></div>
                 </div>
             </div>
@@ -655,7 +663,17 @@
                 navigateTo('page-dashboard');
             }
         }
-        function leaveRoom() { if(currentRoomCode) fetch(`/leave-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId})}); currentRoomCode=null; if(socket) socket.close(); navigateTo('page-dashboard'); }
+        function leaveRoom() {
+            if(currentRoomCode) fetch(`/leave-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId})});
+            currentRoomCode=null;
+            myRoleData=null;
+            if(socket) socket.close();
+            clearInterval(countdownInterval);
+            document.getElementById('header-status-left').style.display = 'none';
+            document.getElementById('header-status-right').style.display = 'none';
+            document.getElementById('role-badge-mini').style.display = 'none';
+            navigateTo('page-dashboard');
+        }
         function setupRoom(r, h) {
             currentRoomCode=r.code;
             isHost=h;
@@ -770,6 +788,12 @@
         }
 
         async function displayMyRole(role) {
+            if (!role) return;
+            myRoleData = role;
+            const badge = document.getElementById('role-badge-mini');
+            badge.innerText = role.role.replace(/_/g, ' ');
+            badge.style.display = 'block';
+
             const popup = document.getElementById('role-popup');
             popup.style.display = 'flex';
 
@@ -816,7 +840,10 @@
             const left = document.getElementById('header-status-left'); const right = document.getElementById('header-status-right');
             const pIcon = document.getElementById('header-phase-icon'); const pText = document.getElementById('header-phase-text');
 
-            if (ph === "LOBBY") { left.style.display = 'none'; right.style.display = 'none'; }
+            if (ph === "LOBBY") {
+                left.style.display = 'none'; right.style.display = 'none';
+                clearInterval(countdownInterval);
+            }
             else {
                 left.style.display = 'flex'; right.style.display = 'flex';
                 if (ph === "NIGHT" || ph.includes("WOLF") || ph === "SEER" || ph === "WITCH" || ph === "GUARDIAN") { pIcon.innerText = "🌙"; pText.innerText = `Đêm ${day}`; }
