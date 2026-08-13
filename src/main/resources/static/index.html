@@ -367,25 +367,25 @@
     <script>
         let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY';
         const allRoles = [
-            { role: 'WEREWOLF', image: 'images/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
-            { role: 'VILLAGER', image: 'images/roles/thevillager.png', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
-            { role: 'SEER', image: 'images/roles/theseer.png', description: 'Tiên Tri - Soi phe 1 người mỗi đêm.' },
-            { role: 'GUARDIAN', image: 'images/roles/theguardian.png', description: 'Bảo Vệ - Miễn nhiễm with Sói đêm đó.' },
-            { role: 'WITCH', image: 'images/roles/thewitch.png', description: 'Phù Thủy - Độc và Cứu.' },
-            { role: 'HUNTER', image: 'images/roles/thehunter.png', description: 'Thợ Săn - Kéo theo người chết cùng.' },
-            { role: 'RUSSIAN', image: 'images/roles/therussianpng.png', description: 'Người Nga - Gấu báo Sói.' },
+            { role: 'WEREWOLF', image: '/images/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
+            { role: 'VILLAGER', image: '/images/roles/thevillager.png', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
+            { role: 'SEER', image: '/images/roles/theseer.png', description: 'Tiên Tri - Soi phe 1 người mỗi đêm.' },
+            { role: 'GUARDIAN', image: '/images/roles/theguardian.png', description: 'Bảo Vệ - Miễn nhiễm with Sói đêm đó.' },
+            { role: 'WITCH', image: '/images/roles/thewitch.png', description: 'Phù Thủy - Độc và Cứu.' },
+            { role: 'HUNTER', image: '/images/roles/thehunter.png', description: 'Thợ Săn - Kéo theo người chết cùng.' },
+            { role: 'RUSSIAN', image: '/images/roles/therussianpng.png', description: 'Người Nga - Gấu báo Sói.' },
             //{ role: 'THIEF', image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=400', description: 'Ăn Trộm - Chọn bài dư.' },
-            { role: 'THREE_BROTHERS', image: 'images/roles/thethreebrothers.png', description: '3 Anh Em - Nhận mặt đêm 1.' },
-            { role: 'TWINS', image: 'images/roles/thetwins.png', description: '2 Chị Em - Báo thù.' },
-            { role: 'CUPID', image: 'images/roles/thecupid.png', description: 'Cupid - Ghép đôi.' },
-            { role: 'CELESTIAL_FOX', image: 'images/roles/thecelestialfox.png', description: 'Hồ Ly - Soi 3 người.' },
-            { role: 'MOON_MAIDEN', image: 'images/roles/themoonmaiden.png', description: 'Nguyệt Nữ - Khóa chức năng.' },
-            { role: 'PIPER', image: 'images/roles/thepiper.png', description: 'Thổi Sáo - Thôi miên.' },
-            { role: 'ELDER', image: 'images/roles/theelder.png', description: 'Già Làng - Giáp 1 mạng.' },
-            { role: 'CURSER_WEREWOLF', image: 'images/roles/thecurserwerewolf.png', description: 'Sói Nguyền - Biến nạn nhân thành Sói.' },
-            { role: 'PROPHET_WEREWOLF', image: 'images/roles/theprophetwerewolf.png', description: 'Sói Tiên Tri - Soi chức năng đối phương.' },
-            { role: 'DERP_WOLF', image: 'images/roles/thederpwolf.png', description: 'Sói Ngu - Có quyền báo thù.' },
-            { role: 'LYCAN', image: 'images/roles/thelycan.png', description: 'Bán Sói - Ban đầu phe Dân, khi bị Sói cắn sẽ hóa Sói thực sự.' }
+            { role: 'THREE_BROTHERS', image: '/images/roles/thethreebrothers.png', description: '3 Anh Em - Nhận mặt đêm 1.' },
+            { role: 'TWINS', image: '/images/roles/thetwins.png', description: '2 Chị Em - Báo thù.' },
+            { role: 'CUPID', image: '/images/roles/thecupid.png', description: 'Cupid - Ghép đôi.' },
+            { role: 'CELESTIAL_FOX', image: '/images/roles/thecelestialfox.png', description: 'Hồ Ly - Soi 3 người.' },
+            { role: 'MOON_MAIDEN', image: '/images/roles/themoonmaiden.png', description: 'Nguyệt Nữ - Khóa chức năng.' },
+            { role: 'PIPER', image: '/images/roles/thepiper.png', description: 'Thổi Sáo - Thôi miên.' },
+            { role: 'ELDER', image: '/images/roles/theelder.png', description: 'Già Làng - Giáp 1 mạng.' },
+            { role: 'CURSER_WEREWOLF', image: '/images/roles/thecurserwerewolf.png', description: 'Sói Nguyền - Biến nạn nhân thành Sói.' },
+            { role: 'PROPHET_WEREWOLF', image: '/images/roles/theprophetwerewolf.png', description: 'Sói Tiên Tri - Soi chức năng đối phương.' },
+            { role: 'DERP_WOLF', image: '/images/roles/thederpwolf.png', description: 'Sói Ngu - Có quyền báo thù.' },
+            { role: 'LYCAN', image: '/images/roles/thelycan.png', description: 'Bán Sói - Ban đầu phe Dân, khi bị Sói cắn sẽ hóa Sói thực sự.' }
         ];
 
         // MAPPING VIRTUAL ROUTES TO PAGE IDs
