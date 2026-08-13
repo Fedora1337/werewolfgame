@@ -411,30 +411,20 @@
 
         async function preloadImages() {
             if (!('caches' in window)) return;
-            const overlay = document.getElementById('loading-overlay');
-            const status = document.getElementById('loading-status');
             const cacheName = 'monsoila-assets-v1';
             const urlsToCache = allRoles.map(r => r.image);
 
             try {
                 const cache = await caches.open(cacheName);
-                const keys = await cache.keys();
-
-                if (keys.length >= urlsToCache.length) {
-                    // Assets đã có sẵn
-                } else {
-                    if (status) status.innerText = "Đang tải bộ bài vĩnh cửu...";
-                    await cache.addAll(urlsToCache);
+                // Tải từng lá bài một ở chế độ chạy ngầm để không gây treo UI
+                for (const url of urlsToCache) {
+                    const match = await cache.match(url);
+                    if (!match) {
+                        cache.add(url).catch(e => {});
+                    }
                 }
             } catch (e) {
-                console.warn("Cache error:", e);
-            } finally {
-                // Tắt overlay sau khi hoàn tất tải hoặc đã có sẵn
-                if (overlay) {
-                    overlay.style.opacity = '0';
-                    overlay.style.visibility = 'hidden';
-                    setTimeout(() => { overlay.style.display = 'none'; }, 600);
-                }
+                console.warn("Cache background error:", e);
             }
         }
 
@@ -602,7 +592,8 @@
 
             updateHomeUI();
             handleInitialRoute();
-            preloadImages(); // Chạy một lần duy nhất khi load/refresh trang
+            preloadImages(); // Tải ngầm bầy sói
+            hideLoading();   // Phá băng màn hình ngay lập tức
         };
 
         function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); alert("Lưu!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
