@@ -178,6 +178,13 @@
         }
         .close-viewer { position: absolute; top: -50px; right: 0; color: white; font-size: 2.5em; cursor: pointer; pointer-events: auto; }
 
+        .role-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .role-card-big { position: relative; width: 90%; max-width: 400px; transform-style: preserve-3d; transition: transform 0.6s; }
+        .role-card-big.flipped { transform: rotateY(180deg); }
+        .role-card-content { padding: 20px; text-align: center; }
+        .role-card-content h1 { margin: 10px 0; font-family: 'Georgia', serif; text-transform: uppercase; }
+        .role-card-content p { font-size: 0.95em; color: #ccc; font-style: italic; margin-bottom: 20px; line-height: 1.5; }
+
         /* ACTION OVERLAY */
         #action-overlay { position: absolute; bottom: 20px; left: 20px; right: 20px; display: none; align-items: flex-end; justify-content: space-between; pointer-events: none; z-index: 3000; }
         .host-action-bar { background: rgba(20, 20, 20, 0.98); padding: 12px; border-radius: 20px; border: 2px solid #333; pointer-events: auto; display: none; flex-direction: column; gap: 8px; width: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -763,20 +770,24 @@
         }
 
         async function displayMyRole(role) {
-            document.getElementById('role-popup').style.display='block';
-            const rData=allRoles.find(r=>r.role===role.role)||allRoles[1];
+            const popup = document.getElementById('role-popup');
+            popup.style.display = 'flex';
+
+            const rData = allRoles.find(r => r.role === role.role) || allRoles[1];
             const displayUrl = await getCachedImageUrl(rData.image);
 
-            document.getElementById('result').innerHTML=`
+            document.getElementById('result').innerHTML = `
                 <div class="role-card-big" id="myRoleCard">
-                    <div class="viewer-back"></div>
-                    <div class="viewer-front">
-                        <img id="my-role-img" src="${displayUrl}">
-                        <div class="role-card-content">
-                            <h2 style="color:#d4af37;">VAI DIỄN</h2>
-                            <h1 style="color:${role.role.includes('WEREWOLF')?'#ff4d4d':'#4da6ff'};">${role.role.replace(/_/g, ' ')}</h1>
-                            <p>"${role.description}"</p>
-                            <button id="btnUnderstand" onclick="confirmUnderstand()" style="background:#e74c3c;">XÁC NHẬN</button>
+                    <div class="viewer-card-inner">
+                        <div class="viewer-back"></div>
+                        <div class="viewer-front">
+                            <img id="my-role-img" src="${displayUrl}">
+                            <div class="role-card-content">
+                                <h2 style="color:#d4af37; margin:0; font-size: 0.9em;">VAI DIỄN CỦA BẠN</h2>
+                                <h1 style="color:${role.role.includes('WEREWOLF') ? '#ff4d4d' : '#4da6ff'}; font-size: 1.8em;">${role.role.replace(/_/g, ' ')}</h1>
+                                <p>"${role.description}"</p>
+                                <button id="btnUnderstand" onclick="confirmUnderstand()" style="background:#e74c3c; width: 100%; margin: 0;">XÁC NHẬN</button>
+                            </div>
                         </div>
                     </div>
                 </div>`;
@@ -785,10 +796,23 @@
             try { await img.decode(); } catch(e) {}
 
             const card = document.getElementById('myRoleCard');
-            card.classList.add('viewer-card');
-            setTimeout(() => card.classList.add('flipped'), 500);
+            // Thêm class để kích hoạt hiệu ứng lật
+            setTimeout(() => card.classList.add('flipped'), 100);
         }
-        function confirmUnderstand() { document.getElementById('btnUnderstand').style.background='#7f8c8d'; document.getElementById('btnUnderstand').innerText='OK'; document.getElementById('btnUnderstand').disabled=true; socket.send(JSON.stringify({type:"I_UNDERSTAND", data:""})); }
+        function confirmUnderstand() {
+            const btn = document.getElementById('btnUnderstand');
+            btn.style.background = '#7f8c8d';
+            btn.innerText = 'ĐÃ HIỂU';
+            btn.disabled = true;
+            socket.send(JSON.stringify({type:"I_UNDERSTAND", data:""}));
+
+            // Lật bài ngược lại và ẩn sau 1 khoảng thời gian
+            const card = document.getElementById('myRoleCard');
+            if (card) card.classList.remove('flipped');
+            setTimeout(() => {
+                document.getElementById('role-popup').style.display = 'none';
+            }, 600);
+        }
         function handlePhaseUpdate(data) {
             const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0;
             const left = document.getElementById('header-status-left'); const right = document.getElementById('header-status-right');
