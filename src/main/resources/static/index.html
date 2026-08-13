@@ -365,7 +365,7 @@
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [];
+        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY';
         const allRoles = [
             { role: 'WEREWOLF', image: 'images/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
             { role: 'VILLAGER', image: 'images/roles/thevillager.png', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
@@ -688,7 +688,7 @@
 
         function updatePlayerListUI(ps) {
             playersCache = ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
-            if (isHost) g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
+            if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
 
             let html = ps.map((p,i)=>`
                 <div class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''}" onclick="selectPlayer('${p.id}')">
@@ -821,6 +821,14 @@
             // Thêm class để kích hoạt hiệu ứng lật
             setTimeout(() => card.classList.add('flipped'), 100);
         }
+
+            const img = document.getElementById('my-role-img');
+            try { await img.decode(); } catch(e) {}
+
+            const card = document.getElementById('myRoleCard');
+            // Thêm class để kích hoạt hiệu ứng lật
+            setTimeout(() => card.classList.add('flipped'), 100);
+        }
         function confirmUnderstand() {
             const btn = document.getElementById('btnUnderstand');
             btn.style.background = '#7f8c8d';
@@ -837,6 +845,7 @@
         }
         function handlePhaseUpdate(data) {
             const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0;
+            currentPhase = ph;
             const left = document.getElementById('header-status-left'); const right = document.getElementById('header-status-right');
             const pIcon = document.getElementById('header-phase-icon'); const pText = document.getElementById('header-phase-text');
 
