@@ -321,7 +321,7 @@ fun triggerNextPhase(room: Room) {
                 triggerNextPhase(room)
             }
         }
-        room.players.forEach { p -> launch { val cur = if (room.phase == "NIGHT") room.nightActionList[room.currentNightActionIndex] else room.phase; playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}")) } }
+        room.players.forEach { p -> launch { val cur = if (room.phase == "NIGHT") room.nightActionList[room.currentNightActionIndex] else room.phase; playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}")) } }
         broadcastPlayerList(room)
     }
 }
