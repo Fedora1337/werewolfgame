@@ -827,13 +827,12 @@
             badge.style.display = 'block';
 
             const popup = document.getElementById('role-popup');
-            popup.innerHTML = ''; // Dọn dẹp trước khi chèn
+            popup.innerHTML = '';
             popup.style.display = 'flex';
 
             const rData = allRoles.find(r => r.role === role.role) || allRoles[1];
             const displayUrl = await getCachedImageUrl(rData.image);
 
-            // BẢN SAO HOÀN HẢO TỪ CẤU TRÚC GALLERY
             const content = document.createElement('div');
             content.className = 'viewer-content';
             content.innerHTML = `
@@ -856,14 +855,14 @@
             const card = document.getElementById('myRoleCard');
 
             const triggerFlip = () => {
-                setTimeout(() => card.classList.add('flipped'), 100);
+                setTimeout(() => { if(card) card.classList.add('flipped'); }, 100);
             };
 
             if (img.complete) triggerFlip();
             else {
                 img.onload = triggerFlip;
                 img.onerror = () => {
-                    img.src = 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=400';
+                    img.src = 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.png';
                     triggerFlip();
                 };
             }
