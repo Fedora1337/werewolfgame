@@ -88,19 +88,44 @@
         .page.active { display: flex !important; }
 
         /* GRID SYSTEMS */
-        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; width: 100%; }
+        .game-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; width: 100%;
+            background-image: radial-gradient(#333 1px, transparent 1px); background-size: 20px 20px; /* Chấm nền nhẹ */
+        }
         .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; }
 
         @media (min-width: 1000px) {
-            .game-grid { grid-template-columns: repeat(9, 1fr); }
+            .game-grid { grid-template-columns: repeat(6, 1fr); }
             .gallery-grid { grid-template-columns: repeat(7, 1fr); }
         }
 
-        .game-player-card { background: #2a2a2a; border-radius: 12px; padding: 10px; border: 2px solid #444; cursor: pointer; position: relative; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .slot-empty {
+            border: 2px dashed #222; border-radius: 12px; height: 110px;
+            display: flex; align-items: center; justify-content: center; color: #222; font-size: 2em;
+        }
+
+        .game-player-card {
+            background: #2a2a2a; border-radius: 12px; padding: 10px; border: 2px solid #444;
+            cursor: pointer; position: relative; height: 110px; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .game-player-card:hover { border-color: #666; transform: translateY(-2px); }
         .game-player-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
         .game-player-card .player-num { position: absolute; top: 5px; right: 8px; color: #f1c40f; font-size: 0.7em; font-weight: bold; }
         .game-player-card p { font-size: 0.65em; margin: 8px 0 0 0; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .game-player-card.ready { border-color: #27ae60; }
+
+        .move-controls {
+            position: absolute; bottom: -5px; left: 0; right: 0; display: none;
+            justify-content: center; gap: 15px; z-index: 10;
+        }
+        .is-host-view .move-controls { display: flex; }
+        .move-btn {
+            background: #444; color: white; border-radius: 4px; padding: 2px 8px;
+            font-size: 10px; cursor: pointer; border: 1px solid #555;
+        }
+        .move-btn:hover { background: var(--primary); }
 
         /* GALLERY & CARD VIEWER */
         .gallery-card { background: #1a1a1a; border-radius: 12px; border: 2px solid #d4af37; overflow: hidden; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -627,12 +652,37 @@
 
         function updatePlayerListUI(ps) {
             playersCache = ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
-            g.innerHTML=ps.map((p,i)=>`<div class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''}" onclick="selectPlayer('${p.id}')">${isHost&&p.id!==myId?`<div class="kick-btn" onclick="event.stopPropagation(); kickPlayer('${p.id}')">×</div>`:''}<div class="player-num">#${i+1}</div><img src="${p.avatar}"><p>${p.name}</p>${p.isDead?'<div style="position:absolute; inset:0; background:rgba(255,0,0,0.3); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:white; z-index:5;">RIP</div>':''}</div>`).join('');
+            if (isHost) g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
+
+            let html = ps.map((p,i)=>`
+                <div class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''}" onclick="selectPlayer('${p.id}')">
+                    ${isHost&&p.id!==myId?`<div class="kick-btn" onclick="event.stopPropagation(); kickPlayer('${p.id}')">×</div>`:''}
+                    <div class="player-num">#${i+1}</div>
+                    <img src="${p.avatar}">
+                    <p>${p.name}</p>
+                    ${p.isDead?'<div style="position:absolute; inset:0; background:rgba(255,0,0,0.3); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:white; z-index:5;">RIP</div>':''}
+                    <div class="move-controls" onclick="event.stopPropagation()">
+                        <div class="move-btn" onclick="movePlayer(${i}, ${i-1})">◀</div>
+                        <div class="move-btn" onclick="movePlayer(${i}, ${i+1})">▶</div>
+                    </div>
+                </div>`).join('');
+
+            // Vẽ thêm các ô grid trống (tối đa 18 ô)
+            for(let i = ps.length; i < 18; i++) {
+                html += `<div class="slot-empty">${i+1}</div>`;
+            }
+
+            g.innerHTML = html;
             if(mi!==-1) document.getElementById('self-mini-num').innerText=`#${mi+1}`;
             const b=document.getElementById('player-count-badge'); const c=ps.length; const rc=ps.filter(p=>p.isReady).length;
             if(c<8) b.innerText=`Cần ${8-c} nữa`; else if(rc<c) b.innerText=`Chờ (${rc}/${c})`; else b.innerText="Đủ!";
             if(isHost){ const btn=document.getElementById('btnStartGame'); if(c>=8&&rc===c){ btn.disabled=false; btn.innerText="BẮT ĐẦU"; } else { btn.disabled=true; btn.innerText=c<8?`CẦN THÊM ${8-c}`:`CHỜ ${c-rc} SẴN SÀNG`; } }
             updateActionButtons();
+        }
+
+        function movePlayer(from, to) {
+            if (to < 0 || to >= playersCache.length) return;
+            socket.send(JSON.stringify({type: "SWAP_PLAYERS", data: `${from}|${to}`}));
         }
 
         function kickPlayer(id) { showConfirm("Kick?", () => socket.send(JSON.stringify({type:"KICK_PLAYER", data:id}))); }

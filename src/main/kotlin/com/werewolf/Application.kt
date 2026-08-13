@@ -257,6 +257,21 @@ fun main() {
                                         }
                                     }
                                 }
+                                "SWAP_PLAYERS" -> {
+                                    if (room.hostId == playerId && room.phase == "LOBBY") {
+                                        val parts = msg.data.split("|")
+                                        if (parts.size == 2) {
+                                            val i = parts[0].toIntOrNull() ?: -1
+                                            val j = parts[1].toIntOrNull() ?: -1
+                                            if (i in room.players.indices && j in room.players.indices) {
+                                                val temp = room.players[i]
+                                                room.players[i] = room.players[j]
+                                                room.players[j] = temp
+                                                broadcastPlayerList(room)
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
