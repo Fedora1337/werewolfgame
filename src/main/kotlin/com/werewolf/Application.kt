@@ -452,7 +452,7 @@ fun processGameLogic(room: Room) {
         val wolves = room.players.filter { !it.isDead && it.trulyTeam == "Sói" }
         val others = room.players.filter { !it.isDead && it.trulyTeam != "Sói" }
         if (wolves.size >= others.size) room.winner = "WEREWOLF_TEAM"
-        else if (wolves.none { it.role == Role.WEREWOLF || it.role == Role.CURSER_WEREWOLF || it.role == Role.PROPHET_WEREWOLF }) room.winner = "VILLAGER_TEAM"
+        else if (wolves.isEmpty()) room.winner = "VILLAGER_TEAM"
     }
     if (room.phase == "NIGHT" || room.phase == "DAY" || room.phase == "TRIAL_VOTING") room.tempDeadIds.clear()
     val deadHunter = room.players.find { it.role == Role.HUNTER && it.isDead && it.canHunterPassive }
@@ -477,19 +477,21 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
     fun resolveTargets(selector: String): List<Player> {
         val s = selector.lowercase()
         return when {
-            s.startsWith("@a") || s.startsWith("@all") -> room.players
-            s.startsWith("@v") || s.startsWith("@villagers") -> room.players.filter { it.trulyTeam == "Dân" }
-            s.startsWith("@w") || s.startsWith("@wolf") || s.startsWith("@wolves") -> room.players.filter { it.trulyTeam == "Sói" }
-            s.startsWith("@c") || s.startsWith("@cupid") -> room.players.filter { it.trulyTeam == "cupid" }
+            s == "@a" || s == "@all" -> room.players
+            s == "@v" || s == "@villagers" -> room.players.filter { it.trulyTeam == "Dân" }
+            s == "@w" || s == "@wolf" || s == "@wolves" -> room.players.filter { it.trulyTeam == "Sói" }
+            s == "@c" || s == "@cupid" -> room.players.filter { it.trulyTeam == "cupid" }
             s.startsWith("@") -> {
                 val namePart = s.substring(1)
                 room.players.filter { it.name.contains(namePart, true) }
             }
             s.startsWith("#") -> {
-                val idx = s.substring(1).toIntOrNull()?.let { it - 1 } ?: -1
-                if (idx in room.players.indices) listOf(room.players[idx]) else emptyList()
+                val numPart = s.substring(1).toIntOrNull()
+                if (numPart != null && numPart > 0 && numPart <= room.players.size) {
+                    listOf(room.players[numPart - 1])
+                } else emptyList()
             }
-            else -> emptyList()
+            else -> room.players.filter { it.name.contains(s, true) }
         }
     }
 
@@ -624,7 +626,19 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
             "/tick" -> {
                 if (parts.size >= 3 && parts[1] == "set") {
                     room.tickSpeed = parts[2].toIntOrNull() ?: 1
-                    triggerNextPhase(room)
+                    // Cập nhật tốc độ ngay lập tức mà không nhảy Phase
+                    val duration = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) getNightActionDuration(room, room.nightActionList[room.currentNightActionIndex]) else getPhaseDuration(room)
+                    room.nightJob?.cancel()
+                    if (room.phase != "LOBBY" && room.tickSpeed > 0) {
+                        room.nightJob = GlobalScope.launch {
+                            delay((duration * 1000L) / room.tickSpeed)
+                            triggerNextPhase(room)
+                        }
+                    }
+                    room.players.forEach { p -> GlobalScope.launch { 
+                        val cur = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) room.nightActionList[room.currentNightActionIndex] else room.phase
+                        playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}")) 
+                    } }
                 }
             }
         }
