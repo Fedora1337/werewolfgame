@@ -425,7 +425,20 @@ suspend fun broadcastAnnouncement(room: Room, text: String) {
 fun handleDevCommand(room: Room, cmd: String, devId: String) {
     val parts = cmd.split(" ")
     val action = parts[0].lowercase()
-    
+    val moderator = Moderator()
+
+    fun resolveTargets(selector: String): List<Player> {
+        if (!selector.startsWith("@")) return emptyList()
+        val s = selector.substring(1).lowercase()
+        return when {
+            s == "a" || s == "all" -> room.players
+            s == "v" || s == "villagers" -> room.players.filter { it.trulyTeam == "Dân" }
+            s == "w" || s == "wolf" || s == "wolves" -> room.players.filter { it.trulyTeam == "Sói" }
+            s == "c" || s == "cupid" -> room.players.filter { it.trulyTeam == "cupid" }
+            else -> room.players.filter { it.name.contains(s, true) }
+        }
+    }
+
     GlobalScope.launch {
         when (action) {
             "/next" -> {
@@ -440,8 +453,20 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
             }
             "/start" -> { 
                 if (room.phase == "LOBBY") {
+                    if (room.assignments.isEmpty()) {
+                        room.wolfRatio = 0.25
+                        room.prophetUses = calculateProphetUses(room.players.size, 0.25)
+                        room.assignments.putAll(moderator.distributeRoles(room.players, 0.25))
+                        room.assignments.forEach { (pid, assign) -> 
+                            launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
+                        }
+                    }
                     room.players.forEach { it.isReady = true }
-                    // Tự động kích hoạt phase PREPARING (Backend cần đảm bảo roles đã được phân nếu dùng qua API)
+                    room.phase = "PREPARING"
+                    room.readyPlayers.clear()
+                    room.players.forEach { p -> 
+                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|300|0|${room.dayCount}")) }
+                    }
                     triggerNextPhase(room) 
                 }
             }
@@ -453,38 +478,46 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
             }
             "/setrole" -> {
                 if (parts.size >= 3) {
-                    val p = room.players.find { it.name.contains(parts[1], true) }
-                    val r = try { Role.valueOf(parts[2].uppercase()) } catch (e: Exception) { null }
-                    if (p != null && r != null) { 
-                        p.role = r
-                        // Cập nhật TrulyTeam dựa trên Role mới
-                        if (r.type == RoleType.WEREWOLF) { p.trulyTeam = "Sói"; p.team = "Sói" }
-                        else if (r == Role.LYCAN) { p.trulyTeam = "Sói"; p.team = "Dân" }
-                        else if (r == Role.PIPER) { p.trulyTeam = "piper"; p.team = "Dân" }
-                        else { p.trulyTeam = "Dân"; p.team = "Dân" }
+                    val targets = resolveTargets(parts[1])
+                    val rolePart = if (parts[2].startsWith("\\")) parts[2].substring(1) else parts[2]
+                    val r = try { Role.valueOf(rolePart.uppercase()) } catch (e: Exception) { null }
+                    if (targets.isNotEmpty() && r != null) { 
+                        targets.forEach { p ->
+                            p.role = r
+                            if (r.type == RoleType.WEREWOLF) { p.trulyTeam = "Sói"; p.team = "Sói" }
+                            else if (r == Role.LYCAN) { p.trulyTeam = "Sói"; p.team = "Dân" }
+                            else if (r == Role.PIPER) { p.trulyTeam = "piper"; p.team = "Dân" }
+                            else { p.trulyTeam = "Dân"; p.team = "Dân" }
+                        }
                         broadcastPlayerList(room) 
                     }
                 }
             }
             "/kill" -> {
                 if (parts.size >= 2) {
-                    val p = room.players.find { it.name.contains(parts[1], true) }
-                    if (p != null) { p.heal = 0; processGameLogic(room); broadcastPlayerList(room) }
+                    val targets = resolveTargets(parts[1])
+                    if (targets.isNotEmpty()) {
+                        targets.forEach { it.heal = 0 }
+                        processGameLogic(room)
+                        broadcastPlayerList(room)
+                    }
                 }
             }
-            "/shield" -> { // Buff giáp ảo
+            "/shield" -> {
                 if (parts.size >= 2) {
-                    val p = room.players.find { it.name.contains(parts[1], true) }
-                    if (p != null) { p.shield += 1; broadcastPlayerList(room) }
+                    val targets = resolveTargets(parts[1])
+                    targets.forEach { it.shield += 1 }
+                    broadcastPlayerList(room)
                 }
             }
             "/curse" -> {
                 if (parts.size >= 2) {
-                    val p = room.players.find { it.id == parts[1] || it.name.contains(parts[1], true) }
-                    if (p != null) { p.moonCurse = 1; broadcastPlayerList(room) }
+                    val targets = resolveTargets(parts[1])
+                    targets.forEach { it.moonCurse = 1 }
+                    broadcastPlayerList(room)
                 }
             }
-            "/time" -> { // /time set day | /time set night
+            "/time" -> {
                 if (parts.size >= 3 && parts[1] == "set") {
                     when (parts[2].lowercase()) {
                         "day" -> {
@@ -502,10 +535,10 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                     }
                 }
             }
-            "/tick" -> { // /tick set {int}
+            "/tick" -> {
                 if (parts.size >= 3 && parts[1] == "set") {
                     room.tickSpeed = parts[2].toIntOrNull() ?: 1
-                    triggerNextPhase(room) // Restart phase with new speed
+                    triggerNextPhase(room)
                 }
             }
         }
