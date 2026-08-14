@@ -283,6 +283,7 @@
                 <!-- STATUS TRÁI: ICON + PHASE -->
                 <div id="header-status-left" style="position: absolute; left: 55px; bottom: 18px; display: none; align-items: center; gap: 6px; font-size: 0.75em; color: #f1c40f; font-weight: bold;">
                     <span id="header-phase-icon"></span> <span id="header-phase-text"></span>
+                    <div id="night-turn-indicator" style="margin-left: 10px; background: rgba(231, 76, 60, 0.2); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--primary); color: var(--primary); display: none;">Lượt của \NONE</div>
                 </div>
 
                 <h2>Môn Sói Là</h2>
@@ -396,7 +397,11 @@
     </div>
 
     <div id="role-popup" class="role-popup"></div>
-    <div id="night-overlay"><h1>🌙</h1><h2>Trời tối rồi...</h2><button onclick="document.getElementById('night-overlay').style.display='none'" class="ghost-btn">Xem vai</button></div>
+    <div id="night-overlay" style="position:fixed; inset:0; background:#000; z-index:5000; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+        <h1 style="font-size: 5em; margin:0;">🌑</h1>
+        <h2 style="color:var(--primary); letter-spacing:3px; margin-top:20px;">TRỜI TỐI RỒI...</h2>
+        <p id="night-overlay-sub" style="color:#444; font-style:italic; margin-top:10px;">Làng đang chìm trong giấc ngủ</p>
+    </div>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
@@ -897,7 +902,12 @@
         function handlePhaseUpdate(data) {
             const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0;
 
-            const isNightPhase = (p) => !["LOBBY", "PREPARING", "DAY", "TRIAL_DEFENSE", "TRIAL_VOTING", "HUNTER_REVENGE"].includes(p);
+            const nightRoles = ["WEREWOLF", "SEER", "WITCH", "GUARDIAN", "CUPID", "PIPER", "CELESTIAL_FOX", "MOON_MAIDEN", "ELDER", "THREE_BROTHERS", "TWINS", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"];
+            const isNightTurn = nightRoles.includes(ph);
+            const left = document.getElementById('header-status-left');
+            const right = document.getElementById('header-status-right');
+            const turnInd = document.getElementById('night-turn-indicator');
+            const nightOverlay = document.getElementById('night-overlay');
 
             // SHOW CINEMATIC TRANSITION OVERLAY
             if (currentPhase !== ph && ph !== "LOBBY") {
@@ -906,21 +916,18 @@
 
                 if (currentPhase === "LOBBY" && ph === "PREPARING") {
                     transitionText = "TRÒ CHƠI BẮT ĐẦU";
-                } else if (currentPhase === "PREPARING" && isNightPhase(ph)) {
-                    transitionText = "HẾT THỜI GIAN CHUẨN BỊ";
-                    subText = "ĐÊM 1 BẮT ĐẦU";
-                } else if (isNightPhase(currentPhase) && ph === "DAY") {
+                } else if (isNightTurn) {
+                    transitionText = `LƯỢT CỦA ${ph.replace(/_/g, ' ')}`;
+                    subText = "MỜI THỨC GIẤC";
+                } else if (ph === "DAY") {
                     transitionText = `HẾT ĐÊM ${day}`;
                     subText = `NGÀY ${day} ĐÃ ĐẾN`;
-                } else if (currentPhase === "DAY" && ph === "TRIAL_DEFENSE") {
+                } else if (ph === "TRIAL_DEFENSE") {
                     transitionText = "PHIÊN BIỆN HỘ BẮT ĐẦU";
-                } else if (currentPhase === "TRIAL_DEFENSE" && ph === "TRIAL_VOTING") {
+                } else if (ph === "TRIAL_VOTING") {
                     transitionText = "PHIÊN BỎ PHIẾU BẮT ĐẦU";
-                } else if (currentPhase === "TRIAL_VOTING" && isNightPhase(ph)) {
+                } else if (currentPhase === "TRIAL_VOTING" && (ph === "NIGHT" || isNightTurn)) {
                     transitionText = "KẾT THÚC BỎ PHIẾU";
-                    subText = `ĐÊM ${day} BẮT ĐẦU`;
-                } else if (currentPhase === "DAY" && isNightPhase(ph)) {
-                    transitionText = `NGÀY ${day-1} KẾT THÚC`;
                     subText = `ĐÊM ${day} BẮT ĐẦU`;
                 }
 
@@ -928,7 +935,7 @@
                     const transOverlay = document.createElement('div');
                     transOverlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2s forwards; pointer-events:none;';
                     transOverlay.innerHTML = `
-                        <h1 style="color:var(--primary); letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px var(--primary); margin:0;">${transitionText}</h1>
+                        <h1 style="color:var(--primary); letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px var(--primary); margin:0; text-align:center;">${transitionText}</h1>
                         ${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic;">${subText}</h2>` : ''}
                     `;
                     document.body.appendChild(transOverlay);
@@ -936,34 +943,58 @@
                 }
             }
 
-            currentPhase = ph;
-            const left = document.getElementById('header-status-left'); const right = document.getElementById('header-status-right');
-            const pIcon = document.getElementById('header-phase-icon'); const pText = document.getElementById('header-phase-text');
+            // XỬ LÝ MÀN ĐÊM (NIGHT OVERLAY)
+            if (isNightTurn) {
+                turnInd.style.display = 'block';
+                turnInd.innerText = `Lượt của \\${ph.replace(/_/g, ' ')}`;
+
+                // CHỈ MỞ MẮT CHO ĐÚNG VAI DIỄN
+                const myRoleName = myRoleData ? (typeof myRoleData.role === 'string' ? myRoleData.role : myRoleData.role.name || "").toUpperCase() : "";
+                if (myRoleName === ph || (ph === "WEREWOLF" && ["CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(myRoleName))) {
+                    nightOverlay.style.display = 'none';
+                } else {
+                    nightOverlay.style.display = 'flex';
+                    document.getElementById('night-overlay-sub').innerText = `Đang chờ \\${ph.replace(/_/g, ' ')} thực hiện chức năng`;
+                }
+            } else {
+                turnInd.style.display = 'none';
+                nightOverlay.style.display = 'none';
+            }
 
             if (ph === "LOBBY") {
                 left.style.display = 'none'; right.style.display = 'none';
                 clearInterval(countdownInterval);
                 document.getElementById('lobby-controls').style.display = 'flex';
                 document.getElementById('btnReady').style.display = isHost ? 'none' : 'block';
-            }
-            else {
+            } else {
                 left.style.display = 'flex'; right.style.display = 'flex';
                 document.getElementById('lobby-controls').style.display = 'none';
-                if (ph === "NIGHT" || ph.includes("WOLF") || ph === "SEER" || ph === "WITCH" || ph === "GUARDIAN") { pIcon.innerText = "🌙"; pText.innerText = `Đêm ${day}`; }
+                const pIcon = document.getElementById('header-phase-icon');
+                const pText = document.getElementById('header-phase-text');
+                if (isNightTurn || ph === "NIGHT") { pIcon.innerText = "🌙"; pText.innerText = `Đêm ${day}`; }
                 else if (ph === "DAY") { pIcon.innerText = "☀️"; pText.innerText = `Ngày ${day}`; }
                 else if (ph === "TRIAL_DEFENSE" || ph === "TRIAL_VOTING") { pIcon.innerText = "⚖️"; pText.innerText = "Biện hộ"; }
                 else { pIcon.innerText = "⏳"; pText.innerText = "Chuẩn bị"; }
             }
 
-            if(ph==="NIGHT"){ clearInterval(countdownInterval); document.getElementById('header-timer').innerText = "00:00"; document.getElementById('role-popup').style.display='none'; document.getElementById('night-overlay').style.display='flex'; announce("Tối rồi."); }
-            else if(ph==="DAY"){ document.getElementById('night-overlay').style.display='none'; startCountdown(du); let m="Sáng rồi."; if(rs==="RUSSIAN_VODKA") m="Gấu nốc rượu! "+m; announce(m); }
-            else { startCountdown(du); }
+            if (ph === "DAY") {
+                startCountdown(du);
+                let m = "Sáng rồi.";
+                if (rs === "RUSSIAN_VODKA") m = "Gấu nốc rượu! " + m;
+                announce(m);
+            } else {
+                startCountdown(du);
+                if (isNightTurn) announce(`Mời ${ph.replace(/_/g, ' ')} thức giấc`);
+            }
 
             if(isHost){
                 document.getElementById('host-action-bar').style.display= (document.querySelector('.page.active').id==='page-lobby') ? 'flex' : 'none';
                 document.getElementById('btnNextPhase').style.display=(ph!=="LOBBY")?'block':'none';
                 document.getElementById('btnStartGame').style.display=(ph==="LOBBY")?'block':'none';
             }
+
+            currentPhase = ph;
+        }
         }
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
         async function distributeRoles() { const r = await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if (!r.ok) showNotification("Không thể bắt đầu. Cần ít nhất 8 người chơi sẵn sàng!"); }
