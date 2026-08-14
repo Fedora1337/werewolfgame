@@ -680,6 +680,13 @@
                 else if (param.startsWith('#')) target = playersCache[parseInt(param.substring(1)) - 1];
                 else if (param.startsWith('\\')) target = playersCache.find(p => { if(!p.role) return false; const r = (typeof p.role === 'string') ? p.role : (p.role.role || p.role.name || ""); return r.toUpperCase().includes(param.substring(1).toUpperCase()); });
                 if (target) { myId = target.id; myName = target.name; myAvatar = target.avatar; myRoleData = (typeof target.role === 'string') ? {role: target.role, description: "Mô phỏng..."} : target.role; connectWebSocket(); updateProfileUI(); navigateTo('page-lobby'); }
+            } else if (cmd === '/getallrole') {
+                logDev("<span style='color:#f1c40f'>--- DANH SÁCH VAI DIỄN ---</span>");
+                playersCache.forEach((p, i) => {
+                    const rName = p.role ? (typeof p.role === 'string' ? p.role : (p.role.role || p.role.name || "??")) : "CHƯA CÓ";
+                    const teamColor = p.trulyTeam === "Sói" ? "#ff4d4d" : (p.trulyTeam === "Dân" ? "#4da6ff" : "#f1c40f");
+                    logDev(`#${i+1} ${p.name}: <span style="color:${teamColor}">${rName}</span>`);
+                });
             } else if (cmd === '/return') { myId = realId; myName = realName; myAvatar = realAvatar; fetch(`/room/${currentRoomCode}/players`).then(r=>r.json()).then(ps => { const me = ps.find(p => p.id === myId); myRoleData = me ? me.role : null; connectWebSocket(); updateProfileUI(); });
             } else if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"DEV_COMMAND", data:cmd}));
             i.value='';
