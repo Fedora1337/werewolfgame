@@ -995,7 +995,7 @@
 
             currentPhase = ph;
         }
-        }
+
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
         async function distributeRoles() { const r = await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if (!r.ok) showNotification("Không thể bắt đầu. Cần ít nhất 8 người chơi sẵn sàng!"); }
         function startCountdown(s) {
