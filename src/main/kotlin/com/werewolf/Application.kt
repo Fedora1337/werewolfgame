@@ -337,19 +337,25 @@ fun main() {
 fun triggerNextPhase(room: Room) {
     room.nightJob?.cancel()
     GlobalScope.launch {
+        // Tạo khoảng trễ 3 giây để server xử lý và tạo hiệu ứng kịch tính cho người chơi
+        if (room.phase != "LOBBY" && room.phase != "PREPARING") {
+            delay(3000)
+        }
+
         when (room.phase) {
+            "LOBBY" -> { room.phase = "PREPARING"; room.dayCount = 1 }
             "PREPARING" -> { room.phase = "NIGHT"; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0 }
-            "NIGHT" -> { if (room.currentNightActionIndex < room.nightActionList.size - 1) room.currentNightActionIndex++ else { processGameLogic(room); room.phase = "DAY"; room.dayCount++ } }
+            "NIGHT" -> { if (room.currentNightActionIndex < room.nightActionList.size - 1) room.currentNightActionIndex++ else { processGameLogic(room); room.phase = "DAY" } }
             "DAY" -> {
                 val alive = room.players.filter { !it.isDead }; val max = if (alive.isNotEmpty()) alive.maxOf { it.vote } else 0
                 val top = alive.filter { it.vote == max && max > 0 }
-                if (top.size == 1) { room.phase = "TRIAL_DEFENSE"; room.trialTargetId = top[0].id } else { processGameLogic(room); room.phase = "NIGHT"; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0 }
+                if (top.size == 1) { room.phase = "TRIAL_DEFENSE"; room.trialTargetId = top[0].id } else { processGameLogic(room); room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0 }
             }
             "TRIAL_DEFENSE" -> room.phase = "TRIAL_VOTING"
-            "TRIAL_VOTING" -> { processGameLogic(room); if (room.phase != "HUNTER_REVENGE") { room.phase = "NIGHT"; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null } }
+            "TRIAL_VOTING" -> { processGameLogic(room); if (room.phase != "HUNTER_REVENGE") { room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null } }
             "HUNTER_REVENGE" -> { 
                 val alive = room.players.filter { !it.isDead }; if (alive.isNotEmpty()) { val target = alive.random(); target.heal = 0 }
-                processGameLogic(room); room.phase = "NIGHT"; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null
+                processGameLogic(room); room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null
             }
             else -> room.phase = "NIGHT"
         }
