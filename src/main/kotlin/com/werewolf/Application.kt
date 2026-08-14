@@ -447,6 +447,20 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                     room.phase = "DAY"
                     room.dayCount++
                     triggerNextPhase(room)
+                } else if (parts.size >= 2 && parts[1].lowercase() == "night") {
+                    processGameLogic(room)
+                    room.phase = "NIGHT"
+                    room.dayCount++
+                    room.nightActionList = getNightOrder(room)
+                    room.currentNightActionIndex = 0
+                    triggerNextPhase(room)
+                } else if (parts.size >= 2 && parts[1].lowercase() == "execution") {
+                    val target = room.players.filter { !it.isDead }.maxByOrNull { it.vote } ?: room.players.find { !it.isDead }
+                    if (target != null) {
+                        room.phase = "TRIAL_DEFENSE"
+                        room.trialTargetId = target.id
+                        triggerNextPhase(room)
+                    }
                 } else if (parts.size >= 2 && parts[1].lowercase() == "phase") {
                     if (room.phase == "NIGHT") {
                         processGameLogic(room)
