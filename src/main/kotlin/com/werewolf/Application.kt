@@ -550,9 +550,27 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                             else if (r == Role.LYCAN) { p.trulyTeam = "Sói"; p.team = "Dân" }
                             else if (r == Role.PIPER) { p.trulyTeam = "piper"; p.team = "Dân" }
                             else { p.trulyTeam = "Dân"; p.team = "Dân" }
+                            
+                            val assign = GameAssignment(p.name, r.name, "Chức năng của bạn đã được thay đổi bởi Đấng Sáng Thế!")
+                            room.assignments[p.id] = assign
+                            launch { playerSessions[p.id]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
                         }
                         broadcastPlayerList(room) 
                     }
+                }
+            }
+            "/reveal" -> {
+                if (parts.size >= 2) {
+                    val targets = resolveTargets(parts[1])
+                    targets.forEach { p ->
+                        launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[REVEAL] ${p.name} là ${p.role?.name} (Team: ${p.trulyTeam})")) }
+                    }
+                }
+            }
+            "/broadcast" -> {
+                if (parts.size >= 2) {
+                    val msg = parts.drop(1).joinToString(" ")
+                    broadcastAnnouncement(room, "GOD: $msg")
                 }
             }
             "/kill" -> {
