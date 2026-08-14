@@ -349,15 +349,16 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
             when (room.phase) {
                 "LOBBY" -> { 
                     room.phase = "PREPARING"; room.dayCount = 1 
-                    // Tự động phân vai nếu chưa có
+                    // Tự động phân vai nếu chưa có (dành cho /start Dev)
                     if (room.assignments.isEmpty()) {
                         val moderator = Moderator()
-                        room.wolfRatio = 0.25
-                        room.prophetUses = calculateProphetUses(room.players.size, 0.25)
-                        room.assignments.putAll(moderator.distributeRoles(room.players, 0.25))
-                        room.assignments.forEach { (pid, assign) -> 
-                            launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
-                        }
+                        room.wolfRatio = room.wolfRatio ?: 0.25
+                        room.prophetUses = calculateProphetUses(room.players.size, room.wolfRatio)
+                        room.assignments.putAll(moderator.distributeRoles(room.players, room.wolfRatio))
+                    }
+                    // LUÔN GỬI VAI DIỄN CHO MỌI NGƯỜI KHI VÀO TRẬN
+                    room.assignments.forEach { (pid, assign) -> 
+                        launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
                     }
                 }
                 "PREPARING" -> { 
