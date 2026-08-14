@@ -447,27 +447,38 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                     room.phase = "DAY"
                     room.dayCount++
                     triggerNextPhase(room)
+                } else if (parts.size >= 2 && parts[1].lowercase() == "phase") {
+                    if (room.phase == "NIGHT") {
+                        processGameLogic(room)
+                        room.phase = "DAY"
+                    } else {
+                        room.phase = "NIGHT"
+                        room.dayCount++
+                        room.nightActionList = getNightOrder(room)
+                        room.currentNightActionIndex = 0
+                    }
+                    triggerNextPhase(room)
                 } else {
                     triggerNextPhase(room)
                 }
             }
             "/start" -> { 
                 if (room.phase == "LOBBY") {
-                    if (room.assignments.isEmpty()) {
-                        room.wolfRatio = 0.25
-                        room.prophetUses = calculateProphetUses(room.players.size, 0.25)
-                        room.assignments.putAll(moderator.distributeRoles(room.players, 0.25))
-                        room.assignments.forEach { (pid, assign) -> 
-                            launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
-                        }
-                    }
                     room.players.forEach { it.isReady = true }
-                    room.phase = "PREPARING"
+                    // Gọi đúng logic chia bài chuẩn của game
+                    room.wolfRatio = 0.25
+                    room.prophetUses = calculateProphetUses(room.players.size, 0.25)
+                    room.assignments.putAll(moderator.distributeRoles(room.players, 0.25))
                     room.readyPlayers.clear()
-                    room.players.forEach { p -> 
-                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|300|0|${room.dayCount}")) }
+                    room.phase = "PREPARING"
+                    room.dayCount = 1
+                    room.assignments.forEach { (pid, assign) -> 
+                        launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
                     }
-                    triggerNextPhase(room) 
+                    room.players.forEach { p -> 
+                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|300||${room.dayCount}")) }
+                    }
+                    broadcastPlayerList(room)
                 }
             }
             "/end" -> {
