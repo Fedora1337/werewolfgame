@@ -897,19 +897,42 @@
         function handlePhaseUpdate(data) {
             const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0;
 
-            // SHOW TRANSITION OVERLAY
+            const isNightPhase = (p) => !["LOBBY", "PREPARING", "DAY", "TRIAL_DEFENSE", "TRIAL_VOTING", "HUNTER_REVENGE"].includes(p);
+
+            // SHOW CINEMATIC TRANSITION OVERLAY
             if (currentPhase !== ph && ph !== "LOBBY") {
                 let transitionText = "";
-                if (currentPhase === "NIGHT" || ph.includes("WOLF") || ph === "SEER" || ph === "WITCH" || ph === "GUARDIAN") transitionText = `HẾT ĐÊM ${day}`;
-                else if (currentPhase === "DAY") transitionText = `HẾT NGÀY ${day}`;
-                else if (currentPhase === "TRIAL_VOTING") transitionText = "KẾT THÚC BỎ PHIẾU";
+                let subText = "";
+
+                if (currentPhase === "LOBBY" && ph === "PREPARING") {
+                    transitionText = "TRÒ CHƠI BẮT ĐẦU";
+                } else if (currentPhase === "PREPARING" && isNightPhase(ph)) {
+                    transitionText = "HẾT THỜI GIAN CHUẨN BỊ";
+                    subText = "ĐÊM 1 BẮT ĐẦU";
+                } else if (isNightPhase(currentPhase) && ph === "DAY") {
+                    transitionText = `HẾT ĐÊM ${day}`;
+                    subText = `NGÀY ${day} ĐÃ ĐẾN`;
+                } else if (currentPhase === "DAY" && ph === "TRIAL_DEFENSE") {
+                    transitionText = "PHIÊN BIỆN HỘ BẮT ĐẦU";
+                } else if (currentPhase === "TRIAL_DEFENSE" && ph === "TRIAL_VOTING") {
+                    transitionText = "PHIÊN BỎ PHIẾU BẮT ĐẦU";
+                } else if (currentPhase === "TRIAL_VOTING" && isNightPhase(ph)) {
+                    transitionText = "KẾT THÚC BỎ PHIẾU";
+                    subText = `ĐÊM ${day} BẮT ĐẦU`;
+                } else if (currentPhase === "DAY" && isNightPhase(ph)) {
+                    transitionText = `NGÀY ${day-1} KẾT THÚC`;
+                    subText = `ĐÊM ${day} BẮT ĐẦU`;
+                }
 
                 if (transitionText) {
                     const transOverlay = document.createElement('div');
-                    transOverlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 1.5s forwards;';
-                    transOverlay.innerHTML = `<h1 style="color:var(--primary); letter-spacing:5px; text-transform:uppercase; text-shadow: 0 0 20px var(--primary);">${transitionText}</h1>`;
+                    transOverlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2s forwards; pointer-events:none;';
+                    transOverlay.innerHTML = `
+                        <h1 style="color:var(--primary); letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px var(--primary); margin:0;">${transitionText}</h1>
+                        ${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic;">${subText}</h2>` : ''}
+                    `;
                     document.body.appendChild(transOverlay);
-                    setTimeout(() => transOverlay.remove(), 2000);
+                    setTimeout(() => transOverlay.remove(), 3000);
                 }
             }
 
