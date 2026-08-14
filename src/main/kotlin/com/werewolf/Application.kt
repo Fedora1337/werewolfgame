@@ -428,8 +428,29 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
     
     GlobalScope.launch {
         when (action) {
-            "/next" -> triggerNextPhase(room)
-            "/start" -> { room.players.forEach { it.isReady = true }; triggerNextPhase(room) }
+            "/next" -> {
+                if (parts.size >= 2 && parts[1].lowercase() == "day") {
+                    processGameLogic(room)
+                    room.phase = "DAY"
+                    room.dayCount++
+                    triggerNextPhase(room)
+                } else {
+                    triggerNextPhase(room)
+                }
+            }
+            "/start" -> { 
+                if (room.phase == "LOBBY") {
+                    room.players.forEach { it.isReady = true }
+                    // Tự động kích hoạt phase PREPARING (Backend cần đảm bảo roles đã được phân nếu dùng qua API)
+                    triggerNextPhase(room) 
+                }
+            }
+            "/end" -> {
+                room.players.forEach { p ->
+                    launch { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Phòng đã bị giải tán bởi Dev!")) }
+                }
+                rooms.remove(room.code)
+            }
             "/setrole" -> {
                 if (parts.size >= 3) {
                     val p = room.players.find { it.name.contains(parts[1], true) }

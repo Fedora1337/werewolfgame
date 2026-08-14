@@ -752,7 +752,7 @@
             socket.send(JSON.stringify({type: "SWAP_PLAYERS", data: `${from}|${to}`}));
         }
 
-        function kickPlayer(id) { showConfirm("Kick?", () => socket.send(JSON.stringify({type:"KICK_PLAYER", data:id}))); }
+        function kickPlayer(id) { socket.send(JSON.stringify({type:"KICK_PLAYER", data:id})); }
         function selectPlayer(id) { selectedPlayerId=(selectedPlayerId===id)?null:id; updatePlayerListUI(playersCache); }
         function updateActionButtons() {
             const c=document.getElementById('action-buttons');
