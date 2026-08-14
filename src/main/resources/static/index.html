@@ -548,7 +548,16 @@
 
         function leaveRoom() { if(currentRoomCode) fetch(`/leave-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId})}); currentRoomCode=null; myRoleData=null; if(socket) socket.close(); clearInterval(countdownInterval); document.getElementById('header-status-left').style.display = 'none'; document.getElementById('header-status-right').style.display = 'none'; document.getElementById('role-badge-mini').style.display = 'none'; navigateTo('page-dashboard'); }
         function setupRoom(r, h) { currentRoomCode=r.code; isHost=h; currentPhase = r.phase || 'LOBBY'; document.getElementById('displayRoomCode').innerText=r.code; document.getElementById('host-action-bar').style.display=isHost?'flex':'none'; document.getElementById('lobby-controls').style.display = 'flex'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; connectWebSocket(); navigateTo('page-lobby', true); refreshPlayers(); }
-        function connectWebSocket() { const p=window.location.protocol==='https:'?'wss:':'ws:'; socket=new WebSocket(`${p}//${window.location.host}/ws/${myId}`); socket.onmessage=(e)=>{ const m=JSON.parse(e.data); if(m.type==="PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(m.data)); else if(m.type==="YOUR_ROLE") displayMyRole(JSON.parse(m.data)); else if(m.type==="PHASE_UPDATE") handlePhaseUpdate(m.data); else if(m.type==="ANNOUNCEMENT") { announce(m.data); logDev(m.data); } else if(m.type==="KICKED"){ showNotification(m.data); setTimeout(() => window.location.reload(), 2000); } }; }
+        function connectWebSocket() { const p=window.location.protocol==='https:'?'wss:':'ws:'; socket=new WebSocket(`${p}//${window.location.host}/ws/${myId}`); socket.onmessage=(e)=>{ const m=JSON.parse(e.data); if(m.type==="PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(m.data)); else if(m.type==="YOUR_ROLE") displayMyRole(JSON.parse(m.data)); else if(m.type==="PHASE_UPDATE") handlePhaseUpdate(m.data); else if(m.type==="WINNER") showWinnerOverlay(m.data); else if(m.type==="ANNOUNCEMENT") { announce(m.data); logDev(m.data); } else if(m.type==="KICKED"){ showNotification(m.data); setTimeout(() => window.location.reload(), 2000); } }; }
+
+        function showWinnerOverlay(winner) {
+            const transOverlay = document.createElement('div');
+            transOverlay.style.cssText = 'position:absolute; inset:0; background:rgba(0,0,0,0.9); z-index:20000; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;';
+            const color = winner === "WEREWOLF_TEAM" ? "#ff4d4d" : "#4da6ff";
+            const text = winner === "WEREWOLF_TEAM" ? "PHE MA SÓI THẮNG" : (winner === "VILLAGER_TEAM" ? "PHE DÂN LÀNG THẮNG" : "PHE THỨ 3 THẮNG");
+            transOverlay.innerHTML = `<h1 style="color:${color}; letter-spacing:10px; font-size:3em; text-shadow: 0 0 50px ${color};">${text}</h1><button onclick="location.reload()" style="margin-top:40px;">VỀ SẢNH CHỜ</button>`;
+            document.getElementById('main-content').appendChild(transOverlay);
+        }
 
         function updatePlayerListUI(ps) {
             playersCache = ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
@@ -665,10 +674,10 @@
 
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
         async function distributeRoles() { const r = await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if (!r.ok) showNotification("Lỗi phân vai!"); }
-        function startCountdown(s) {
+        function startCountdown(s, tick = 1) {
             clearInterval(countdownInterval); let t=s;
             const updateT = () => { const m = Math.floor(t / 60).toString().padStart(2, '0'); const sc = (t % 60).toString().padStart(2, '0'); document.getElementById('header-timer').innerText = `${m}:${sc}`; };
-            updateT(); countdownInterval=setInterval(()=>{ t--; updateT(); if(t <= 0){ clearInterval(countdownInterval); if(isHost) nextPhase(); } },1000);
+            updateT(); countdownInterval=setInterval(()=>{ t--; updateT(); if(t <= 0){ clearInterval(countdownInterval); if(isHost) nextPhase(); } }, 1000 / tick);
         }
         function announce(t) { if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const m=new SpeechSynthesisUtterance(t); m.lang='vi-VN'; m.rate=0.9; window.speechSynthesis.speak(m); }
         async function addBot() { const bc=playersCache.filter(p=>p.name.startsWith("Bot_")).length+1; await fetch(`/join-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:"bot_"+Date.now()+"_"+bc, name:"Bot_"+bc, avatar:"https://robohash.org/bot_"+bc, isReady:true})}); }

@@ -408,7 +408,8 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
 
             room.players.forEach { p -> launch { 
                 val cur = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) room.nightActionList[room.currentNightActionIndex] else room.phase
-                playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}")) 
+                playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}")) 
+                if (room.winner != null) playerSessions[p.id]?.sendSerialized(SocketMessage("WINNER", room.winner!!))
             } }
             broadcastPlayerList(room)
         } catch (e: Exception) {
