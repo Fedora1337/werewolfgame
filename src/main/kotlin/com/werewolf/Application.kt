@@ -318,10 +318,13 @@ fun main() {
             get("/room/{code}/distribute") {
                 val code = call.parameters["code"] ?: ""; val ratio = (call.parameters["ratio"] ?: "0.25").toDouble(); val room = rooms[code] ?: return@get call.respond(io.ktor.http.HttpStatusCode.NotFound)
                 if (room.players.size < 8 || room.players.any { !it.isReady }) return@get call.respond(io.ktor.http.HttpStatusCode.BadRequest, "Lỗi!")
+                
                 room.wolfRatio = ratio; room.prophetUses = calculateProphetUses(room.players.size, ratio)
-                room.assignments.putAll(moderator.distributeRoles(room.players, ratio)); room.readyPlayers.clear(); room.phase = "PREPARING"
-                room.assignments.forEach { (pid, assign) -> GlobalScope.launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) } }
-                room.players.forEach { p -> GlobalScope.launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|60")) } }
+                room.assignments.putAll(moderator.distributeRoles(room.players, ratio))
+                room.readyPlayers.clear()
+                
+                // Gọi Trigger chính để xử lý chuyển Phase và bắt đầu Timer 60s đồng bộ
+                triggerNextPhase(room)
                 call.respond(mapOf("ok" to true))
             }
             post("/room/{code}/next-phase") { val room = rooms[call.parameters["code"]] ?: return@post call.respond(io.ktor.http.HttpStatusCode.NotFound); triggerNextPhase(room); call.respond(mapOf("ok" to true)) }
@@ -528,7 +531,8 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
             "/start" -> { 
                 if (room.phase == "LOBBY") {
                     room.players.forEach { it.isReady = true }
-                    // Chuyển phase LOBBY sang PREPARING thông qua trigger chuẩn
+                    // Đảm bảo dữ liệu chuẩn bị cho triggerNextPhase
+                    room.readyPlayers.clear()
                     triggerNextPhase(room, true)
                 }
             }
