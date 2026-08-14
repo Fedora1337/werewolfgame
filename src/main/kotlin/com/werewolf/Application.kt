@@ -334,17 +334,29 @@ fun main() {
     }.start(wait = true)
 }
 
-fun triggerNextPhase(room: Room) {
+fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
     room.nightJob?.cancel()
     GlobalScope.launch {
         try {
-            // Tạo khoảng trễ 3 giây để server xử lý và tạo hiệu ứng kịch tính cho người chơi
-            if (room.phase != "LOBBY" && room.phase != "PREPARING") {
+            // Chỉ delay nếu không phải lệnh nhảy phase từ Dev
+            if (!isDevJump && room.phase != "LOBBY" && room.phase != "PREPARING") {
                 delay(3000)
             }
 
             when (room.phase) {
-                "LOBBY" -> { room.phase = "PREPARING"; room.dayCount = 1 }
+                "LOBBY" -> { 
+                    room.phase = "PREPARING"; room.dayCount = 1 
+                    // Tự động phân vai nếu chưa có
+                    if (room.assignments.isEmpty()) {
+                        val moderator = Moderator()
+                        room.wolfRatio = 0.25
+                        room.prophetUses = calculateProphetUses(room.players.size, 0.25)
+                        room.assignments.putAll(moderator.distributeRoles(room.players, 0.25))
+                        room.assignments.forEach { (pid, assign) -> 
+                            launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
+                        }
+                    }
+                }
                 "PREPARING" -> { 
                     room.phase = "NIGHT"
                     room.nightActionList = getNightOrder(room)
@@ -381,12 +393,15 @@ fun triggerNextPhase(room: Room) {
             }
 
             val duration = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) getNightActionDuration(room, room.nightActionList[room.currentNightActionIndex]) else getPhaseDuration(room)
+            
+            // Kích hoạt Timer mới cho Phase vừa chuyển
             if (room.phase != "LOBBY" && room.tickSpeed > 0) {
                 room.nightJob = launch {
                     delay((duration * 1000L) / room.tickSpeed)
                     triggerNextPhase(room)
                 }
             }
+
             room.players.forEach { p -> launch { 
                 val cur = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) room.nightActionList[room.currentNightActionIndex] else room.phase
                 playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}")) 
@@ -480,20 +495,20 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                     processGameLogic(room)
                     room.phase = "DAY"
                     room.dayCount++
-                    triggerNextPhase(room)
+                    triggerNextPhase(room, true)
                 } else if (parts.size >= 2 && parts[1].lowercase() == "night") {
                     processGameLogic(room)
                     room.phase = "NIGHT"
                     room.dayCount++
                     room.nightActionList = getNightOrder(room)
                     room.currentNightActionIndex = 0
-                    triggerNextPhase(room)
+                    triggerNextPhase(room, true)
                 } else if (parts.size >= 2 && parts[1].lowercase() == "execution") {
                     val target = room.players.filter { !it.isDead }.maxByOrNull { it.vote } ?: room.players.find { !it.isDead }
                     if (target != null) {
                         room.phase = "TRIAL_DEFENSE"
                         room.trialTargetId = target.id
-                        triggerNextPhase(room)
+                        triggerNextPhase(room, true)
                     }
                 } else if (parts.size >= 2 && parts[1].lowercase() == "phase") {
                     if (room.phase == "NIGHT") {
@@ -505,28 +520,16 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                         room.nightActionList = getNightOrder(room)
                         room.currentNightActionIndex = 0
                     }
-                    triggerNextPhase(room)
+                    triggerNextPhase(room, true)
                 } else {
-                    triggerNextPhase(room)
+                    triggerNextPhase(room, true)
                 }
             }
             "/start" -> { 
                 if (room.phase == "LOBBY") {
                     room.players.forEach { it.isReady = true }
-                    // Gọi đúng logic chia bài chuẩn của game
-                    room.wolfRatio = 0.25
-                    room.prophetUses = calculateProphetUses(room.players.size, 0.25)
-                    room.assignments.putAll(moderator.distributeRoles(room.players, 0.25))
-                    room.readyPlayers.clear()
-                    room.phase = "PREPARING"
-                    room.dayCount = 1
-                    room.assignments.forEach { (pid, assign) -> 
-                        launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
-                    }
-                    room.players.forEach { p -> 
-                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|60||${room.dayCount}")) }
-                    }
-                    broadcastPlayerList(room)
+                    // Chuyển phase LOBBY sang PREPARING thông qua trigger chuẩn
+                    triggerNextPhase(room, true)
                 }
             }
             "/end" -> {
