@@ -455,14 +455,21 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
     val moderator = Moderator()
 
     fun resolveTargets(selector: String): List<Player> {
-        if (!selector.startsWith("@")) return emptyList()
-        val s = selector.substring(1).lowercase()
+        val s = selector.lowercase()
         return when {
-            s == "a" || s == "all" -> room.players
-            s == "v" || s == "villagers" -> room.players.filter { it.trulyTeam == "Dân" }
-            s == "w" || s == "wolf" || s == "wolves" -> room.players.filter { it.trulyTeam == "Sói" }
-            s == "c" || s == "cupid" -> room.players.filter { it.trulyTeam == "cupid" }
-            else -> room.players.filter { it.name.contains(s, true) }
+            s.startsWith("@a") || s.startsWith("@all") -> room.players
+            s.startsWith("@v") || s.startsWith("@villagers") -> room.players.filter { it.trulyTeam == "Dân" }
+            s.startsWith("@w") || s.startsWith("@wolf") || s.startsWith("@wolves") -> room.players.filter { it.trulyTeam == "Sói" }
+            s.startsWith("@c") || s.startsWith("@cupid") -> room.players.filter { it.trulyTeam == "cupid" }
+            s.startsWith("@") -> {
+                val namePart = s.substring(1)
+                room.players.filter { it.name.contains(namePart, true) }
+            }
+            s.startsWith("#") -> {
+                val idx = s.substring(1).toIntOrNull()?.let { it - 1 } ?: -1
+                if (idx in room.players.indices) listOf(room.players[idx]) else emptyList()
+            }
+            else -> emptyList()
         }
     }
 
