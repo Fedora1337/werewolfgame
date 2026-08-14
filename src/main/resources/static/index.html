@@ -78,7 +78,7 @@
             display: none; grid-template-columns: repeat(3, 1fr); flex-shrink: 0;
             box-shadow: 0 -5px 20px rgba(0,0,0,0.5); padding-bottom: env(safe-area-inset-bottom);
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75em; color: #666; cursor: pointer; transition: all 0.3s; position: relative; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75em; color: #aaa; cursor: pointer; transition: all 0.3s; position: relative; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
         .nav-item.active::after { content: ""; position: absolute; bottom: 0; left: 20%; right: 20%; height: 4px; background: var(--primary); border-radius: 4px 4px 0 0; box-shadow: 0 -2px 10px var(--primary); }
         .nav-item span { font-size: 1.6em; margin-bottom: 4px; }
@@ -189,10 +189,6 @@
 
         .role-popup { position: absolute; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center; }
         .role-card-big { position: relative; width: 90%; max-width: 400px; transform-style: preserve-3d; transition: transform 0.6s; }
-        .role-card-big.flipped { transform: rotateY(180deg); }
-        .role-card-content { padding: 20px; text-align: center; }
-        .role-card-content h1 { margin: 10px 0; font-family: 'Georgia', serif; text-transform: uppercase; }
-        .role-card-content p { font-size: 0.95em; color: #ccc; font-style: italic; margin-bottom: 20px; line-height: 1.5; }
 
         /* ACTION OVERLAY */
         #action-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 0; pointer-events: none; z-index: 3000; }
@@ -256,12 +252,6 @@
     </style>
 </head>
 <body>
-    <div id="loading-overlay">
-        <div class="spinner"></div>
-        <h3 style="color: var(--primary); margin-top: 20px; letter-spacing: 2px; font-size: 0.9em;">ĐANG KẾT NỐI ĐẾN MÁY CHỦ<span class="dots"></span></h3>
-        <p id="loading-status" style="color: #666; font-size: 0.7em; margin-top: 10px;">Đang chuẩn bị dữ liệu bộ bài<span class="dots"></span></p>
-    </div>
-
     <div id="app-root">
         <aside id="dev-sidebar">
             <label style="color:#27ae60; font-size: 0.7em; font-weight: bold; margin-bottom: 10px; display: block;">DEVELOPER CONSOLE</label>
@@ -283,7 +273,7 @@
                 <p id="loading-status" style="color: #666; font-size: 0.7em; margin-top: 10px;">Đang chuẩn bị dữ liệu bộ bài<span class="dots"></span></p>
             </div>
 
-            <!-- FULLSCREEN CARD VIEWER -->
+            <!-- CARD VIEWER -->
             <div id="card-viewer">
                 <div class="viewer-content">
                     <div class="close-viewer" onclick="closeCardViewer()">×</div>
@@ -340,20 +330,16 @@
                                 <img id="profile-ava-preview" src="" width="200" height="200" style="border-radius: 50%; border: 5px solid var(--primary); object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: border-radius 0.3s ease;">
                                 <div style="position: absolute; bottom: 10px; right: 10px; background: var(--primary); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; border: 3px solid var(--card);">📷</div>
                             </div>
-
-                            <!-- AVATAR EDIT OVERLAY -->
                             <div id="avatar-options" style="display: none; flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; animation: fadeIn 0.3s ease;">
                                 <label style="font-size:0.7em; color:#888; text-align: left;">CẬP NHẬT ẢNH ĐẠI DIỆN</label>
                                 <input type="file" id="fileAvatar" onchange="previewFileAvatar(this)" style="font-size: 0.8em; padding: 8px;">
                                 <input type="text" id="editAvatar" placeholder="Dán URL ảnh vào đây..." style="margin-top: 0;">
                                 <button onclick="toggleAvatarEdit()" class="ghost-btn" style="padding: 10px; font-size: 0.8em;">Đóng</button>
                             </div>
-
                             <div style="text-align:left; width: 100%; margin-top: 25px;">
                                 <label style="font-size:0.8em;color:#888; font-weight: bold; letter-spacing: 1px;">TÊN HIỂN THỊ</label>
                                 <input type="text" id="editName" placeholder="Nhập tên mới...">
                             </div>
-
                             <div style="display: flex; flex-direction: column; width: 100%; margin-top: 20px; gap: 15px;">
                                 <button onclick="saveProfile()" style="background:#27ae60; margin: 0; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);">LƯU HỒ SƠ</button>
                                 <button onclick="logout()" style="background: #e74c3c; color: white; margin: 0; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);">ĐĂNG XUẤT</button>
@@ -369,13 +355,10 @@
                     </div>
                     <div id="page-gallery" class="page">
                         <h2 style="color:#f1c40f; margin-bottom: 30px;">Bộ Bài Môn Sói Là</h2>
-
                         <h3 style="color: #4da6ff; text-align: left; border-left: 5px solid #4da6ff; padding-left: 15px; margin: 20px 0;">PHE DÂN LÀNG</h3>
                         <div class="gallery-grid" id="gallery-villagers"></div>
-
                         <h3 style="color: #ff4d4d; text-align: left; border-left: 5px solid #ff4d4d; padding-left: 15px; margin: 40px 0 20px 0;">PHE MA SÓI</h3>
                         <div class="gallery-grid" id="gallery-wolves"></div>
-
                         <h3 style="color: #f1c40f; text-align: left; border-left: 5px solid #f1c40f; padding-left: 15px; margin: 40px 0 20px 0;">PHE THỨ 3</h3>
                         <div class="gallery-grid" id="gallery-3rd"></div>
                     </div>
@@ -395,10 +378,8 @@
                     <button id="btnStartGame" onclick="distributeRoles()" style="background:#27ae60; padding:10px; margin:0;">BẮT ĐẦU</button>
                     <button id="btnNextPhase" onclick="nextPhase()" style="display:none; background:#f39c12; padding:10px; margin:0;">TIẾP TỤC</button>
                 </div>
-
                 <div class="player-action-panel">
                     <div id="action-buttons" class="action-buttons"></div>
-                    <!-- LOBBY FLOATING ACTIONS -->
                     <div id="lobby-controls" style="display:none; flex-direction:column; gap:8px; width: 140px;">
                         <button id="btnReady" onclick="toggleReady()" style="background:#2980b9; margin:0; padding:12px; font-size: 0.85em; box-shadow: 0 5px 15px rgba(41, 128, 185, 0.4);">SẴN SÀNG</button>
                         <button onclick="goBack()" class="ghost-btn" style="color:var(--primary); font-size: 0.85em; margin:0; padding:8px; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(0,0,0,0.6) !important;">RỜI PHÒNG</button>
@@ -410,18 +391,10 @@
         </div>
     </div>
 
-    <!-- FULLSCREEN CARD VIEWER (Xóa vì đã chuyển vào main-content) -->
-
-    <div id="night-overlay" style="position:fixed; inset:0; background:#000; z-index:5000; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
-        <h1 style="font-size: 5em; margin:0;">🌑</h1>
-        <h2 style="color:var(--primary); letter-spacing:3px; margin-top:20px;">TRỜI TỐI RỒI...</h2>
-        <p id="night-overlay-sub" style="color:#444; font-style:italic; margin-top:10px;">Làng đang chìm trong giấc ngủ</p>
-    </div>
-
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY';
-        let realId, realName, realAvatar; // Lưu giữ danh tính Host gốc
+        let realId, realName, realAvatar;
         const allRoles = [
             { role: 'WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
             { role: 'VILLAGER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.png', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
@@ -443,15 +416,7 @@
             { role: 'LYCAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thelycan.png', description: 'Bán Sói - Ban đầu phe Dân, khi bị Sói cắn sẽ hóa Sói thực sự.' }
         ];
 
-        // MAPPING VIRTUAL ROUTES TO PAGE IDs
-        const routes = {
-            '/home': 'page-home',
-            '/dashboard': 'page-dashboard',
-            '/gallery': 'page-gallery',
-            '/lobby': 'page-lobby',
-            '/profile': 'page-profile',
-            '/dev-login': 'page-dev-login'
-        };
+        const routes = {'/home': 'page-home','/dashboard': 'page-dashboard','/gallery': 'page-gallery','/lobby': 'page-lobby','/profile': 'page-profile','/dev-login': 'page-dev-login'};
 
         async function getCachedImageUrl(url) {
             if (!('caches' in window)) return url;
@@ -466,25 +431,16 @@
 
         async function preloadImages() {
             if (!('caches' in window)) return;
-            const cacheName = 'monsoila-assets-v1';
-            const urlsToCache = allRoles.map(r => r.image);
-
-            try {
-                const cache = await caches.open(cacheName);
-                urlsToCache.forEach(url => {
-                    cache.match(url).then(match => {
-                        if (!match) cache.add(url).catch(e => {});
-                    });
-                });
-            } catch (e) {}
+            const cache = await caches.open('monsoila-assets-v1');
+            allRoles.forEach(r => {
+                cache.match(r.image).then(match => { if (!match) cache.add(r.image).catch(e => {}); });
+            });
         }
 
         function showLoading(title, statusMsg) {
             const overlay = document.getElementById('loading-overlay');
             if (!overlay) return;
-            overlay.style.display = 'flex';
-            overlay.style.opacity = '1';
-            overlay.style.visibility = 'visible';
+            overlay.style.display = 'flex'; overlay.style.opacity = '1'; overlay.style.visibility = 'visible';
             overlay.querySelector('h3').innerHTML = title + '<span class="dots"></span>';
             document.getElementById('loading-status').innerHTML = statusMsg + '<span class="dots"></span>';
         }
@@ -492,69 +448,43 @@
         function hideLoading() {
             const overlay = document.getElementById('loading-overlay');
             if (!overlay) return;
-            overlay.style.opacity = '0';
-            overlay.style.visibility = 'hidden';
+            overlay.style.opacity = '0'; overlay.style.visibility = 'hidden';
             setTimeout(() => { overlay.style.display = 'none'; }, 600);
         }
 
         function navigateTo(pId, updateHistory = true) {
             const b = document.getElementById('back-btn'); if(b) b.style.display = (pId==='page-home'||pId==='page-dashboard')?'none':'block';
             if(pId!=='page-gallery'&&pId!=='page-dev-login'&&pId!=='page-profile'&&pId!=='page-lobby') lastPage=pId;
-
-            // HIDE ALL PAGES FIRST
             document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-
-            // SHOW TARGET PAGE
-            const target = document.getElementById(pId);
-            if (target) target.classList.add('active');
-
-            // NAVBAR HIGHLIGHT
+            const target = document.getElementById(pId); if (target) target.classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
             if(pId==='page-dashboard') document.getElementById('nav-dash').classList.add('active');
             if(pId==='page-gallery') document.getElementById('nav-gall').classList.add('active');
             if(pId==='page-profile') document.getElementById('nav-prof').classList.add('active');
-
-            const nav=document.getElementById('bottom-nav');
-            if(pId==='page-lobby'||pId==='page-home') nav.style.display='none'; else nav.style.display='grid';
-
+            const nav=document.getElementById('bottom-nav'); if(pId==='page-lobby'||pId==='page-home') nav.style.display='none'; else nav.style.display='grid';
             updateActionButtons();
             if(pId==='page-gallery') showGallery();
             updateProfileUI();
-
-            // HISTORY API
             if (updateHistory) {
                 let path = Object.keys(routes).find(key => routes[key] === pId) || '/home';
-                if (pId === 'page-lobby' && currentRoomCode) {
-                    path = `/lobby/code=${currentRoomCode}`;
-                }
+                if (pId === 'page-lobby' && currentRoomCode) path = `/lobby/code=${currentRoomCode}`;
                 history.pushState({ pageId: pId, roomCode: currentRoomCode }, '', path);
             }
         }
 
-        window.onpopstate = (event) => {
-            if (event.state && event.state.pageId) {
-                navigateTo(event.state.pageId, false);
-            } else {
-                handleInitialRoute();
-            }
-        };
+        window.onpopstate = (event) => { if (event.state && event.state.pageId) navigateTo(event.state.pageId, false); else handleInitialRoute(); };
 
         function handleInitialRoute() {
             const path = window.location.pathname;
-            if (path.startsWith('/lobby/code=')) {
-                const code = path.split('code=')[1];
-                attemptAutoJoin(code);
-                return;
-            }
-            const pId = routes[path] || 'page-home';
-            navigateTo(pId, false);
+            if (path.startsWith('/lobby/code=')) { attemptAutoJoin(path.split('code=')[1]); return; }
+            navigateTo(routes[path] || 'page-home', false);
         }
 
         function goBack() {
             const cur=document.querySelector('.page.active').id;
-            if(cur==='page-lobby'){ showConfirm("Rời?", leaveRoom); }
-            else if (history.length > 1) { history.back(); }
-            else { navigateTo(lastPage); }
+            if(cur==='page-lobby') showConfirm("Rời?", leaveRoom);
+            else if (history.length > 1) history.back();
+            else navigateTo(lastPage);
         }
 
         function handleCredentialResponse(res) { const p=JSON.parse(atob(res.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); myId=p.sub; myName=p.name; myAvatar=p.picture; const s=localStorage.getItem('werewolf_user'); if(s){ const u=JSON.parse(s); myName=u.name; myAvatar=u.avatar; } updateProfileUI(); localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateHomeUI(); }
@@ -565,230 +495,79 @@
             const ed=document.getElementById('editAvatar'); if(ed)ed.value=myAvatar;
         }
 
-        function updateHomeUI() { const s=document.getElementById('home-auth-section'); if(!s) return; if(myId){ s.innerHTML=`<img src="${myAvatar}" width="80" style="border-radius:50%; border:3px solid var(--primary);"><h3 style="margin:10px 0;">${myName}</h3><button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer;">Đăng xuất</p>`; } else { s.innerHTML=`<h3>Vào game ngay</h3><div id="google-btn"></div>`; if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'rectangular'}); } } }
+        function updateHomeUI() {
+            const s=document.getElementById('home-auth-section'); if(!s) return;
+            if(myId){ s.innerHTML=`<img src="${myAvatar}" width="80" style="border-radius:50%; border:3px solid var(--primary);"><h3 style="margin:10px 0;">${myName}</h3><button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer;">Đăng xuất</p>`; }
+            else { s.innerHTML=`<h3>Vào game ngay</h3><div id="google-btn"></div>`; if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'rectangular'}); } }
+        }
+
         function logout() { localStorage.removeItem('werewolf_user'); myId=null; updateHomeUI(); navigateTo('page-home'); }
+
         function showNotification(message) {
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.3s ease;';
             overlay.innerHTML = `<div class="card" style="max-width:320px; text-align:center; border:2px solid var(--primary); box-shadow: 0 0 30px var(--primary);"><h3 style="color:var(--primary); margin-top:0;">THÔNG BÁO</h3><p style="margin:20px 0; font-size:0.9em; line-height:1.5;">${message}</p><button onclick="this.parentElement.parentElement.remove()" style="margin:0; padding:12px;">XÁC NHẬN</button></div>`;
             document.body.appendChild(overlay);
         }
+
         function showConfirm(message, onConfirm) {
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.3s ease;';
-            overlay.innerHTML = `
-                <div class="card" style="max-width:320px; text-align:center; border:2px solid var(--primary); box-shadow: 0 0 30px var(--primary);">
-                    <h3 style="color:var(--primary); margin-top:0;">XÁC NHẬN</h3>
-                    <p style="margin:20px 0; font-size:0.9em; line-height:1.5;">${message}</p>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="margin:0; padding:12px; background:#555;">HỦY</button>
-                        <button id="confirmBtn" style="margin:0; padding:12px;">ĐỒNG Ý</button>
-                    </div>
-                </div>`;
+            overlay.innerHTML = `<div class="card" style="max-width:320px; text-align:center; border:2px solid var(--primary); box-shadow: 0 0 30px var(--primary);"><h3 style="color:var(--primary); margin-top:0;">XÁC NHẬN</h3><p style="margin:20px 0; font-size:0.9em; line-height:1.5;">${message}</p><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><button onclick="this.parentElement.parentElement.parentElement.remove()" style="margin:0; padding:12px; background:#555;">HỦY</button><button id="confirmBtn" style="margin:0; padding:12px;">ĐỒNG Ý</button></div></div>`;
             document.body.appendChild(overlay);
-            overlay.querySelector('#confirmBtn').onclick = () => {
-                overlay.remove();
-                onConfirm();
-            };
+            overlay.querySelector('#confirmBtn').onclick = () => { overlay.remove(); onConfirm(); };
         }
+
         function showDevLogin() { navigateTo('page-dev-login'); }
-        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else alert("Sai!"); }
-        function toggleDevBar() { const b = document.getElementById('dev-sidebar'); b.classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
+        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else showNotification("Mật khẩu sai!"); }
+        function toggleDevBar() { document.getElementById('dev-sidebar').classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
-
-        function toggleAvatarEdit() {
-            const options = document.getElementById('avatar-options');
-            const img = document.getElementById('profile-ava-preview');
-            if (options.style.display === 'none' || options.style.display === '') {
-                options.style.display = 'flex';
-                img.style.borderRadius = '20px';
-            } else {
-                options.style.display = 'none';
-                img.style.borderRadius = '50%';
-            }
-        }
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.error(`Fullscreen error: ${err.message}`);
-                });
-            } else {
-                if (document.exitFullscreen) document.exitFullscreen();
-            }
-        }
-
-        function previewFileAvatar(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('profile-ava-preview').src = e.target.result;
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
+        function toggleAvatarEdit() { const o = document.getElementById('avatar-options'); const img = document.getElementById('profile-ava-preview'); if (o.style.display === 'none' || o.style.display === '') { o.style.display = 'flex'; img.style.borderRadius = '20px'; } else { o.style.display = 'none'; img.style.borderRadius = '50%'; } }
+        function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e => {}); else if (document.exitFullscreen) document.exitFullscreen(); }
+        function previewFileAvatar(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = (e) => { document.getElementById('profile-ava-preview').src = e.target.result; }; r.readAsDataURL(input.files[0]); } }
 
         window.onload=()=>{
             const s=localStorage.getItem('werewolf_user');
             if(s){ const u=JSON.parse(s); myId=u.id; myName=u.name; myAvatar=u.avatar; updateProfileUI(); }
-
-            // LƯU DANH TÍNH GỐC NGAY KHI LOAD
             realId = myId; realName = myName; realAvatar = myAvatar;
-
-            // RESTORE DEV BAR IF AUTHORIZED
-            if(localStorage.getItem('werewolf_dev_auth') === 'true'){
-                isDev = true;
-                document.getElementById('dev-sidebar').classList.add('active');
-                document.getElementById('dev-toggle').style.display = 'flex';
-                document.body.classList.add('dev-open');
-                document.body.classList.add('dev-expanded');
-            }
-
-            updateHomeUI();
-            handleInitialRoute();
-            preloadImages(); // Tải ngầm bầy sói
-            hideLoading();   // Phá băng màn hình ngay lập tức
+            if(localStorage.getItem('werewolf_dev_auth') === 'true'){ isDev = true; document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display = 'flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); }
+            updateHomeUI(); handleInitialRoute(); preloadImages(); hideLoading();
         };
 
-        function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); alert("Lưu!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
-        async function createRoom() {
-            showLoading("ĐANG KHỞI TẠO", "Đang thiết lập không gian sảnh");
-            const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})});
-            setupRoom(await res.json(), true);
-            setTimeout(hideLoading, 500);
-        }
-        async function joinRoom() {
-            const c=document.getElementById('roomCodeInput').value;
-            showLoading("ĐANG GIA NHẬP", "Đang kết nối đến phòng " + c);
-            const res=await fetch(`/join-room/${c}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})});
-            if(res.ok) {
-                setupRoom(await res.json(), false);
-                setTimeout(hideLoading, 500);
-            } else {
-                hideLoading();
-                showNotification("Mã phòng không chính xác hoặc phòng đã đầy!");
-            }
-        }
+        function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); showNotification("Hồ sơ đã cập nhật!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
+        async function createRoom() { showLoading("ĐANG KHỞI TẠO", "Chuẩn bị sảnh..."); const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); setupRoom(await res.json(), true); setTimeout(hideLoading, 500); }
+        async function joinRoom() { const c=document.getElementById('roomCodeInput').value; showLoading("ĐANG GIA NHẬP", "Kết nối phòng " + c); const res=await fetch(`/join-room/${c}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); if(res.ok) { setupRoom(await res.json(), false); setTimeout(hideLoading, 500); } else { hideLoading(); showNotification("Lỗi kết nối!"); } }
 
         async function attemptAutoJoin(code) {
-            showLoading("TỰ ĐỘNG GIA NHẬP", "Đang tìm kiếm phòng " + code);
-            // Chờ myId sẵn sàng (từ localStorage)
-            if (!myId) {
-                const s = localStorage.getItem('werewolf_user');
-                if (s) {
-                    const u = JSON.parse(s);
-                    myId = u.id; myName = u.name; myAvatar = u.avatar;
-                    updateProfileUI();
-                    updateHomeUI();
-                }
-            }
-
-            if (!myId) {
-                hideLoading();
-                showNotification("Vui lòng đăng nhập trước khi tham gia phòng!");
-                navigateTo('page-home');
-                return;
-            }
-
-            const res = await fetch(`/join-room/${code}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: myId, name: myName, avatar: myAvatar })
-            });
-
-            if (res.ok) {
-                setupRoom(await res.json(), false);
-                setTimeout(hideLoading, 500);
-            } else {
-                hideLoading();
-                showNotification("Không thể tự động gia nhập phòng này!");
-                navigateTo('page-dashboard');
-            }
+            showLoading("TỰ ĐỘNG GIA NHẬP", "Tìm kiếm phòng " + code);
+            if (!myId) { const s = localStorage.getItem('werewolf_user'); if (s) { const u = JSON.parse(s); myId = u.id; myName = u.name; myAvatar = u.avatar; updateProfileUI(); updateHomeUI(); } }
+            if (!myId) { hideLoading(); showNotification("Đăng nhập trước!"); navigateTo('page-home'); return; }
+            const res = await fetch(`/join-room/${code}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: myId, name: myName, avatar: myAvatar }) });
+            if (res.ok) { setupRoom(await res.json(), false); setTimeout(hideLoading, 500); } else { hideLoading(); showNotification("Không thể tự join!"); navigateTo('page-dashboard'); }
         }
-        function leaveRoom() {
-            if(currentRoomCode) fetch(`/leave-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId})});
-            currentRoomCode=null;
-            myRoleData=null;
-            if(socket) socket.close();
-            clearInterval(countdownInterval);
-            document.getElementById('header-status-left').style.display = 'none';
-            document.getElementById('header-status-right').style.display = 'none';
-            document.getElementById('role-badge-mini').style.display = 'none';
-            navigateTo('page-dashboard');
-        }
-        function setupRoom(r, h) {
-            currentRoomCode=r.code;
-            isHost=h;
-            currentPhase = r.phase || 'LOBBY';
-            document.getElementById('displayRoomCode').innerText=r.code;
-            document.getElementById('host-action-bar').style.display=isHost?'flex':'none';
-            document.getElementById('lobby-controls').style.display = 'flex';
-            document.getElementById('btnReady').style.display = isHost ? 'none' : 'block';
-            connectWebSocket();
-            navigateTo('page-lobby', true); // TRUE để đẩy URL phòng lên trình duyệt
-            refreshPlayers();
-        }
-        function connectWebSocket() { const p=window.location.protocol==='https:'?'wss:':'ws:'; socket=new WebSocket(`${p}//${window.location.host}/ws/${myId}`); socket.onmessage=(e)=>{ const m=JSON.parse(e.data); if(m.type==="PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(m.data)); else if(m.type==="YOUR_ROLE") { myRoleData=JSON.parse(m.data); displayMyRole(myRoleData); } else if(m.type==="PHASE_UPDATE") handlePhaseUpdate(m.data); else if(m.type==="ANNOUNCEMENT") { announce(m.data); logDev(m.data); } else if(m.type==="KICKED"){ showNotification(m.data); setTimeout(() => window.location.reload(), 2000); } }; }
+
+        function leaveRoom() { if(currentRoomCode) fetch(`/leave-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId})}); currentRoomCode=null; myRoleData=null; if(socket) socket.close(); clearInterval(countdownInterval); document.getElementById('header-status-left').style.display = 'none'; document.getElementById('header-status-right').style.display = 'none'; document.getElementById('role-badge-mini').style.display = 'none'; navigateTo('page-dashboard'); }
+        function setupRoom(r, h) { currentRoomCode=r.code; isHost=h; currentPhase = r.phase || 'LOBBY'; document.getElementById('displayRoomCode').innerText=r.code; document.getElementById('host-action-bar').style.display=isHost?'flex':'none'; document.getElementById('lobby-controls').style.display = 'flex'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; connectWebSocket(); navigateTo('page-lobby', true); refreshPlayers(); }
+        function connectWebSocket() { const p=window.location.protocol==='https:'?'wss:':'ws:'; socket=new WebSocket(`${p}//${window.location.host}/ws/${myId}`); socket.onmessage=(e)=>{ const m=JSON.parse(e.data); if(m.type==="PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(m.data)); else if(m.type==="YOUR_ROLE") displayMyRole(JSON.parse(m.data)); else if(m.type==="PHASE_UPDATE") handlePhaseUpdate(m.data); else if(m.type==="ANNOUNCEMENT") { announce(m.data); logDev(m.data); } else if(m.type==="KICKED"){ showNotification(m.data); setTimeout(() => window.location.reload(), 2000); } }; }
 
         function updatePlayerListUI(ps) {
             playersCache = ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
-
-            // KẾ THỪA HOST: Cập nhật quyền Host ngay tại Frontend
             const me = ps.find(p => p.id === myId);
-            if (me) {
-                isHost = me.isHost;
-                const hostBar = document.getElementById('host-action-bar');
-                if (hostBar) hostBar.style.display = isHost ? 'flex' : 'none';
-                const readyBtn = document.getElementById('btnReady');
-                if (readyBtn) readyBtn.style.display = isHost ? 'none' : 'block';
-            }
-
+            if (me) { isHost = me.isHost; document.getElementById('host-action-bar').style.display = isHost ? 'flex' : 'none'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
             if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
-
-            let html = ps.map((p,i)=>`
-                <div class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''} ${p.isDead?'is-dead':''}" onclick="selectPlayer('${p.id}')">
-                    ${isHost&&p.id!==myId&&currentPhase==='LOBBY'?`<div class="kick-btn" onclick="event.stopPropagation(); kickPlayer('${p.id}')">×</div>`:''}
-                    <div class="player-num">${p.isDead ? '#DIE' : '#'+(i+1)}</div>
-                    <img src="${p.avatar}">
-                    <p>${p.name}</p>
-                    ${p.isDead?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.4); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:#fff; z-index:5;">RIP</div>':''}
-                    <div class="move-controls" onclick="event.stopPropagation()">
-                        <div class="move-btn" onclick="movePlayer(${i}, ${i-1})">◀</div>
-                        <div class="move-btn" onclick="movePlayer(${i}, ${i+1})">▶</div>
-                    </div>
-                </div>`).join('');
-
-            // Vẽ thêm các ô grid trống (tối đa 18 ô)
-            for(let i = ps.length; i < 18; i++) {
-                html += `<div class="slot-empty">${i+1}</div>`;
-            }
-
-            g.innerHTML = html;
-            if(mi!==-1) document.getElementById('self-mini-num').innerText=`#${mi+1}`;
+            let html = ps.map((p,i)=>`<div class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''} ${p.isDead?'is-dead':''}" onclick="selectPlayer('${p.id}')">${isHost&&p.id!==myId&&currentPhase==='LOBBY'?`<div class="kick-btn" onclick="event.stopPropagation(); kickPlayer('${p.id}')">×</div>`:''}<div class="player-num">${p.isDead ? '#DIE' : '#'+(i+1)}</div><img src="${p.avatar}"><p>${p.name}</p>${p.isDead?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.4); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:#fff; z-index:5;">RIP</div>':''}<div class="move-controls" onclick="event.stopPropagation()"><div class="move-btn" onclick="movePlayer(${i}, ${i-1})">◀</div><div class="move-btn" onclick="movePlayer(${i}, ${i+1})">▶</div></div></div>`).join('');
+            for(let i = ps.length; i < 18; i++) html += `<div class="slot-empty">${i+1}</div>`;
+            g.innerHTML = html; if(mi!==-1) document.getElementById('self-mini-num').innerText=`#${mi+1}`;
             const b=document.getElementById('player-count-badge'); const c=ps.length; const rc=ps.filter(p=>p.isReady).length;
             if(c<8) b.innerText=`Cần ${8-c} nữa`; else if(rc<c) b.innerText=`Chờ (${rc}/${c})`; else b.innerText="Đủ!";
-            if(isHost){ const btn=document.getElementById('btnStartGame'); if(c>=8&&rc===c){ btn.disabled=false; btn.innerText="BẮT ĐẦU"; } else { btn.disabled=true; btn.innerText=c<8?`CẦN THÊM ${8-c}`:`CHỜ ${c-rc} SẴN SÀNG`; } }
+            if(isHost){ const btn=document.getElementById('btnStartGame'); btn.disabled=(c<8||rc<c); btn.innerText=c<8?`CẦN THÊM ${8-c}`:rc<c?`CHỜ SẴN SÀNG`:"BẮT ĐẦU"; }
             updateActionButtons();
         }
 
-        function movePlayer(from, to) {
-            if (to < 0 || to >= playersCache.length) return;
-            socket.send(JSON.stringify({type: "SWAP_PLAYERS", data: `${from}|${to}`}));
-        }
-
+        function movePlayer(from, to) { if (to >= 0 && to < playersCache.length) socket.send(JSON.stringify({type: "SWAP_PLAYERS", data: `${from}|${to}`})); }
         function kickPlayer(id) { socket.send(JSON.stringify({type:"KICK_PLAYER", data:id})); }
         function selectPlayer(id) { selectedPlayerId=(selectedPlayerId===id)?null:id; updatePlayerListUI(playersCache); }
-        function updateActionButtons() {
-            const c=document.getElementById('action-buttons');
-            const o=document.getElementById('action-overlay');
-            if(document.querySelector('.page.active').id!=='page-lobby'){
-                o.style.display='none';
-                return;
-            }
-            o.style.display='block';
-            c.innerHTML='';
-            if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`;
-        }
+        function updateActionButtons() { const c=document.getElementById('action-buttons'); const o=document.getElementById('action-overlay'); if(document.querySelector('.page.active').id!=='page-lobby'){ o.style.display='none'; return; } o.style.display='block'; c.innerHTML=''; if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`; }
         function sendAction(t) { if(!selectedPlayerId) return; socket.send(JSON.stringify({type:t, data:selectedPlayerId})); selectedPlayerId=null; updatePlayerListUI(playersCache); }
         async function refreshPlayers() { if(currentRoomCode){ const res=await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
 
@@ -796,293 +575,113 @@
             const villagers = allRoles.filter(r => !r.role.includes('WOLF') && r.role !== 'LYCAN' && r.role !== 'CUPID' && r.role !== 'PIPER');
             const wolves = allRoles.filter(r => r.role.includes('WOLF') || r.role === 'LYCAN');
             const third = allRoles.filter(r => r.role === 'CUPID' || r.role === 'PIPER');
-
-            // Cập nhật danh sách hiển thị theo trình tự mới (Loại bỏ các role bị comment out)
-            displayRoles = [...villagers, ...wolves, ...third].filter(r => r !== undefined);
-
+            displayRoles = [...villagers, ...wolves, ...third];
             const renderGrid = async (list, targetId) => {
-                const htmlParts = await Promise.all(list.map(async (r) => {
-                    const idxInDisplay = displayRoles.indexOf(r);
-                    const displayUrl = await getCachedImageUrl(r.image);
-                    return `<div class="gallery-card" onclick="openCardViewer(${idxInDisplay})">
-                        <img src="${displayUrl}">
-                        <h4>${r.role.replace(/_/g, ' ')}</h4>
-                    </div>`;
-                }));
+                const htmlParts = await Promise.all(list.map(async (r) => { const displayUrl = await getCachedImageUrl(r.image); return `<div class="gallery-card" onclick="openCardViewer(${displayRoles.indexOf(r)})"><img src="${displayUrl}"><h4>${r.role.replace(/_/g, ' ')}</h4></div>`; }));
                 document.getElementById(targetId).innerHTML = htmlParts.join('');
             };
-
-            await renderGrid(villagers, 'gallery-villagers');
-            await renderGrid(wolves, 'gallery-wolves');
-            await renderGrid(third, 'gallery-3rd');
+            await renderGrid(villagers, 'gallery-villagers'); await renderGrid(wolves, 'gallery-wolves'); await renderGrid(third, 'gallery-3rd');
         }
 
         async function openCardViewer(idx) {
-            currentViewerIndex = idx; const r = displayRoles[idx];
-            const card = document.getElementById('mainViewerCard');
-            card.classList.remove('flipped'); // Reset xoay
-
-            // Cập nhật thông tin mặt trước (Lấy từ Cache thật)
-            const displayUrl = await getCachedImageUrl(r.image);
-            const img = document.getElementById('viewer-img');
-            img.src = displayUrl;
-
-            // ĂN GIAN: Chỉ lật khi ảnh đã nạp xong vào RAM
+            currentViewerIndex = idx; const r = displayRoles[idx]; const card = document.getElementById('mainViewerCard'); card.classList.remove('flipped');
+            const displayUrl = await getCachedImageUrl(r.image); const img = document.getElementById('viewer-img'); img.src = displayUrl;
             try { await img.decode(); } catch(e) {}
-
-            document.getElementById('viewer-title').innerText = r.role.replace(/_/g, ' ');
-            document.getElementById('viewer-desc').innerText = r.description;
-            document.getElementById('card-viewer').style.display = 'flex';
-
-            setTimeout(() => card.classList.add('flipped'), 50);
+            document.getElementById('viewer-title').innerText = r.role.replace(/_/g, ' '); document.getElementById('viewer-desc').innerText = r.description;
+            document.getElementById('card-viewer').style.display = 'flex'; setTimeout(() => card.classList.add('flipped'), 50);
         }
         function closeCardViewer() { document.getElementById('card-viewer').style.display = 'none'; }
-
-        async function nextCard() {
-            currentViewerIndex = (currentViewerIndex + 1) % displayRoles.length;
-            const card = document.getElementById('mainViewerCard');
-            card.classList.remove('flipped'); // Lật về mặt sau để đổi ảnh
-            setTimeout(() => openCardViewer(currentViewerIndex), 300);
-        }
-
-        async function prevCard() {
-            currentViewerIndex = (currentViewerIndex - 1 + displayRoles.length) % displayRoles.length;
-            const card = document.getElementById('mainViewerCard');
-            card.classList.remove('flipped');
-            setTimeout(() => openCardViewer(currentViewerIndex), 300);
-        }
+        async function nextCard() { currentViewerIndex = (currentViewerIndex + 1) % displayRoles.length; document.getElementById('mainViewerCard').classList.remove('flipped'); setTimeout(() => openCardViewer(currentViewerIndex), 300); }
+        async function prevCard() { currentViewerIndex = (currentViewerIndex - 1 + displayRoles.length) % displayRoles.length; document.getElementById('mainViewerCard').classList.remove('flipped'); setTimeout(() => openCardViewer(currentViewerIndex), 300); }
 
         async function displayMyRole(role) {
-            if (!role) return;
-            myRoleData = role;
-            const badge = document.getElementById('role-badge-mini');
-            badge.innerText = role.role.replace(/_/g, ' ');
-            badge.style.display = 'block';
-
-            const popup = document.getElementById('role-popup');
-            popup.innerHTML = '';
-            popup.style.display = 'flex';
-
-            const rData = allRoles.find(r => r.role === role.role) || allRoles[1];
-            const displayUrl = await getCachedImageUrl(rData.image);
-
-            const content = document.createElement('div');
-            content.className = 'viewer-content';
-            content.innerHTML = `
-                <div class="viewer-card" id="myRoleCard">
-                    <div class="viewer-back"></div>
-                    <div class="viewer-front">
-                        <img id="my-role-img" src="${displayUrl}">
-                        <div class="viewer-info">
-                            <h3 style="color:#d4af37; margin:0; font-size: 0.7em; font-family: 'Georgia', serif;">VAI DIỄN CỦA BẠN</h3>
-                            <h2 style="color:${role.role.includes('WOLF') ? '#ff4d4d' : '#4da6ff'}; margin: 5px 0;">${role.role.replace(/_/g, ' ')}</h2>
-                            <p style="font-size: 0.85em;">"${role.description}"</p>
-                            <button id="btnUnderstand" onclick="confirmUnderstand()" style="background:#e74c3c; width: 100%; margin-top: 15px; padding: 12px; font-weight:bold;">XÁC NHẬN</button>
-                        </div>
-                    </div>
-                </div>`;
-
-            popup.appendChild(content);
-
-            const img = document.getElementById('my-role-img');
-            const card = document.getElementById('myRoleCard');
-
-            const triggerFlip = () => {
-                setTimeout(() => { if(card) card.classList.add('flipped'); }, 100);
-            };
-
-            if (img.complete) triggerFlip();
-            else {
-                img.onload = triggerFlip;
-                img.onerror = () => {
-                    img.src = 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.png';
-                    triggerFlip();
-                };
-            }
+            if (!role) return; myRoleData = role; document.getElementById('role-badge-mini').style.display = 'block'; document.getElementById('role-badge-mini').innerText = role.role.replace(/_/g, ' ');
+            const popup = document.getElementById('role-popup'); popup.innerHTML = ''; popup.style.display = 'flex';
+            const rData = allRoles.find(r => r.role === role.role) || allRoles[1]; const displayUrl = await getCachedImageUrl(rData.image);
+            const content = document.createElement('div'); content.className = 'viewer-content';
+            content.innerHTML = `<div class="viewer-card" id="myRoleCard"><div class="viewer-back"></div><div class="viewer-front"><img id="my-role-img" src="${displayUrl}"><div class="viewer-info"><h3 style="color:#d4af37; margin:0; font-size: 0.7em;">VAI DIỄN CỦA BẠN</h3><h2 style="color:${role.role.includes('WOLF') ? '#ff4d4d' : '#4da6ff'}; margin: 5px 0;">${role.role.replace(/_/g, ' ')}</h2><p style="font-size: 0.85em;">"${role.description}"</p><button id="btnUnderstand" onclick="confirmUnderstand()" style="background:#e74c3c; width: 100%; margin-top: 15px; padding: 12px; font-weight:bold;">XÁC NHẬN</button></div></div></div>`;
+            popup.appendChild(content); const img = document.getElementById('my-role-img'); const card = document.getElementById('myRoleCard');
+            const triggerFlip = () => { setTimeout(() => { if(card) card.classList.add('flipped'); }, 100); };
+            if (img.complete) triggerFlip(); else { img.onload = triggerFlip; img.onerror = () => { img.src = 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.png'; triggerFlip(); }; }
         }
+
         function confirmUnderstand() {
-            const btn = document.getElementById('btnUnderstand');
-            btn.style.background = '#7f8c8d';
-            btn.innerText = 'ĐÃ HIỂU';
-            btn.disabled = true;
-            socket.send(JSON.stringify({type:"I_UNDERSTAND", data:""}));
-
-            // Lật bài ngược lại và ẩn sau 1 khoảng thời gian
-            const card = document.getElementById('myRoleCard');
-            if (card) card.classList.remove('flipped');
-            setTimeout(() => {
-                document.getElementById('role-popup').style.display = 'none';
-            }, 600);
+            const btn = document.getElementById('btnUnderstand'); btn.style.background = '#7f8c8d'; btn.innerText = 'ĐÃ HIỂU'; btn.disabled = true; socket.send(JSON.stringify({type:"I_UNDERSTAND", data:""}));
+            const card = document.getElementById('myRoleCard'); if (card) card.classList.remove('flipped');
+            setTimeout(() => { document.getElementById('role-popup').style.display = 'none'; }, 600);
         }
+
         function handlePhaseUpdate(data) {
             const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0;
-
             const nightRoles = ["WEREWOLF", "SEER", "WITCH", "GUARDIAN", "CUPID", "PIPER", "CELESTIAL_FOX", "MOON_MAIDEN", "ELDER", "THREE_BROTHERS", "TWINS", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"];
-            const isNightTurn = nightRoles.includes(ph);
-            const left = document.getElementById('header-status-left');
-            const right = document.getElementById('header-status-right');
-            const turnInd = document.getElementById('night-turn-indicator');
-            const nightOverlay = document.getElementById('night-overlay');
+            const isNightTurn = nightRoles.includes(ph); currentPhase = ph;
+            const left = document.getElementById('header-status-left'); const right = document.getElementById('header-status-right');
+            const turnInd = document.getElementById('night-turn-indicator'); const nightOverlay = document.getElementById('night-overlay');
 
-            // SHOW CINEMATIC TRANSITION OVERLAY
             if (currentPhase !== ph && ph !== "LOBBY") {
-                let transitionText = "";
-                let subText = "";
-
-                if (currentPhase === "LOBBY" && ph === "PREPARING") {
-                    transitionText = "TRÒ CHƠI BẮT ĐẦU";
-                } else if (isNightTurn) {
-                    transitionText = `LƯỢT CỦA ${ph.replace(/_/g, ' ')}`;
-                    subText = "MỜI THỨC GIẤC";
-                } else if (ph === "DAY") {
-                    transitionText = `HẾT ĐÊM ${day}`;
-                    subText = `NGÀY ${day} ĐÃ ĐẾN`;
-                } else if (ph === "TRIAL_DEFENSE") {
-                    transitionText = "PHIÊN BIỆN HỘ BẮT ĐẦU";
-                } else if (ph === "TRIAL_VOTING") {
-                    transitionText = "PHIÊN BỎ PHIẾU BẮT ĐẦU";
-                } else if (currentPhase === "TRIAL_VOTING" && (ph === "NIGHT" || isNightTurn)) {
-                    transitionText = "KẾT THÚC BỎ PHIẾU";
-                    subText = `ĐÊM ${day} BẮT ĐẦU`;
-                }
+                let transitionText = ""; let subText = "";
+                if (currentPhase === "LOBBY" && ph === "PREPARING") transitionText = "TRÒ CHƠI BẮT ĐẦU";
+                else if (isNightTurn) { transitionText = `LƯỢT CỦA ${ph.replace(/_/g, ' ')}`; subText = "MỜI THỨC GIẤC"; }
+                else if (ph === "DAY") { transitionText = `HẾT ĐÊM ${day}`; subText = `NGÀY ${day} ĐÃ ĐẾN`; }
+                else if (ph === "TRIAL_DEFENSE") transitionText = "PHIÊN BIỆN HỘ BẮT ĐẦU";
+                else if (ph === "TRIAL_VOTING") transitionText = "PHIÊN BỎ PHIẾU BẮT ĐẦU";
+                else if (currentPhase === "TRIAL_VOTING" && (ph === "NIGHT" || isNightTurn)) { transitionText = "KẾT THÚC BỎ PHIẾU"; subText = `ĐÊM ${day} BẮT ĐẦU`; }
 
                 if (transitionText) {
                     const transOverlay = document.createElement('div');
                     transOverlay.style.cssText = 'position:absolute; inset:0; background:rgba(0,0,0,0.85); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2s forwards; pointer-events:none;';
-                    transOverlay.innerHTML = `
-                        <h1 style="color:var(--primary); letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px var(--primary); margin:0; text-align:center;">${transitionText}</h1>
-                        ${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic;">${subText}</h2>` : ''}
-                    `;
-                    document.getElementById('main-content').appendChild(transOverlay);
-                    setTimeout(() => transOverlay.remove(), 3000);
+                    transOverlay.innerHTML = `<h1 style="color:var(--primary); letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px var(--primary); margin:0; text-align:center;">${transitionText}</h1>${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic;">${subText}</h2>` : ''}`;
+                    document.getElementById('main-content').appendChild(transOverlay); setTimeout(() => transOverlay.remove(), 3000);
                 }
             }
 
-            // XỬ LÝ MÀN ĐÊM (NIGHT OVERLAY)
             if (isNightTurn) {
-                turnInd.style.display = 'block';
-                turnInd.innerText = `Lượt của \\${ph.replace(/_/g, ' ')}`;
-
-                // CHỈ MỞ MẮT CHO ĐÚNG VAI DIỄN
+                turnInd.style.display = 'block'; turnInd.innerText = `Lượt của \\${ph.replace(/_/g, ' ')}`;
                 const myRoleName = myRoleData ? (typeof myRoleData.role === 'string' ? myRoleData.role : myRoleData.role.name || "").toUpperCase() : "";
-                if (myRoleName === ph || (ph === "WEREWOLF" && ["CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(myRoleName))) {
-                    nightOverlay.style.display = 'none';
-                } else {
-                    nightOverlay.style.display = 'flex';
-                    document.getElementById('night-overlay-sub').innerText = `Đang chờ \\${ph.replace(/_/g, ' ')} thực hiện chức năng`;
-                }
-            } else {
-                turnInd.style.display = 'none';
-                nightOverlay.style.display = 'none';
-            }
+                if (myRoleName === ph || (ph === "WEREWOLF" && ["CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(myRoleName))) nightOverlay.style.display = 'none';
+                else { nightOverlay.style.display = 'flex'; document.getElementById('night-overlay-sub').innerText = `Đang chờ \\${ph.replace(/_/g, ' ')} thực hiện chức năng`; }
+            } else { turnInd.style.display = 'none'; nightOverlay.style.display = 'none'; }
 
-            if (ph === "LOBBY") {
-                left.style.display = 'none'; right.style.display = 'none';
-                clearInterval(countdownInterval);
-                document.getElementById('lobby-controls').style.display = 'flex';
-                document.getElementById('btnReady').style.display = isHost ? 'none' : 'block';
-            } else {
-                left.style.display = 'flex'; right.style.display = 'flex';
-                document.getElementById('lobby-controls').style.display = 'none';
-                const pIcon = document.getElementById('header-phase-icon');
-                const pText = document.getElementById('header-phase-text');
+            if (ph === "LOBBY") { left.style.display = 'none'; right.style.display = 'none'; clearInterval(countdownInterval); document.getElementById('lobby-controls').style.display = 'flex'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
+            else {
+                left.style.display = 'flex'; right.style.display = 'flex'; document.getElementById('lobby-controls').style.display = 'none';
+                const pIcon = document.getElementById('header-phase-icon'); const pText = document.getElementById('header-phase-text');
                 if (isNightTurn || ph === "NIGHT") { pIcon.innerText = "🌙"; pText.innerText = `Đêm ${day}`; }
                 else if (ph === "DAY") { pIcon.innerText = "☀️"; pText.innerText = `Ngày ${day}`; }
                 else if (ph === "TRIAL_DEFENSE" || ph === "TRIAL_VOTING") { pIcon.innerText = "⚖️"; pText.innerText = "Biện hộ"; }
                 else { pIcon.innerText = "⏳"; pText.innerText = "Chuẩn bị"; }
             }
 
-            if (ph === "DAY") {
-                startCountdown(du);
-                let m = "Sáng rồi.";
-                if (rs === "RUSSIAN_VODKA") m = "Gấu nốc rượu! " + m;
-                announce(m);
-            } else {
-                startCountdown(du);
-                if (isNightTurn) announce(`Mời ${ph.replace(/_/g, ' ')} thức giấc`);
-            }
+            startCountdown(du);
+            if (ph === "DAY") { let m = "Sáng rồi."; if (rs === "RUSSIAN_VODKA") m = "Gấu nốc rượu! " + m; announce(m); }
+            else if (isNightTurn) announce(`Mời ${ph.replace(/_/g, ' ')} thức giấc`);
 
             if(isHost){
                 document.getElementById('host-action-bar').style.display= (document.querySelector('.page.active').id==='page-lobby') ? 'flex' : 'none';
                 document.getElementById('btnNextPhase').style.display=(ph!=="LOBBY")?'block':'none';
                 document.getElementById('btnStartGame').style.display=(ph==="LOBBY")?'block':'none';
             }
-
-            currentPhase = ph;
         }
 
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
-        async function distributeRoles() { const r = await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if (!r.ok) showNotification("Không thể bắt đầu. Cần ít nhất 8 người chơi sẵn sàng!"); }
+        async function distributeRoles() { const r = await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if (!r.ok) showNotification("Lỗi phân vai!"); }
         function startCountdown(s) {
             clearInterval(countdownInterval); let t=s;
-            const updateTimer = () => {
-                const m = Math.floor(t / 60).toString().padStart(2, '0');
-                const sc = (t % 60).toString().padStart(2, '0');
-                document.getElementById('header-timer').innerText = `${m}:${sc}`;
-            };
-            updateTimer();
-            countdownInterval=setInterval(()=>{
-                t--; updateTimer();
-                if(t <= 0){ clearInterval(countdownInterval); if(isHost) nextPhase(); }
-            },1000);
+            const updateT = () => { const m = Math.floor(t / 60).toString().padStart(2, '0'); const sc = (t % 60).toString().padStart(2, '0'); document.getElementById('header-timer').innerText = `${m}:${sc}`; };
+            updateT(); countdownInterval=setInterval(()=>{ t--; updateT(); if(t <= 0){ clearInterval(countdownInterval); if(isHost) nextPhase(); } },1000);
         }
         function announce(t) { if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const m=new SpeechSynthesisUtterance(t); m.lang='vi-VN'; m.rate=0.9; window.speechSynthesis.speak(m); }
         async function addBot() { const bc=playersCache.filter(p=>p.name.startsWith("Bot_")).length+1; await fetch(`/join-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:"bot_"+Date.now()+"_"+bc, name:"Bot_"+bc, avatar:"https://robohash.org/bot_"+bc, isReady:true})}); }
         function executeDevCommand() {
-            const i=document.getElementById('devConsole');
-            const cmd=i.value.trim();
-            if(!cmd.startsWith('/')) return;
-
+            const i=document.getElementById('devConsole'); const cmd=i.value.trim(); if(!cmd.startsWith('/')) return;
             if(cmd.startsWith('/access')){
-                const param = cmd.substring(8).trim();
-                let target = null;
-
-                if (param.startsWith('@')) { // Truy cập theo tên
-                    const name = param.substring(1).toLowerCase();
-                    target = playersCache.find(p => p.name.toLowerCase().includes(name));
-                } else if (param.startsWith('#')) { // Truy cập theo STT
-                    const idx = parseInt(param.substring(1)) - 1;
-                    target = playersCache[idx];
-                } else if (param.startsWith('\\')) { // Truy cập theo Chức năng
-                    const roleName = param.substring(1).toUpperCase();
-                    target = playersCache.find(p => {
-                        if(!p.role) return false;
-                        const pRole = (typeof p.role === 'string') ? p.role : (p.role.role || p.role.name || "");
-                        return pRole.toUpperCase().includes(roleName);
-                    });
-                }
-
-                if (target) {
-                    logDev(`Đang thâm nhập: ${target.name} (${target.role || 'Chưa rõ'})`);
-                    myId = target.id;
-                    myName = target.name;
-                    myAvatar = target.avatar;
-                    myRoleData = (typeof target.role === 'string') ? {role: target.role, description: "Kỹ năng đang được mô phỏng..."} : target.role;
-
-                    connectWebSocket();
-                    updateProfileUI();
-                    if(myRoleData) {
-                        const badge = document.getElementById('role-badge-mini');
-                        badge.innerText = myRoleData.role ? myRoleData.role.replace(/_/g, ' ') : myRoleData.replace(/_/g, ' ');
-                        badge.style.display = 'block';
-                    }
-                    navigateTo('page-lobby');
-                } else {
-                    logDev("Không tìm thấy đối tượng yêu cầu!");
-                }
-            } else if (cmd === '/return') {
-                logDev("Đang trở về danh tính gốc...");
-                myId = realId; myName = realName; myAvatar = realAvatar;
-                fetch(`/room/${currentRoomCode}/players`).then(r=>r.json()).then(ps => {
-                    const me = ps.find(p => p.id === myId);
-                    myRoleData = me ? me.role : null;
-                    connectWebSocket();
-                    updateProfileUI();
-                    if(!myRoleData) document.getElementById('role-badge-mini').style.display = 'none';
-                });
-            } else if(socket?.readyState===WebSocket.OPEN) {
-                socket.send(JSON.stringify({type:"DEV_COMMAND", data:cmd}));
-            }
+                const param = cmd.substring(8).trim(); let target = null;
+                if (param.startsWith('@')) target = playersCache.find(p => p.name.toLowerCase().includes(param.substring(1).toLowerCase()));
+                else if (param.startsWith('#')) target = playersCache[parseInt(param.substring(1)) - 1];
+                else if (param.startsWith('\\')) target = playersCache.find(p => { if(!p.role) return false; const r = (typeof p.role === 'string') ? p.role : (p.role.role || p.role.name || ""); return r.toUpperCase().includes(param.substring(1).toUpperCase()); });
+                if (target) { myId = target.id; myName = target.name; myAvatar = target.avatar; myRoleData = (typeof target.role === 'string') ? {role: target.role, description: "Mô phỏng..."} : target.role; connectWebSocket(); updateProfileUI(); navigateTo('page-lobby'); }
+            } else if (cmd === '/return') { myId = realId; myName = realName; myAvatar = realAvatar; fetch(`/room/${currentRoomCode}/players`).then(r=>r.json()).then(ps => { const me = ps.find(p => p.id === myId); myRoleData = me ? me.role : null; connectWebSocket(); updateProfileUI(); });
+            } else if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"DEV_COMMAND", data:cmd}));
             i.value='';
         }
         async function devCommand(c) { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "DEV_COMMAND", data: c})); }
