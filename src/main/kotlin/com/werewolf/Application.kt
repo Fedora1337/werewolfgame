@@ -99,7 +99,7 @@ fun getPhaseDuration(room: Room): Int {
         "DAY" -> (if (count >= 46) (if (isDay1) 900 else 420) else if (count >= 31) (if (isDay1) 600 else 300) else if (count >= 21) (if (isDay1) 420 else 240) else if (count >= 16) (if (isDay1) 300 else 180) else if (count >= 12) (if (isDay1) 210 else 150) else (if (isDay1) 120 else 90)) + buffer
         "TRIAL_DEFENSE" -> (if (count >= 21) 60 else if (count >= 12) 45 else 30) + buffer
         "TRIAL_VOTING" -> (if (count >= 46) 45 else if (count >= 31) 30 else if (count >= 21) 20 else if (count >= 12) 15 else 10) + buffer
-        "PREPARING" -> 300; "HUNTER_REVENGE" -> 25; else -> 0
+        "PREPARING" -> 60; "HUNTER_REVENGE" -> 25; else -> 0
     }
 }
 
@@ -321,7 +321,7 @@ fun main() {
                 room.wolfRatio = ratio; room.prophetUses = calculateProphetUses(room.players.size, ratio)
                 room.assignments.putAll(moderator.distributeRoles(room.players, ratio)); room.readyPlayers.clear(); room.phase = "PREPARING"
                 room.assignments.forEach { (pid, assign) -> GlobalScope.launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) } }
-                room.players.forEach { p -> GlobalScope.launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|300")) } }
+                room.players.forEach { p -> GlobalScope.launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|60")) } }
                 call.respond(mapOf("ok" to true))
             }
             post("/room/{code}/next-phase") { val room = rooms[call.parameters["code"]] ?: return@post call.respond(io.ktor.http.HttpStatusCode.NotFound); triggerNextPhase(room); call.respond(mapOf("ok" to true)) }
@@ -337,37 +337,64 @@ fun main() {
 fun triggerNextPhase(room: Room) {
     room.nightJob?.cancel()
     GlobalScope.launch {
-        // Tạo khoảng trễ 3 giây để server xử lý và tạo hiệu ứng kịch tính cho người chơi
-        if (room.phase != "LOBBY" && room.phase != "PREPARING") {
-            delay(3000)
-        }
+        try {
+            // Tạo khoảng trễ 3 giây để server xử lý và tạo hiệu ứng kịch tính cho người chơi
+            if (room.phase != "LOBBY" && room.phase != "PREPARING") {
+                delay(3000)
+            }
 
-        when (room.phase) {
-            "LOBBY" -> { room.phase = "PREPARING"; room.dayCount = 1 }
-            "PREPARING" -> { room.phase = "NIGHT"; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0 }
-            "NIGHT" -> { if (room.currentNightActionIndex < room.nightActionList.size - 1) room.currentNightActionIndex++ else { processGameLogic(room); room.phase = "DAY" } }
-            "DAY" -> {
-                val alive = room.players.filter { !it.isDead }; val max = if (alive.isNotEmpty()) alive.maxOf { it.vote } else 0
-                val top = alive.filter { it.vote == max && max > 0 }
-                if (top.size == 1) { room.phase = "TRIAL_DEFENSE"; room.trialTargetId = top[0].id } else { processGameLogic(room); room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0 }
+            when (room.phase) {
+                "LOBBY" -> { room.phase = "PREPARING"; room.dayCount = 1 }
+                "PREPARING" -> { 
+                    room.phase = "NIGHT"
+                    room.nightActionList = getNightOrder(room)
+                    room.currentNightActionIndex = 0
+                    if (room.nightActionList.isEmpty()) { processGameLogic(room); room.phase = "DAY" }
+                }
+                "NIGHT" -> { 
+                    if (room.currentNightActionIndex < room.nightActionList.size - 1) room.currentNightActionIndex++ 
+                    else { processGameLogic(room); room.phase = "DAY" } 
+                }
+                "DAY" -> {
+                    val alive = room.players.filter { !it.isDead }; val max = if (alive.isNotEmpty()) alive.maxOf { it.vote } else 0
+                    val top = alive.filter { it.vote == max && max > 0 }
+                    if (top.size == 1) { room.phase = "TRIAL_DEFENSE"; room.trialTargetId = top[0].id } 
+                    else { 
+                        processGameLogic(room); room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0 
+                        if (room.nightActionList.isEmpty()) { processGameLogic(room); room.phase = "DAY" }
+                    }
+                }
+                "TRIAL_DEFENSE" -> room.phase = "TRIAL_VOTING"
+                "TRIAL_VOTING" -> { 
+                    processGameLogic(room)
+                    if (room.phase != "HUNTER_REVENGE") { 
+                        room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null 
+                        if (room.nightActionList.isEmpty()) { processGameLogic(room); room.phase = "DAY" }
+                    } 
+                }
+                "HUNTER_REVENGE" -> { 
+                    val alive = room.players.filter { !it.isDead }; if (alive.isNotEmpty()) { val target = alive.random(); target.heal = 0 }
+                    processGameLogic(room); room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null
+                    if (room.nightActionList.isEmpty()) { processGameLogic(room); room.phase = "DAY" }
+                }
+                else -> room.phase = "NIGHT"
             }
-            "TRIAL_DEFENSE" -> room.phase = "TRIAL_VOTING"
-            "TRIAL_VOTING" -> { processGameLogic(room); if (room.phase != "HUNTER_REVENGE") { room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null } }
-            "HUNTER_REVENGE" -> { 
-                val alive = room.players.filter { !it.isDead }; if (alive.isNotEmpty()) { val target = alive.random(); target.heal = 0 }
-                processGameLogic(room); room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null
+
+            val duration = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) getNightActionDuration(room, room.nightActionList[room.currentNightActionIndex]) else getPhaseDuration(room)
+            if (room.phase != "LOBBY" && room.tickSpeed > 0) {
+                room.nightJob = launch {
+                    delay((duration * 1000L) / room.tickSpeed)
+                    triggerNextPhase(room)
+                }
             }
-            else -> room.phase = "NIGHT"
+            room.players.forEach { p -> launch { 
+                val cur = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) room.nightActionList[room.currentNightActionIndex] else room.phase
+                playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}")) 
+            } }
+            broadcastPlayerList(room)
+        } catch (e: Exception) {
+            println("ERROR: ${e.message}")
         }
-        val duration = if (room.phase == "NIGHT") getNightActionDuration(room, room.nightActionList[room.currentNightActionIndex]) else getPhaseDuration(room)
-        if (room.phase != "LOBBY" && room.tickSpeed > 0) {
-            room.nightJob = launch {
-                delay((duration * 1000L) / room.tickSpeed)
-                triggerNextPhase(room)
-            }
-        }
-        room.players.forEach { p -> launch { val cur = if (room.phase == "NIGHT") room.nightActionList[room.currentNightActionIndex] else room.phase; playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}")) } }
-        broadcastPlayerList(room)
     }
 }
 
@@ -490,7 +517,7 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                         launch { playerSessions[pid]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
                     }
                     room.players.forEach { p -> 
-                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|300||${room.dayCount}")) }
+                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "PREPARING|60||${room.dayCount}")) }
                     }
                     broadcastPlayerList(room)
                 }
