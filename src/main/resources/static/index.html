@@ -671,7 +671,7 @@
                 document.getElementById('btnNextPhase').style.display=(ph!=="LOBBY")?'block':'none';
                 document.getElementById('btnStartGame').style.display=(ph==="LOBBY")?'block':'none';
             }
-        }
+            currentPhase = ph;
         }
 
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
