@@ -149,14 +149,25 @@
         }
 
         #hunt-rank-panel {
-            position: absolute; top: 150px; right: 20px; width: 220px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(15px);
-            border: 1px solid #333; border-radius: 20px; padding: 15px;
-            display: none; flex-direction: column; gap: 10px; z-index: 2500;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: fixed; right: 0; top: 0; bottom: 0; width: 240px;
+            background: rgba(15, 15, 15, 0.98); border-left: 2px solid var(--primary);
+            display: none; flex-direction: column; padding: 20px; padding-top: 80px;
+            box-sizing: border-box; transition: margin-right 0.3s ease; z-index: 3500;
+            margin-right: -240px; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
-        .rank-title { font-size: 0.7em; color: #f1c40f; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .rank-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; color: #eee; }
+        #hunt-rank-panel.active { margin-right: 0; }
+
+        #hunt-rank-toggle {
+            position: fixed; right: 0; top: 40%; transform: translateY(-50%);
+            background: var(--primary); width: 35px; height: 60px; display: none;
+            align-items: center; justify-content: center; border-radius: 10px 0 0 10px;
+            cursor: pointer; z-index: 3501; transition: right 0.3s; color: white;
+            box-shadow: -5px 0 15px rgba(231, 76, 60, 0.4); font-size: 1.2em;
+        }
+        #hunt-rank-panel.active + #hunt-rank-toggle { right: 240px; }
+
+        .rank-title { font-size: 0.8em; color: #f1c40f; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
+        .rank-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; color: #eee; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
         .rank-mark-btn { background: #e74c3c; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.9em; cursor: pointer; }
         .rank-mark-btn:disabled { background: #555; opacity: 0.5; cursor: not-allowed; }
 
@@ -315,10 +326,11 @@
 
             <div id="hunt-rank-panel">
                 <div class="rank-title">BẢNG SĂN MỒI (RANKING)</div>
-                <div id="rank-list-content" style="display: flex; flex-direction: column; gap: 8px;">
+                <div id="rank-list-content" style="display: flex; flex-direction: column; gap: 10px;">
                     <!-- Sẽ được render bằng JS -->
                 </div>
             </div>
+            <div id="hunt-rank-toggle" onclick="toggleHuntRankBar()">🐺</div>
 
             <!-- CARD VIEWER -->
             <div id="card-viewer">
@@ -570,6 +582,7 @@
         function showDevLogin() { navigateTo('page-dev-login'); }
         function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else showNotification("Mật khẩu sai!"); }
         function toggleDevBar() { document.getElementById('dev-sidebar').classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
+        function toggleHuntRankBar() { document.getElementById('hunt-rank-panel').classList.toggle('active'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
         function toggleAvatarEdit() { const o = document.getElementById('avatar-options'); const img = document.getElementById('profile-ava-preview'); if (o.style.display === 'none' || o.style.display === '') { o.style.display = 'flex'; img.style.borderRadius = '20px'; } else { o.style.display = 'none'; img.style.borderRadius = '50%'; } }
         function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e => {}); else if (document.exitFullscreen) document.exitFullscreen(); }
@@ -624,7 +637,9 @@
                 if(searchContainer) searchContainer.style.display = 'block';
                 if (iAmWolf) {
                     const rankPanel = document.getElementById('hunt-rank-panel');
+                    const rankToggle = document.getElementById('hunt-rank-toggle');
                     if(rankPanel) rankPanel.style.display = 'flex';
+                    if(rankToggle) rankToggle.style.display = 'flex';
                     renderHuntRank(ps);
                 }
 
@@ -638,7 +653,9 @@
                 const searchContainer = document.getElementById('hunt-search-container');
                 if(searchContainer) searchContainer.style.display = 'none';
                 const rankPanel = document.getElementById('hunt-rank-panel');
-                if(rankPanel) rankPanel.style.display = 'none';
+                const rankToggle = document.getElementById('hunt-rank-toggle');
+                if(rankPanel) { rankPanel.style.display = 'none'; rankPanel.classList.remove('active'); }
+                if(rankToggle) rankToggle.style.display = 'none';
             }
 
             if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
