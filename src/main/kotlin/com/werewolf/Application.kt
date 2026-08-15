@@ -188,6 +188,19 @@ fun main() {
                     for (frame in incoming) {
                         if (frame is Frame.Text) {
                             val msg = Json.decodeFromString<SocketMessage>(frame.readText())
+                            
+                            // Xử lý lệnh DEV GLOBAL (Không cần room)
+                            if (msg.type == "DEV_COMMAND" && (msg.data == "/end all" || msg.data == "/clean")) {
+                                rooms.values.forEach { r ->
+                                    r.players.forEach { p ->
+                                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Hệ thống đã được dọn dẹp bởi Admin!")) }
+                                    }
+                                }
+                                rooms.clear()
+                                launch { playerSessions[playerId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[CLEAN] Đã xóa sạch mọi Lobby trên Server!")) }
+                                continue
+                            }
+
                             val room = rooms.values.find { r -> r.players.any { it.id == playerId } } ?: continue
                             when (msg.type) {
                                 "I_UNDERSTAND" -> if (room.phase == "PREPARING") { 
@@ -555,22 +568,12 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                 }
             }
             "/end" -> {
-                if (parts.size >= 2 && parts[1].lowercase() == "all") {
-                    // Cú Nuke toàn Server: Giải tán mọi phòng đang tồn tại
-                    val allPlayerIds = rooms.values.flatMap { it.players.map { p -> it.code to p.id } }
-                    allPlayerIds.forEach { (code, pid) ->
-                        launch { playerSessions[pid]?.sendSerialized(SocketMessage("KICKED", "Server đã được reset bởi Đấng Sáng Thế! (Phòng $code)")) }
-                    }
-                    rooms.clear()
-                    launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[NUKE] Đã quét sạch toàn bộ Lobby trên Server!")) }
-                } else {
-                    // Giải tán phòng hiện tại
-                    room.players.forEach { p ->
-                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Phòng đã bị giải tán bởi Dev!")) }
-                    }
-                    rooms.remove(room.code)
-                    launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[END] Đã giải tán phòng ${room.code}")) }
+                // Giải tán phòng hiện tại tuyệt đối
+                room.players.forEach { p ->
+                    launch { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Phòng đã bị giải tán bởi Admin!")) }
                 }
+                rooms.remove(room.code)
+                launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[END] Đã xóa phòng ${room.code}")) }
             }
             "/setrole" -> {
                 if (parts.size >= 3) {
