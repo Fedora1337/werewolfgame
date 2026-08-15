@@ -555,10 +555,22 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                 }
             }
             "/end" -> {
-                room.players.forEach { p ->
-                    launch { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Phòng đã bị giải tán bởi Dev!")) }
+                if (parts.size >= 2 && parts[1].lowercase() == "all") {
+                    // Cú Nuke toàn Server: Giải tán mọi phòng đang tồn tại
+                    val allPlayerIds = rooms.values.flatMap { it.players.map { p -> it.code to p.id } }
+                    allPlayerIds.forEach { (code, pid) ->
+                        launch { playerSessions[pid]?.sendSerialized(SocketMessage("KICKED", "Server đã được reset bởi Đấng Sáng Thế! (Phòng $code)")) }
+                    }
+                    rooms.clear()
+                    launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[NUKE] Đã quét sạch toàn bộ Lobby trên Server!")) }
+                } else {
+                    // Giải tán phòng hiện tại
+                    room.players.forEach { p ->
+                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Phòng đã bị giải tán bởi Dev!")) }
+                    }
+                    rooms.remove(room.code)
+                    launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[END] Đã giải tán phòng ${room.code}")) }
                 }
-                rooms.remove(room.code)
             }
             "/setrole" -> {
                 if (parts.size >= 3) {
