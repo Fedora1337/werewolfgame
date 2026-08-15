@@ -202,7 +202,7 @@ fun main() {
                                 "TOGGLE_READY" -> if (room.phase == "LOBBY" && room.hostId != playerId) { val p = room.players.find { it.id == playerId }; if (p != null) { p.isReady = !p.isReady; broadcastPlayerList(room) } }
                                 "WEREWOLF_VOTE" -> {
                                     val p = room.players.find { it.id == playerId }
-                                    if (p != null && p.moonCurse != 1 && p.role != Role.DERP_WOLF && (p.trulyTeam == "Sói" || p.trulyTeam == "cupid") && p.team == "Sói") {
+                                    if (p != null && !p.isDead && p.moonCurse != 1 && p.role != Role.DERP_WOLF && (p.trulyTeam == "Sói" || p.trulyTeam == "cupid") && p.team == "Sói") {
                                         val d = room.players.find { it.id == msg.data }
                                         if (d != null && !d.isDead && !((d.trulyTeam == "Sói" || d.trulyTeam == "cupid") && d.team == "Sói")) { d.werewolfMark += 1; broadcastPlayerList(room) }
                                     }
