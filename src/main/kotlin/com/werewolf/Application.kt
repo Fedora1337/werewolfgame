@@ -123,7 +123,7 @@ class Moderator {
             p.role = r; p.shield = if (r == Role.ELDER) 1 else 0
             if (r == Role.HUNTER) { p.hunterBullets = if (wolfRatio >= 0.33) 1 else 0; p.canHunterPassive = true }
             if (r.type == RoleType.WEREWOLF) { p.trulyTeam = "Sói"; p.team = "Sói" }
-            else if (r == Role.LYCAN) { p.trulyTeam = "Sói"; p.team = "Dân" }
+            else if (r == Role.LYCAN) { p.trulyTeam = "Dân"; p.team = "Sói" }
             else if (r == Role.PIPER) { p.trulyTeam = "piper"; p.team = "Dân" }
             else { p.trulyTeam = "Dân"; p.team = "Dân" }
             p.id to GameAssignment(p.name, r.name, r.name)
@@ -439,7 +439,13 @@ fun processGameLogic(room: Room) {
         val russian = room.players.find { it.role == Role.RUSSIAN && !it.isDead }
         if (russian != null) { val idx = room.players.indexOf(russian); val s = room.players.size; val l = if (idx == 0) s - 1 else idx - 1; val ri = if (idx == s - 1) 0 else idx + 1; room.russianStatus = if (listOf(room.players[l], room.players[ri]).any { it.team == "Sói" && !it.isDead }) "RUSSIAN_VODKA" else "RUSSIAN_CALM" } else room.russianStatus = null
     }
-    room.players.forEach { p -> if (p.role == Role.LYCAN && p.shield == -1) { p.team = "Sói"; p.shield = 0 }; if (p.role != Role.LYCAN && p.shield < 0) { p.heal += p.shield; p.shield = 0 }; if (room.phase == "NIGHT") { if (p.role != Role.ELDER && p.shield > 0) p.shield = 0; p.vote = 0; p.werewolfMark = 0; p.moonCurse = 0; p.killersVotedForMe.clear() } }
+    room.players.forEach { p -> 
+        if (p.role == Role.LYCAN && p.shield == -1) { 
+            p.team = "Sói"; p.trulyTeam = "Sói"; p.shield = 0 
+        }
+        if (p.role != Role.LYCAN && p.shield < 0) { p.heal += p.shield; p.shield = 0 }; 
+        if (room.phase == "NIGHT") { if (p.role != Role.ELDER && p.shield > 0) p.shield = 0; p.vote = 0; p.werewolfMark = 0; p.moonCurse = 0; p.killersVotedForMe.clear() } 
+    }
     room.charmedPlayerIds.removeIf { id -> room.players.any { it.id == id && it.isDead } }
     val couple = room.players.filter { it.linked == 2 }
     if (couple.isNotEmpty() && couple.any { it.heal <= 0 }) couple.forEach { it.heal = 0; it.linked = 1 }
@@ -501,8 +507,13 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                 if (parts.size >= 2 && parts[1].lowercase() == "day") {
                     processGameLogic(room)
                     room.phase = "DAY"
-                    room.dayCount++
-                    triggerNextPhase(room, true)
+                    // Chỉ gửi thông báo, không gọi triggerNextPhase để tránh bị nhảy phase tiếp
+                    room.players.forEach { p -> 
+                        launch { 
+                            playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "DAY|${getPhaseDuration(room)}|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}")) 
+                        } 
+                    }
+                    broadcastPlayerList(room)
                 } else if (parts.size >= 2 && parts[1].lowercase() == "night") {
                     processGameLogic(room)
                     room.phase = "NIGHT"
@@ -555,7 +566,7 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                         targets.forEach { p ->
                             p.role = r
                             if (r.type == RoleType.WEREWOLF) { p.trulyTeam = "Sói"; p.team = "Sói" }
-                            else if (r == Role.LYCAN) { p.trulyTeam = "Sói"; p.team = "Dân" }
+                            else if (r == Role.LYCAN) { p.trulyTeam = "Dân"; p.team = "Sói" }
                             else if (r == Role.PIPER) { p.trulyTeam = "piper"; p.team = "Dân" }
                             else { p.trulyTeam = "Dân"; p.team = "Dân" }
                             
