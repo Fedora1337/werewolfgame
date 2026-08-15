@@ -619,6 +619,13 @@
             const text = winner === "WEREWOLF_TEAM" ? "PHE MA SÓI THẮNG" : (winner === "VILLAGER_TEAM" ? "PHE DÂN LÀNG THẮNG" : "PHE THỨ 3 THẮNG");
             transOverlay.innerHTML = `<h1 style="color:${color}; letter-spacing:10px; font-size:3em; text-shadow: 0 0 50px ${color};">${text}</h1><button onclick="location.reload()" style="margin-top:40px;">VỀ SẢNH CHỜ</button>`;
             document.getElementById('main-content').appendChild(transOverlay);
+
+            // CLEANUP HUNT UI
+            document.getElementById('hunt-search-container').style.display = 'none';
+            const rankPanel = document.getElementById('hunt-rank-panel');
+            const rankToggle = document.getElementById('hunt-rank-toggle');
+            if(rankPanel) { rankPanel.style.display = 'none'; rankPanel.classList.remove('active'); }
+            if(rankToggle) rankToggle.style.display = 'none';
         }
 
         function updatePlayerListUI(ps) {
@@ -738,6 +745,7 @@
             }
         }
 
+        function toggleReady() { if(socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "TOGGLE_READY", data: ""})); }
         function movePlayer(from, to) { if (to >= 0 && to < playersCache.length) socket.send(JSON.stringify({type: "SWAP_PLAYERS", data: `${from}|${to}`})); }
         function kickPlayer(id) { socket.send(JSON.stringify({type:"KICK_PLAYER", data:id})); }
         function selectPlayer(id) { selectedPlayerId=(selectedPlayerId===id)?null:id; updatePlayerListUI(playersCache); }
@@ -830,7 +838,18 @@
                 }
             } else { turnInd.style.display = 'none'; nightOverlay.style.display = 'none'; }
 
-            if (ph === "LOBBY") { left.style.display = 'none'; right.style.display = 'none'; clearInterval(countdownInterval); document.getElementById('lobby-controls').style.display = 'flex'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
+            if (ph === "LOBBY") {
+                left.style.display = 'none'; right.style.display = 'none'; clearInterval(countdownInterval);
+                document.getElementById('lobby-controls').style.display = 'flex';
+                document.getElementById('btnReady').style.display = isHost ? 'none' : 'block';
+
+                // CLEANUP HUNT UI
+                document.getElementById('hunt-search-container').style.display = 'none';
+                const rankPanel = document.getElementById('hunt-rank-panel');
+                const rankToggle = document.getElementById('hunt-rank-toggle');
+                if(rankPanel) { rankPanel.style.display = 'none'; rankPanel.classList.remove('active'); }
+                if(rankToggle) rankToggle.style.display = 'none';
+            }
             else {
                 left.style.display = 'flex'; right.style.display = 'flex'; document.getElementById('lobby-controls').style.display = 'none';
                 const pIcon = document.getElementById('header-phase-icon'); const pText = document.getElementById('header-phase-text');

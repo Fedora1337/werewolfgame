@@ -190,7 +190,11 @@ fun main() {
                             val msg = Json.decodeFromString<SocketMessage>(frame.readText())
                             val room = rooms.values.find { r -> r.players.any { it.id == playerId } } ?: continue
                             when (msg.type) {
-                                "I_UNDERSTAND" -> if (room.phase == "PREPARING") { room.readyPlayers.add(playerId); if (room.readyPlayers.size == room.players.size) triggerNextPhase(room) }
+                                "I_UNDERSTAND" -> if (room.phase == "PREPARING") { 
+                                    room.readyPlayers.add(playerId)
+                                    broadcastPlayerList(room)
+                                    if (room.readyPlayers.size == room.players.size) triggerNextPhase(room) 
+                                }
                                 "UPDATE_PROFILE" -> {
                                     val data = Json.decodeFromString<Map<String, String>>(msg.data); val p = room.players.find { it.id == playerId }
                                     if (p != null) { room.players[room.players.indexOf(p)] = p.copy(name = data["name"] ?: p.name, avatar = data["avatar"] ?: p.avatar); broadcastPlayerList(room) }
@@ -300,6 +304,7 @@ fun main() {
                 val room = rooms[code]
                 if (room != null) {
                     room.players.removeIf { it.id == id }
+                    room.readyPlayers.remove(id)
                     if (room.players.isEmpty() || room.players.none { !it.id.startsWith("bot_") }) {
                         rooms.remove(code)
                     } else {
@@ -348,7 +353,14 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
 
             when (room.phase) {
                 "LOBBY" -> { 
-                    room.phase = "PREPARING"; room.dayCount = 1 
+                    room.phase = "PREPARING"; room.dayCount = 1; room.winner = null; room.trialTargetId = null;
+                    room.curserUsedAbility = false; room.isCurseActiveThisNight = false;
+                    room.witchSaveUsed = false; room.witchKillUsed = false; room.elderIsDead = false;
+                    room.charmedPlayerIds.clear(); room.tempDeadIds.clear(); room.derpWolfRevengeList.clear();
+                    room.players.forEach { p -> 
+                        p.heal = 1; p.shield = 0; p.isDead = false; p.vote = 0; p.werewolfMark = 0; p.moonCurse = 0; p.linked = -1; p.killersVotedForMe.clear() 
+                    }
+
                     // Tự động phân vai nếu chưa có (dành cho /start Dev)
                     if (room.assignments.isEmpty()) {
                         val moderator = Moderator()
@@ -515,15 +527,7 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                 if (parts.size >= 2 && parts[1].lowercase() == "day") {
                     processGameLogic(room)
                     room.phase = "DAY"
-                    // Gửi lệnh cập nhật phase trực tiếp cho cả làng, reset timer
-                    val duration = getPhaseDuration(room)
-                    room.nightJob?.cancel()
-                    room.players.forEach { p -> 
-                        launch { 
-                            playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "DAY|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}"))
-                        } 
-                    }
-                    broadcastPlayerList(room)
+                    triggerNextPhase(room, true)
                 } else if (parts.size >= 2 && parts[1].lowercase() == "night") {
                     processGameLogic(room)
                     room.phase = "NIGHT"
@@ -538,17 +542,6 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                         room.trialTargetId = target.id
                         triggerNextPhase(room, true)
                     }
-                } else if (parts.size >= 2 && parts[1].lowercase() == "phase") {
-                    if (room.phase == "NIGHT") {
-                        processGameLogic(room)
-                        room.phase = "DAY"
-                    } else {
-                        room.phase = "NIGHT"
-                        room.dayCount++
-                        room.nightActionList = getNightOrder(room)
-                        room.currentNightActionIndex = 0
-                    }
-                    triggerNextPhase(room, true)
                 } else {
                     triggerNextPhase(room, true)
                 }
@@ -587,7 +580,11 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                                 playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[SETROLE] Đã chuyển ${p.name} thành ${r.name}"))
                             }
                         }
-                        broadcastPlayerList(room) 
+                        processGameLogic(room)
+                        broadcastPlayerList(room)
+                        if (room.winner != null) {
+                            room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("WINNER", room.winner!!)) } }
+                        }
                     } else {
                         launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[LỖI] Role hoặc Mục tiêu không hợp lệ!")) }
                     }
@@ -618,6 +615,9 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                         targets.forEach { it.heal = 0 }
                         processGameLogic(room)
                         broadcastPlayerList(room)
+                        if (room.winner != null) {
+                            room.players.forEach { p -> launch { playerSessions[p.id]?.sendSerialized(SocketMessage("WINNER", room.winner!!)) } }
+                        }
                         launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[KILL] Đã tiêu diệt ${targets.size} mục tiêu")) }
                     }
                 }
