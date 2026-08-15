@@ -724,7 +724,7 @@
         function movePlayer(from, to) { if (to >= 0 && to < playersCache.length) socket.send(JSON.stringify({type: "SWAP_PLAYERS", data: `${from}|${to}`})); }
         function kickPlayer(id) { socket.send(JSON.stringify({type:"KICK_PLAYER", data:id})); }
         function selectPlayer(id) { selectedPlayerId=(selectedPlayerId===id)?null:id; updatePlayerListUI(playersCache); }
-        function updateActionButtons() { const c=document.getElementById('action-buttons'); const o=document.getElementById('action-overlay'); if(document.querySelector('.page.active').id!=='page-lobby'){ o.style.display='none'; return; } o.style.display='block'; c.innerHTML=''; if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`; }
+        function updateActionButtons() { const c=document.getElementById('action-buttons'); const o=document.getElementById('action-overlay'); if(document.querySelector('.page.active').id!=='page-lobby'){ o.style.display='none'; return; } o.style.display='block'; c.innerHTML=''; }
         function sendAction(t) { if(!selectedPlayerId) return; socket.send(JSON.stringify({type:t, data:selectedPlayerId})); selectedPlayerId=null; updatePlayerListUI(playersCache); }
         async function refreshPlayers() { if(currentRoomCode){ const res=await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
 
