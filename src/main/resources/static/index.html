@@ -802,8 +802,15 @@
             if (isNightTurn) {
                 turnInd.style.display = 'block'; turnInd.innerText = `Lượt của \\${ph.replace(/_/g, ' ')}`;
                 const myRoleName = myRoleData ? (typeof myRoleData.role === 'string' ? myRoleData.role : (myRoleData.role ? myRoleData.role.name : "") || "").toUpperCase() : "";
-                if (myRoleName === ph || (ph === "WEREWOLF" && ["CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(myRoleName))) nightOverlay.style.display = 'none';
-                else { nightOverlay.style.display = 'flex'; document.getElementById('night-overlay-sub').innerText = `Đang chờ \\${ph.replace(/_/g, ' ')} thực hiện chức năng`; }
+                const meInCache = playersCache.find(p => p.id === myId);
+                const iAmTransformedLycan = myRoleName === "LYCAN" && meInCache?.trulyTeam === "Sói";
+
+                if (myRoleName === ph || (ph === "WEREWOLF" && (["CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(myRoleName) || iAmTransformedLycan))) {
+                    nightOverlay.style.display = 'none';
+                } else {
+                    nightOverlay.style.display = 'flex';
+                    document.getElementById('night-overlay-sub').innerText = `Đang chờ \\${ph.replace(/_/g, ' ')} thực hiện chức năng`;
+                }
             } else { turnInd.style.display = 'none'; nightOverlay.style.display = 'none'; }
 
             if (ph === "LOBBY") { left.style.display = 'none'; right.style.display = 'none'; clearInterval(countdownInterval); document.getElementById('lobby-controls').style.display = 'flex'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
