@@ -409,7 +409,14 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
             room.players.forEach { p -> launch { 
                 val cur = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) room.nightActionList[room.currentNightActionIndex] else room.phase
                 playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}")) 
-                if (room.winner != null) playerSessions[p.id]?.sendSerialized(SocketMessage("WINNER", room.winner!!))
+                if (room.winner != null) {
+                    playerSessions[p.id]?.sendSerialized(SocketMessage("WINNER", room.winner!!))
+                    // GIẢI TÁN PHÒNG: Tự động xóa khỏi rooms map sau 60 giây
+                    GlobalScope.launch {
+                        delay(60000)
+                        rooms.remove(room.code)
+                    }
+                }
             } }
             broadcastPlayerList(room)
         } catch (e: Exception) {
@@ -510,10 +517,6 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                     // Gửi lệnh cập nhật phase trực tiếp cho cả làng, reset timer
                     val duration = getPhaseDuration(room)
                     room.nightJob?.cancel()
-                    room.nightJob = GlobalScope.launch {
-                        delay((duration * 1000L) / room.tickSpeed)
-                        triggerNextPhase(room)
-                    }
                     room.players.forEach { p -> 
                         launch { 
                             playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "DAY|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}"))
