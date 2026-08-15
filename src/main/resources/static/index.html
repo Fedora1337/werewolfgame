@@ -613,19 +613,18 @@
             const me = ps.find(p => p.id === myId);
             if (me) { isHost = me.isHost; document.getElementById('host-action-bar').style.display = isHost ? 'flex' : 'none'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
 
-            const isWolfTeam = (p) => p.trulyTeam === "Sói";
-            const me = ps.find(p => p.id === myId);
-            if (me) { isHost = me.isHost; document.getElementById('host-action-bar').style.display = isHost ? 'flex' : 'none'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
-
+            const isWolfTeam = (p) => p && p.trulyTeam === "Sói";
             const iAmWolf = isWolfTeam(me);
             const isHuntPhase = ["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(currentPhase);
 
             // XỬ LÝ SORT VÀ UI SĂN MỒI
             let sortedPs = [...ps];
             if (isHuntPhase) {
-                document.getElementById('hunt-search-container').style.display = 'block';
+                const searchContainer = document.getElementById('hunt-search-container');
+                if(searchContainer) searchContainer.style.display = 'block';
                 if (iAmWolf) {
-                    document.getElementById('hunt-rank-panel').style.display = 'flex';
+                    const rankPanel = document.getElementById('hunt-rank-panel');
+                    if(rankPanel) rankPanel.style.display = 'flex';
                     renderHuntRank(ps);
                 }
 
@@ -636,8 +635,10 @@
                     return (b.werewolfMark || 0) - (a.werewolfMark || 0); // Rank theo vote
                 });
             } else {
-                document.getElementById('hunt-search-container').style.display = 'none';
-                document.getElementById('hunt-rank-panel').style.display = 'none';
+                const searchContainer = document.getElementById('hunt-search-container');
+                if(searchContainer) searchContainer.style.display = 'none';
+                const rankPanel = document.getElementById('hunt-rank-panel');
+                if(rankPanel) rankPanel.style.display = 'none';
             }
 
             if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
@@ -667,7 +668,7 @@
             if(c<8) b.innerText=`Cần ${8-c} nữa`; else if(rc<c) b.innerText=`Chờ (${rc}/${c})`; else b.innerText="Đủ!";
             if(isHost){ const btn=document.getElementById('btnStartGame'); btn.disabled=(c<8||rc<c); btn.innerText=c<8?`CẦN THÊM ${8-c}`:rc<c?`CHỜ SẴN SÀNG`:"BẮT ĐẦU"; }
             updateActionButtons();
-        }
+        }}
 
         function selectPlayerHunt(id) {
             if (hasMarkedThisNight || !["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(currentPhase)) {
@@ -848,7 +849,7 @@
                 if (param.startsWith('@')) target = playersCache.find(p => p.name.toLowerCase().includes(param.substring(1).toLowerCase()));
                 else if (param.startsWith('#')) target = playersCache[parseInt(param.substring(1)) - 1];
                 else if (param.startsWith('\\')) target = playersCache.find(p => { if(!p.role) return false; const r = (typeof p.role === 'string') ? p.role : (p.role.role || p.role.name || ""); return r.toUpperCase().includes(param.substring(1).toUpperCase()); });
-
+                }
                 if (target) {
                     logDev(`Đang thâm nhập: ${target.name}`);
                     myId = target.id; myName = target.name; myAvatar = target.avatar;
