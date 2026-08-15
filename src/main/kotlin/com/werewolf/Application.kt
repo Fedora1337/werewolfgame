@@ -487,10 +487,11 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
     val action = parts[0].lowercase()
     val moderator = Moderator()
 
-    fun resolveTargets(selector: String): List<Player> {
+    fun resolveTargets(selector: String, devId: String = ""): List<Player> {
         val s = selector.lowercase()
         return when {
             s == "@a" || s == "@all" -> room.players
+            s == "@me" && devId.isNotEmpty() -> room.players.filter { it.id == devId }
             s == "@v" || s == "@villagers" -> room.players.filter { it.trulyTeam == "Dân" }
             s == "@w" || s == "@wolf" || s == "@wolves" -> room.players.filter { it.trulyTeam == "Sói" }
             s == "@c" || s == "@cupid" -> room.players.filter { it.trulyTeam == "cupid" }
@@ -568,7 +569,7 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
             }
             "/setrole" -> {
                 if (parts.size >= 3) {
-                    val targets = resolveTargets(parts[1])
+                    val targets = resolveTargets(parts[1], devId)
                     val rolePart = if (parts[2].startsWith("\\")) parts[2].substring(1) else parts[2]
                     val r = try { Role.valueOf(rolePart.uppercase()) } catch (e: Exception) { null }
                     if (targets.isNotEmpty() && r != null) { 
@@ -581,15 +582,24 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                             
                             val assign = GameAssignment(p.name, r.name, "Chức năng của bạn đã được thay đổi bởi Đấng Sáng Thế!")
                             room.assignments[p.id] = assign
-                            launch { playerSessions[p.id]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign))) }
+                            launch { 
+                                playerSessions[p.id]?.sendSerialized(SocketMessage("YOUR_ROLE", Json.encodeToString(assign)))
+                                playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[SETROLE] Đã chuyển ${p.name} thành ${r.name}"))
+                            }
                         }
                         broadcastPlayerList(room) 
+                    } else {
+                        launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[LỖI] Role hoặc Mục tiêu không hợp lệ!")) }
                     }
                 }
             }
+            "/roles" -> {
+                val all = Role.values().joinToString(", ") { it.name }
+                launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[ROLES] Danh sách: $all")) }
+            }
             "/reveal" -> {
                 if (parts.size >= 2) {
-                    val targets = resolveTargets(parts[1])
+                    val targets = resolveTargets(parts[1], devId)
                     targets.forEach { p ->
                         launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[REVEAL] ${p.name} là ${p.role?.name} (Team: ${p.trulyTeam})")) }
                     }
@@ -603,26 +613,29 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
             }
             "/kill" -> {
                 if (parts.size >= 2) {
-                    val targets = resolveTargets(parts[1])
+                    val targets = resolveTargets(parts[1], devId)
                     if (targets.isNotEmpty()) {
                         targets.forEach { it.heal = 0 }
                         processGameLogic(room)
                         broadcastPlayerList(room)
+                        launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[KILL] Đã tiêu diệt ${targets.size} mục tiêu")) }
                     }
                 }
             }
             "/shield" -> {
                 if (parts.size >= 2) {
-                    val targets = resolveTargets(parts[1])
+                    val targets = resolveTargets(parts[1], devId)
                     targets.forEach { it.shield += 1 }
                     broadcastPlayerList(room)
+                    launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[SHIELD] Đã bảo vệ ${targets.size} mục tiêu")) }
                 }
             }
             "/curse" -> {
                 if (parts.size >= 2) {
-                    val targets = resolveTargets(parts[1])
+                    val targets = resolveTargets(parts[1], devId)
                     targets.forEach { it.moonCurse = 1 }
                     broadcastPlayerList(room)
+                    launch { playerSessions[devId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[CURSE] Đã nguyền rủa ${targets.size} mục tiêu")) }
                 }
             }
             "/time" -> {
