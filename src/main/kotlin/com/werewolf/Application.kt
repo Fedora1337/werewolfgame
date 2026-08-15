@@ -507,10 +507,16 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                 if (parts.size >= 2 && parts[1].lowercase() == "day") {
                     processGameLogic(room)
                     room.phase = "DAY"
-                    // Chỉ gửi thông báo, không gọi triggerNextPhase để tránh bị nhảy phase tiếp
+                    // Gửi lệnh cập nhật phase trực tiếp cho cả làng, reset timer
+                    val duration = getPhaseDuration(room)
+                    room.nightJob?.cancel()
+                    room.nightJob = GlobalScope.launch {
+                        delay((duration * 1000L) / room.tickSpeed)
+                        triggerNextPhase(room)
+                    }
                     room.players.forEach { p -> 
                         launch { 
-                            playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "DAY|${getPhaseDuration(room)}|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}")) 
+                            playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "DAY|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}"))
                         } 
                     }
                     broadcastPlayerList(room)

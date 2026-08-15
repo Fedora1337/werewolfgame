@@ -18,18 +18,22 @@
             user-select: none; -webkit-user-select: none;
         }
 
-        /* CUSTOM SCROLLBAR */
-        ::-webkit-scrollbar { width: 6px; }
+        /* CUSTOM SCROLLBAR - MAKE IT PRO */
+        ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; border: 2px solid var(--bg); }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
+        /* Firefox support */
+        * { scrollbar-width: thin; scrollbar-color: #333 var(--bg); }
+
         input {
-            user-select: text; -webkit-user-select: text;
+            user-select: text; -webkit-user-select: text; /* Cho phép nhập liệu trong input */
             padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333;
             background: #222; color: white; font-size: 16px; box-sizing: border-box;
         }
 
+        /* ROOT LAYOUT - FLEX IS KEY */
         #app-root { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
 
         /* DEV SIDEBAR */
@@ -37,9 +41,10 @@
             width: var(--dev-w); background: #111; border-right: 2px solid #27ae60;
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
             transition: margin-left 0.3s ease; flex-shrink: 0; z-index: 4000;
-            margin-left: calc(-1 * var(--dev-w));
+            margin-left: calc(-1 * var(--dev-w)); /* Hidden by default */
         }
         #dev-sidebar.active { margin-left: 0; }
+
         #dev-toggle {
             position: fixed; left: 0; top: 50%; transform: translateY(-50%);
             background: #27ae60; width: 35px; height: 60px; display: none;
@@ -47,92 +52,247 @@
             cursor: pointer; z-index: 4001; transition: left 0.3s; color: white;
         }
         body.dev-open #dev-toggle { display: flex; }
+        /* KHI SIDEBAR MỞ -> NÚT PHẢI CHẠY RA MÉP 300PX */
         #dev-sidebar.active + #dev-toggle { left: var(--dev-w); }
 
-        /* MAIN CONTENT */
-        #main-content { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; width: 100%; background: var(--bg); }
+        /* MAIN CONTENT AREA */
+        #main-content {
+            flex: 1; display: flex; flex-direction: column; position: relative;
+            overflow: hidden; width: 100%; background: var(--bg);
+        }
 
         header {
             height: var(--header-h); background: rgba(26,26,26,0.95);
             display: flex; align-items: flex-end; justify-content: center;
             border-bottom: 1px solid #333; flex-shrink: 0; backdrop-filter: blur(10px);
-            position: relative; width: 100%; padding-bottom: 15px; box-sizing: border-box; z-index: 100;
+            position: relative; width: 100%; padding-bottom: 15px; box-sizing: border-box;
         }
-        header h2 { color: var(--primary); margin: 0; font-size: 1.1em; text-transform: uppercase; letter-spacing: 2px; }
+        header h2 { color: var(--primary); margin: 0; font-size: 1.2em; text-transform: uppercase; letter-spacing: 2px; }
 
-        #scroll-area { flex: 1; overflow-y: auto; padding: 20px; box-sizing: border-box; width: 100%; scroll-behavior: smooth; }
+        #scroll-area { flex: 1; overflow-y: auto; padding: 20px; box-sizing: border-box; width: 100%; }
         .container { width: 100%; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; }
 
-        /* HUNT UI COMPONENTS */
-        #search-bar-container {
-            position: absolute; top: var(--header-h); left: 50%; transform: translateX(-50%);
-            width: 80%; max-width: 400px; z-index: 90; display: none;
+        /* NAVBAR REDESIGN */
+        nav#bottom-nav {
+            height: var(--nav-h); background: #151515; border-top: 1px solid #333;
+            display: none; grid-template-columns: repeat(3, 1fr); flex-shrink: 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5); padding-bottom: env(safe-area-inset-bottom);
         }
-        #hunt-search { width: 100%; border-radius: 20px; background: rgba(0,0,0,0.8); border: 1px solid #444; padding: 8px 15px; color: white; font-size: 0.9em; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75em; color: #aaa; cursor: pointer; transition: all 0.3s; position: relative; }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+        .nav-item.active::after { content: ""; position: absolute; bottom: 0; left: 20%; right: 20%; height: 4px; background: var(--primary); border-radius: 4px 4px 0 0; box-shadow: 0 -2px 10px var(--primary); }
+        .nav-item span { font-size: 1.6em; margin-bottom: 4px; }
 
-        #hunt-rank-panel {
-            position: absolute; top: 120px; left: 20px; width: 180px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-            border: 1px solid #444; border-radius: 15px; padding: 10px;
-            display: none; flex-direction: column; gap: 8px; z-index: 80;
+        /* PAGE SYSTEM - FIX "LOẠN CÀO CÀO" */
+        .page { display: none !important; width: 100%; flex-direction: column; }
+        .page.active { display: flex !important; }
+
+        /* GRID SYSTEMS */
+        .game-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; width: 100%;
+            background-image: radial-gradient(#333 1px, transparent 1px); background-size: 20px 20px; /* Chấm nền nhẹ */
         }
-        .rank-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.75em; border-bottom: 1px solid #222; padding-bottom: 4px; }
-        .quick-mark-btn { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; cursor: pointer; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; }
 
-        /* GRID SYSTEM */
-        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; width: 100%; }
-        @media (min-width: 1000px) { .game-grid { grid-template-columns: repeat(6, 1fr); } }
+        @media (min-width: 1000px) {
+            .game-grid { grid-template-columns: repeat(6, 1fr); }
+            .gallery-grid { grid-template-columns: repeat(7, 1fr); }
+        }
 
-        .slot-empty { border: 2px dashed #222; border-radius: 12px; height: 110px; display: flex; align-items: center; justify-content: center; color: #222; }
+        .slot-empty {
+            border: 2px dashed #222; border-radius: 12px; height: 110px;
+            display: flex; align-items: center; justify-content: center; color: #222; font-size: 2em;
+        }
 
         .game-player-card {
             background: #2a2a2a; border-radius: 12px; padding: 10px; border: 2px solid #444;
-            cursor: pointer; position: relative; height: 110px; display: flex;
-            flex-direction: column; align-items: center; justify-content: center;
-            transition: all 0.2s; max-width: 140px; margin: 0 auto; width: 100%;
+            cursor: pointer; position: relative; height: 110px; width: 100%; max-width: 140px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: all 0.2s; margin: 0 auto;
         }
+        .game-player-card:hover { border-color: #666; transform: translateY(-2px); }
         .game-player-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
         .game-player-card .player-num { position: absolute; top: 5px; right: 8px; color: #f1c40f; font-size: 0.7em; font-weight: bold; }
-        .game-player-card p { font-size: 0.7em; margin: 8px 0 0 0; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.1; }
-
-        .game-player-card.is-me { border-color: white !important; border-width: 3px; }
-        .game-player-card.is-dead { opacity: 0.4; border-color: #222 !important; }
+        .game-player-card p {
+            font-size: 0.7em; margin: 8px 0 0 0; width: 100%;
+            overflow: hidden; text-overflow: ellipsis;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            line-height: 1.1; text-align: center; word-break: break-word;
+        }
+        .game-player-card.ready { border-color: #27ae60; }
+        .game-player-card.is-dead { border-color: #444 !important; opacity: 0.6; }
         .game-player-card.is-dead img { filter: grayscale(1); }
+        .game-player-card.is-dead p { color: #888 !important; }
+        .game-player-card.is-dead .player-num { color: #666 !important; }
 
-        /* TEAMMATE RED UI */
-        .game-player-card.is-teammate { border-color: #ff4d4d !important; }
-        .game-player-card.is-teammate .player-num { color: #ff4d4d !important; }
+        /* HUNT UI - TEAMMATE & MARKING */
+        .game-player-card.is-teammate { border-color: #ff4d4d !important; box-shadow: 0 0 15px rgba(255, 77, 77, 0.3); }
+        .game-player-card.is-teammate .player-num { color: #ff4d4d !important; text-decoration: underline; }
 
-        .mark-btn {
-            position: absolute; bottom: 5px; background: var(--primary); color: white;
-            border-radius: 15px; padding: 4px 10px; font-size: 0.6em; font-weight: bold;
-            display: none; z-index: 20; border: 1px solid white;
+        .mark-target-btn {
+            position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+            background: #e74c3c; color: white; padding: 4px 12px; border-radius: 20px;
+            font-size: 10px; font-weight: bold; border: 1px solid white;
+            cursor: pointer; z-index: 50; display: none; white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.5);
         }
 
-        /* OVERLAYS */
-        #loading-overlay { position: absolute; inset: 0; background: #0f0f0f; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        .role-popup { position: absolute; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 6000; display: none; align-items: center; justify-content: center; }
-        #night-overlay { position: absolute; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        #hunt-search-container {
+            position: absolute; top: var(--header-h); left: 50%; transform: translateX(-50%);
+            width: 80%; max-width: 400px; z-index: 2000; display: none;
+            padding: 10px; box-sizing: border-box;
+        }
+        #hunt-search-input {
+            width: 100%; padding: 10px 20px; border-radius: 25px; border: 1px solid #444;
+            background: rgba(0,0,0,0.85); color: white; backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
 
-        /* NAVBAR */
-        nav#bottom-nav { height: var(--nav-h); background: #151515; border-top: 1px solid #333; display: none; grid-template-columns: repeat(3, 1fr); padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75em; color: #aaa; cursor: pointer; }
-        .nav-item.active { color: var(--primary); font-weight: bold; position: relative; }
-        .nav-item.active::after { content: ""; position: absolute; bottom: 0; left: 20%; right: 20%; height: 4px; background: var(--primary); border-radius: 4px 4px 0 0; }
+        #hunt-rank-panel {
+            position: absolute; top: 150px; right: 20px; width: 220px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(15px);
+            border: 1px solid #333; border-radius: 20px; padding: 15px;
+            display: none; flex-direction: column; gap: 10px; z-index: 2500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .rank-title { font-size: 0.7em; color: #f1c40f; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .rank-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; color: #eee; }
+        .rank-mark-btn { background: #e74c3c; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.9em; cursor: pointer; }
+        .rank-mark-btn:disabled { background: #555; opacity: 0.5; cursor: not-allowed; }
 
+        .move-controls {
+            position: absolute; bottom: -5px; left: 0; right: 0; display: none;
+            justify-content: center; gap: 15px; z-index: 10;
+        }
+        .is-host-view .move-controls { display: flex; }
+        .move-btn {
+            background: #444; color: white; border-radius: 4px; padding: 2px 8px;
+            font-size: 10px; cursor: pointer; border: 1px solid #555;
+        }
+        .move-btn:hover { background: var(--primary); }
+
+        /* GALLERY & CARD VIEWER */
+        .gallery-card { background: #1a1a1a; border-radius: 12px; border: 2px solid #d4af37; overflow: hidden; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .gallery-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: center 95%; border-bottom: 2px solid #d4af37; }
+        .gallery-card h4 {
+            margin: 0;
+            color: #d4af37;
+            font-size: 0.8em;
+            font-family: 'Georgia', serif;
+            text-transform: uppercase;
+            padding: 5px;
+            height: 45px; /* Chiều cao cố định tương đương 2 dòng chữ */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+            line-height: 1.2;
+        }
+
+        #card-viewer { position: absolute; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .viewer-content { position: relative; height: 90vh; width: 90%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        /* 3D FLIP CARD LOGIC */
+        .viewer-card {
+            perspective: 1000px; background: transparent; width: 100%; height: auto; transition: transform 0.6s; transform-style: preserve-3d;
+        }
+        .viewer-card.flipped { transform: rotateY(180deg); }
+        .viewer-card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
+        .viewer-front, .viewer-back { position: relative; inset: 0; width: 100%; backface-visibility: hidden; background: #1a1a1a; border: 4px solid #d4af37; border-radius: 20px; overflow: hidden; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); }
+        .viewer-front { transform: rotateY(180deg); }
+        .viewer-back {
+            position: absolute; top: 0; left: 0; bottom: 0; right: 0; transform: rotateY(0deg);
+            background: #111; display: flex; align-items: center; justify-content: center;
+        }
+        .viewer-back::after { content: "MÔN SÓI LÀ"; color: #d4af37; font-family: 'Georgia', serif; letter-spacing: 4px; font-weight: bold; border: 2px solid #d4af37; padding: 20px; }
+
+        .viewer-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: center 95%; border-bottom: 3px solid #d4af37; }
+        .viewer-info { padding: 20px; text-align: center; }
+        .viewer-info h2 { color: #d4af37; margin: 0; font-family: 'Georgia', serif; text-transform: uppercase; }
+        .viewer-info p { font-size: 0.95em; color: #ccc; font-style: italic; margin-top: 10px; line-height: 1.5; }
+
+        /* FIXED NAV BUTTONS FOR MOBILE */
+        .viewer-nav { position: absolute; top: 40%; width: 100%; display: flex; justify-content: space-between; padding: 0 10px; box-sizing: border-box; pointer-events: none; z-index: 6005; }
+        .nav-btn {
+            background: rgba(0,0,0,0.6); color: white; width: 45px; height: 45px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.8em;
+            cursor: pointer; pointer-events: auto; border: 1px solid #d4af37; backdrop-filter: blur(5px);
+            padding-bottom: 5px;
+        }
+        .close-viewer { position: absolute; top: -50px; right: 0; color: white; font-size: 2.5em; cursor: pointer; pointer-events: auto; }
+
+        .role-popup { position: absolute; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .role-card-big { position: relative; width: 90%; max-width: 400px; transform-style: preserve-3d; transition: transform 0.6s; }
+
+        /* ACTION OVERLAY */
+        #action-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 0; pointer-events: none; z-index: 3000; }
+
+        .host-action-bar {
+            position: absolute; bottom: 20px; left: 20px;
+            background: rgba(20, 20, 20, 0.98); padding: 12px; border-radius: 20px; border: 2px solid #333;
+            pointer-events: auto; display: none; flex-direction: column; gap: 8px; width: 160px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .player-action-panel {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+            pointer-events: none;
+        }
+        .player-action-panel > * { pointer-events: auto; }
+
+        .self-card-mini { background: rgba(26, 26, 26, 0.95); border: 2px solid white; border-radius: 20px; padding: 5px 12px; display: flex; align-items: center; gap: 10px; min-width: 130px; backdrop-filter: blur(10px); box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+        .self-card-mini img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid white; }
+        #self-mini-num { margin: 0; font-size: 1.1em; color: #27ae60; font-weight: bold; text-decoration: underline; }
+
+        .role-badge-mini {
+            background: rgba(0,0,0,0.8); border: 1px solid #d4af37; border-radius: 12px;
+            padding: 4px 12px; color: #d4af37; font-size: 0.7em; font-weight: bold;
+            cursor: pointer; display: none; margin-bottom: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-transform: uppercase;
+        }
+
+        .game-player-card.is-me { border: 3px solid white !important; }
+        .game-player-card p { font-size: 0.75em; margin: 8px 0 0 0; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; width: 100%; box-sizing: border-box; }
+        input { padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
+        button { padding: 15px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; margin: 10px 0; transition: transform 0.1s; }
+        button:active { transform: scale(0.98); }
         .ghost-btn { background: rgba(255,255,255,0.05) !important; color: var(--primary) !important; border: 1px solid rgba(231, 76, 60, 0.3) !important; }
-        .action-overlay-fixed { position: absolute; bottom: 0; left: 0; right: 0; height: 0; pointer-events: none; z-index: 3000; }
-        .player-panel { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: none; }
-        .player-panel > * { pointer-events: auto; }
+        .ghost-btn:hover { background: rgba(255,255,255,0.1) !important; }
+        .kick-btn { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #111; z-index: 5; cursor: pointer; }
+
+        /* LOADING OVERLAY */
+        #loading-overlay {
+            position: absolute; inset: 0; background: #0f0f0f; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        .spinner { width: 50px; height: 50px; border: 4px solid #1a1a1a; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ANIMATED DOTS */
+        .dots::after {
+            content: '';
+            animation: loading-dots 1.5s infinite;
+        }
+        @keyframes loading-dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+        }
     </style>
 </head>
 <body>
     <div id="app-root">
         <aside id="dev-sidebar">
-            <label style="color:#27ae60; font-size: 0.7em; font-weight: bold; margin-bottom: 10px;">DEVELOPER CONSOLE</label>
-            <div id="dev-logs" style="background:black; color:#27ae60; font-family:monospace; padding:10px; flex:1; overflow-y:auto; font-size:0.7em; border-radius:8px; margin-bottom:15px; border:1px solid #222;">> Sẵn sàng...</div>
+            <label style="color:#27ae60; font-size: 0.7em; font-weight: bold; margin-bottom: 10px; display: block;">DEVELOPER CONSOLE</label>
+            <div id="dev-logs" style="background: black; color: #27ae60; font-family: monospace; padding: 10px; flex: 1; overflow-y: auto; font-size: 0.7em; border-radius: 8px; margin-bottom: 15px; text-align: left; border: 1px solid #222;">> Sẵn sàng...</div>
             <input type="text" id="devConsole" placeholder="Lệnh /..." onkeydown="if(event.key==='Enter') executeDevCommand()">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <button onclick="addBot()" style="background:#27ae60; padding:10px; margin:0">+BOT</button>
                 <button onclick="devCommand('/next')" style="background:#f39c12; padding:10px; margin:0">NEXT</button>
                 <button onclick="devCommand('/start')" style="background:#2980b9; padding:10px; margin:0">START</button>
@@ -143,76 +303,113 @@
 
         <div id="main-content">
             <div id="loading-overlay">
-                <div class="spinner" style="width:50px; height:50px; border:4px solid #1a1a1a; border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite;"></div>
-                <h3 style="color:var(--primary); margin-top:20px; letter-spacing:2px; font-size:0.9em;">ĐANG KẾT NỐI<span class="dots"></span></h3>
+                <div class="spinner"></div>
+                <h3 style="color: var(--primary); margin-top: 20px; letter-spacing: 2px; font-size: 0.9em;">ĐANG KẾT NỐI ĐẾN MÁY CHỦ<span class="dots"></span></h3>
+                <p id="loading-status" style="color: #666; font-size: 0.7em; margin-top: 10px;">Đang chuẩn bị dữ liệu bộ bài<span class="dots"></span></p>
             </div>
 
-            <div id="search-bar-container">
-                <input type="text" id="hunt-search" placeholder="Tìm mồi: #số hoặc @tên..." oninput="handleHuntSearch(this.value)">
+            <!-- HUNT UI: SEARCH & RANKING -->
+            <div id="hunt-search-container">
+                <input type="text" id="hunt-search-input" placeholder="Tìm mục tiêu: #số hoặc @tên..." oninput="handleHuntSearch(this.value)">
             </div>
 
             <div id="hunt-rank-panel">
-                <label style="font-size:0.6em; color:#f1c40f; font-weight:bold; margin-bottom:5px;">BẢNG SĂN MỒI</label>
-                <div id="rank-list" style="max-height: 200px; overflow-y: auto;"></div>
+                <div class="rank-title">BẢNG SĂN MỒI (RANKING)</div>
+                <div id="rank-list-content" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Sẽ được render bằng JS -->
+                </div>
+            </div>
+
+            <!-- CARD VIEWER -->
+            <div id="card-viewer">
+                <div class="viewer-content">
+                    <div class="close-viewer" onclick="closeCardViewer()">×</div>
+                    <div class="viewer-card" id="mainViewerCard">
+                        <div class="viewer-back"></div>
+                        <div class="viewer-front">
+                            <img id="viewer-img" src=""><div class="viewer-info"><h2 id="viewer-title">ROLE</h2><p id="viewer-desc">Description</p></div>
+                        </div>
+                    </div>
+                    <div class="viewer-nav">
+                        <div class="nav-btn" onclick="prevCard()">‹</div>
+                        <div class="nav-btn" onclick="nextCard()">›</div>
+                    </div>
+                </div>
             </div>
 
             <div id="role-popup" class="role-popup"></div>
-            <div id="night-overlay">
-                <h1 style="font-size:5em; margin:0;">🌑</h1>
+
+            <div id="night-overlay" style="position:absolute; inset:0; background:#000; z-index:5000; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+                <h1 style="font-size: 5em; margin:0;">🌑</h1>
                 <h2 style="color:var(--primary); letter-spacing:3px; margin-top:20px;">TRỜI TỐI RỒI...</h2>
-                <p id="night-overlay-sub" style="color:#444; font-style:italic;">Làng đang chìm trong giấc ngủ</p>
+                <p id="night-overlay-sub" style="color:#444; font-style:italic; margin-top:10px;">Làng đang chìm trong giấc ngủ</p>
             </div>
 
             <header>
-                <div id="back-btn" onclick="goBack()" style="position:absolute; left:15px; bottom:15px; cursor:pointer; display:none; font-size:1.5em;">←</div>
-                <div id="header-status-left" style="position:absolute; left:55px; bottom:18px; display:none; align-items:center; gap:6px; font-size:0.7em; color:#f1c40f; font-weight:bold;">
+                <div id="back-btn" onclick="goBack()" style="position: absolute; left: 15px; bottom: 15px; cursor: pointer; display: none; font-size: 1.5em;">←</div>
+
+                <!-- STATUS TRÁI: ICON + PHASE -->
+                <div id="header-status-left" style="position: absolute; left: 55px; bottom: 18px; display: none; align-items: center; gap: 6px; font-size: 0.75em; color: #f1c40f; font-weight: bold;">
                     <span id="header-phase-icon"></span> <span id="header-phase-text"></span>
-                    <div id="night-turn-indicator" style="margin-left:10px; background:rgba(231,76,60,0.2); padding:2px 8px; border-radius:4px; border:1px solid var(--primary); color:var(--primary); display:none;">Lượt của \NONE</div>
+                    <div id="night-turn-indicator" style="margin-left: 10px; background: rgba(231, 76, 60, 0.2); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--primary); color: var(--primary); display: none;">Lượt của \NONE</div>
                 </div>
+
                 <h2>Môn Sói Là</h2>
-                <div id="header-status-right" style="position:absolute; right:85px; bottom:18px; display:none; align-items:center; gap:6px; font-size:0.7em; color:var(--primary); font-family:monospace; font-weight:bold;">
+
+                <!-- STATUS PHẢI: CLOCK + TIMER -->
+                <div id="header-status-right" style="position: absolute; right: 85px; bottom: 18px; display: none; align-items: center; gap: 6px; font-size: 0.75em; color: var(--primary); font-family: monospace; font-weight: bold;">
                     <span>🕒</span> <span id="header-timer">00:00</span>
                 </div>
-                <div style="position:absolute; right:15px; bottom:15px; display:flex; gap:15px; align-items:center;">
-                    <div onclick="showDevLogin()" style="opacity:0.00005; cursor:pointer;">🛠️</div>
-                    <div onclick="toggleFullscreen()" style="opacity:0.5; cursor:pointer; font-size:1.2em;">⛶</div>
+
+                <div style="position: absolute; right: 15px; bottom: 15px; display: flex; gap: 15px; align-items: center;">
+                    <div onclick="showDevLogin()" style="opacity: 0.00005; cursor: pointer;">🛠️</div>
+                    <div onclick="toggleFullscreen()" style="opacity: 1; cursor: pointer; font-size: 1.2em;">⛶</div>
                 </div>
             </header>
 
             <main id="scroll-area">
                 <div class="container">
-                    <div id="page-home" class="page active"><div id="home-auth-section" class="card" style="text-align:center;"><h3>Đang tải...</h3></div></div>
-                    <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
+                    <div id="page-home" class="page active"><div id="home-auth-section" class="card"><h3>Đang tải...</h3></div></div>
+                    <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng (6 số)..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
                     <div id="page-profile" class="page">
-                        <div class="card" style="align-items:center; display:flex; flex-direction:column;">
-                            <div style="position:relative; cursor:pointer;" onclick="toggleAvatarEdit()">
-                                <img id="profile-ava-preview" src="" width="200" height="200" style="border-radius:50%; border:5px solid var(--primary); object-fit:cover; transition: border-radius 0.3s;">
-                                <div style="position:absolute; bottom:10px; right:10px; background:var(--primary); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:3px solid var(--card);">📷</div>
+                        <div class="card" style="align-items: center; display: flex; flex-direction: column;">
+                            <div style="position: relative; cursor: pointer;" onclick="toggleAvatarEdit()">
+                                <img id="profile-ava-preview" src="" width="200" height="200" style="border-radius: 50%; border: 5px solid var(--primary); object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: border-radius 0.3s ease;">
+                                <div style="position: absolute; bottom: 10px; right: 10px; background: var(--primary); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; border: 3px solid var(--card);">📷</div>
                             </div>
-                            <div id="avatar-options" style="display:none; flex-direction:column; gap:10px; margin-top:20px; width:100%;">
-                                <input type="file" id="fileAvatar" onchange="previewFileAvatar(this)">
-                                <input type="text" id="editAvatar" placeholder="URL ảnh...">
-                                <button onclick="toggleAvatarEdit()" class="ghost-btn">Đóng</button>
+                            <div id="avatar-options" style="display: none; flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; animation: fadeIn 0.3s ease;">
+                                <label style="font-size:0.7em; color:#888; text-align: left;">CẬP NHẬT ẢNH ĐẠI DIỆN</label>
+                                <input type="file" id="fileAvatar" onchange="previewFileAvatar(this)" style="font-size: 0.8em; padding: 8px;">
+                                <input type="text" id="editAvatar" placeholder="Dán URL ảnh vào đây..." style="margin-top: 0;">
+                                <button onclick="toggleAvatarEdit()" class="ghost-btn" style="padding: 10px; font-size: 0.8em;">Đóng</button>
                             </div>
-                            <input type="text" id="editName" placeholder="Tên hiển thị">
-                            <button onclick="saveProfile()" style="background:#27ae60; width:100%;">LƯU HỒ SƠ</button>
-                            <button onclick="logout()" style="background:#e74c3c; width:100%;">ĐĂNG XUẤT</button>
+                            <div style="text-align:left; width: 100%; margin-top: 25px;">
+                                <label style="font-size:0.8em;color:#888; font-weight: bold; letter-spacing: 1px;">TÊN HIỂN THỊ</label>
+                                <input type="text" id="editName" placeholder="Nhập tên mới...">
+                            </div>
+                            <div style="display: flex; flex-direction: column; width: 100%; margin-top: 20px; gap: 15px;">
+                                <button onclick="saveProfile()" style="background:#27ae60; margin: 0; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);">LƯU HỒ SƠ</button>
+                                <button onclick="logout()" style="background: #e74c3c; color: white; margin: 0; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);">ĐĂNG XUẤT</button>
+                            </div>
                         </div>
                     </div>
                     <div id="page-lobby" class="page">
-                        <div class="card" style="flex:1; overflow-y:auto; margin-bottom:80px;">
+                        <div class="card" style="flex:1; overflow-y:auto; margin-bottom: 80px;">
                             <h2>Mã: <span id="displayRoomCode" style="color:#f1c40f">######</span></h2>
-                            <div id="player-count-badge" style="background:#333; padding:5px 10px; border-radius:10px; font-size:0.8em; margin-bottom:10px;">Đang chờ...</div>
+                            <div id="player-count-badge" style="background:#333;padding:5px 10px;border-radius:10px;font-size:0.8em;margin-bottom:10px">Đang chờ...</div>
                             <div id="game-grid" class="game-grid"></div>
                         </div>
                     </div>
                     <div id="page-gallery" class="page">
-                        <h2 style="color:#f1c40f; margin-bottom:30px;">Bộ Bài</h2>
-                        <div id="gallery-villagers" class="gallery-grid"></div>
-                        <div id="gallery-wolves" class="gallery-grid"></div>
-                        <div id="gallery-3rd" class="gallery-grid"></div>
+                        <h2 style="color:#f1c40f; margin-bottom: 30px;">Bộ Bài Môn Sói Là</h2>
+                        <h3 style="color: #4da6ff; text-align: left; border-left: 5px solid #4da6ff; padding-left: 15px; margin: 20px 0;">PHE DÂN LÀNG</h3>
+                        <div class="gallery-grid" id="gallery-villagers"></div>
+                        <h3 style="color: #ff4d4d; text-align: left; border-left: 5px solid #ff4d4d; padding-left: 15px; margin: 40px 0 20px 0;">PHE MA SÓI</h3>
+                        <div class="gallery-grid" id="gallery-wolves"></div>
+                        <h3 style="color: #f1c40f; text-align: left; border-left: 5px solid #f1c40f; padding-left: 15px; margin: 40px 0 20px 0;">PHE THỨ 3</h3>
+                        <div class="gallery-grid" id="gallery-3rd"></div>
                     </div>
-                    <div id="page-dev-login" class="page"><div class="card"><h3>Admin</h3><input type="password" id="devPassword"><button onclick="checkDevPassword()">Kích hoạt</button></div></div>
+                    <div id="page-dev-login" class="page"><div class="card"><h3>Developer Portal</h3><input type="password" id="devPassword" placeholder="Mật khẩu..."><button onclick="checkDevPassword()">Kích hoạt</button></div></div>
                 </div>
             </main>
 
@@ -222,137 +419,289 @@
                 <div id="nav-prof" class="nav-item" onclick="navigateTo('page-profile')"><span>👤</span>Hồ sơ</div>
             </nav>
 
-            <div class="action-overlay-fixed">
+            <div id="action-overlay">
                 <div id="host-action-bar" class="host-action-bar">
-                    <select id="ratioSelect" style="background:#222; color:white; border-radius:8px; padding:5px;"><option value="0.25">Newbie</option><option value="0.33">Standard</option></select>
-                    <button id="btnStartGame" onclick="distributeRoles()" style="background:#27ae60; padding:10px;">BẮT ĐẦU</button>
-                    <button id="btnNextPhase" onclick="nextPhase()" style="display:none; background:#f39c12; padding:10px;">TIẾP TỤC</button>
+                    <select id="ratioSelect" style="width:100%; background:#222; color:white; border-radius:8px; padding:5px;"><option value="0.25">Newbie (25% sói)</option><option value="0.33">Standard (33% sói)</option></select>
+                    <button id="btnStartGame" onclick="distributeRoles()" style="background:#27ae60; padding:10px; margin:0;">BẮT ĐẦU</button>
+                    <button id="btnNextPhase" onclick="nextPhase()" style="display:none; background:#f39c12; padding:10px; margin:0;">TIẾP TỤC</button>
                 </div>
-                <div class="player-panel">
-                    <div id="lobby-controls" style="display:none; flex-direction:column; gap:8px; width:140px;">
-                        <button id="btnReady" onclick="toggleReady()" style="background:#2980b9;">SẴN SÀNG</button>
-                        <button onclick="goBack()" class="ghost-btn">RỜI PHÒNG</button>
+                <div class="player-action-panel">
+                    <div id="action-buttons" class="action-buttons"></div>
+                    <div id="lobby-controls" style="display:none; flex-direction:column; gap:8px; width: 140px;">
+                        <button id="btnReady" onclick="toggleReady()" style="background:#2980b9; margin:0; padding:12px; font-size: 0.85em; box-shadow: 0 5px 15px rgba(41, 128, 185, 0.4);">SẴN SÀNG</button>
+                        <button onclick="goBack()" class="ghost-btn" style="color:var(--primary); font-size: 0.85em; margin:0; padding:8px; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(0,0,0,0.6) !important;">RỜI PHÒNG</button>
                     </div>
-                    <div id="role-badge-mini" class="role-badge-mini" onclick="displayMyRole(myRoleData)"></div>
-                    <div class="self-card-mini"><img id="self-mini-ava" src=""><div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">User</p></div></div>
+                    <div id="role-badge-mini" class="role-badge-mini" onclick="displayMyRole(myRoleData)">Xem vai</div>
+                    <div class="self-card-mini"><img id="self-mini-ava" src=""><div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">Name</p></div></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        let myId, myName, myAvatar, realId, realName, realAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY', hasMarkedThisNight = false;
+        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY';
+        let realId, realName, realAvatar;
+        let hasMarkedThisNight = false; // Cờ khóa hành động đêm
 
         const allRoles = [
-            { role: 'WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng.' },
-            { role: 'VILLAGER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.png', description: 'Dân Làng - Bảo vệ ngôi làng.' },
-            { role: 'SEER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theseer.png', description: 'Tiên Tri - Soi phe 1 người.' },
-            { role: 'GUARDIAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theguardian.png', description: 'Bảo Vệ - Miễn nhiễm Sói đêm đó.' },
+            { role: 'WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
+            { role: 'VILLAGER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.png', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
+            { role: 'SEER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theseer.png', description: 'Tiên Tri - Soi phe 1 người mỗi đêm.' },
+            { role: 'GUARDIAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theguardian.png', description: 'Bảo Vệ - Miễn nhiễm with Sói đêm đó.' },
             { role: 'WITCH', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewitch.png', description: 'Phù Thủy - Độc và Cứu.' },
             { role: 'HUNTER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thehunter.png', description: 'Thợ Săn - Kéo theo người chết cùng.' },
             { role: 'RUSSIAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/therussianpng.png', description: 'Người Nga - Gấu báo Sói.' },
-            { role: 'THREE_BROTHERS', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thethreebrothers.png', description: '3 Anh Em.' },
-            { role: 'TWINS', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thetwins.png', description: '2 Chị Em.' },
+            { role: 'THREE_BROTHERS', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thethreebrothers.png', description: '3 Anh Em - Nhận mặt đêm 1.' },
+            { role: 'TWINS', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thetwins.png', description: '2 Chị Em - Báo thù.' },
             { role: 'CUPID', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thecupid.png', description: 'Cupid - Ghép đôi.' },
             { role: 'CELESTIAL_FOX', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thecelestialfox.png', description: 'Hồ Ly - Soi 3 người.' },
             { role: 'MOON_MAIDEN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/themoonmaiden.png', description: 'Nguyệt Nữ - Khóa chức năng.' },
             { role: 'PIPER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thepiper.png', description: 'Thổi Sáo - Thôi miên.' },
             { role: 'ELDER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theelder.png', description: 'Già Làng - Giáp 1 mạng.' },
             { role: 'CURSER_WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thecurserwerewolf.png', description: 'Sói Nguyền - Biến nạn nhân thành Sói.' },
-            { role: 'PROPHET_WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theprophetwerewolf.png', description: 'Sói Tiên Tri - Soi chức năng.' },
-            { role: 'DERP_WOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thederpwolf.png', description: 'Sói Ngu.' },
-            { role: 'LYCAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thelycan.png', description: 'Bán Sói.' }
+            { role: 'PROPHET_WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theprophetwerewolf.png', description: 'Sói Tiên Tri - Soi chức năng đối phương.' },
+            { role: 'DERP_WOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thederpwolf.png', description: 'Sói Ngu - Có quyền báo thù.' },
+            { role: 'LYCAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thelycan.png', description: 'Bán Sói - Ban đầu phe Dân, khi bị Sói cắn sẽ hóa Sói thực sự.' }
         ];
 
-        async function getCachedImageUrl(url) { if (!('caches' in window)) return url; const cache = await caches.open('monsoila-assets-v1'); const response = await cache.match(url); if (response) { const b = await response.blob(); return URL.createObjectURL(b); } return url; }
-        async function preloadImages() { if (!('caches' in window)) return; const cache = await caches.open('monsoila-assets-v1'); allRoles.forEach(r => { cache.match(r.image).then(m => { if (!m) cache.add(r.image).catch(e => {}); }); }); }
-        function showLoading(t, s) { const o = document.getElementById('loading-overlay'); o.style.display='flex'; o.querySelector('h3').innerText=t; }
-        function hideLoading() { const o = document.getElementById('loading-overlay'); o.style.display='none'; }
+        const routes = {'/home': 'page-home','/dashboard': 'page-dashboard','/gallery': 'page-gallery','/lobby': 'page-lobby','/profile': 'page-profile','/dev-login': 'page-dev-login'};
+
+        async function getCachedImageUrl(url) {
+            if (!('caches' in window)) return url;
+            const cache = await caches.open('monsoila-assets-v1');
+            const response = await cache.match(url);
+            if (response) {
+                const blob = await response.blob();
+                return URL.createObjectURL(blob);
+            }
+            return url;
+        }
+
+        async function preloadImages() {
+            if (!('caches' in window)) return;
+            const cache = await caches.open('monsoila-assets-v1');
+            allRoles.forEach(r => {
+                cache.match(r.image).then(match => { if (!match) cache.add(r.image).catch(e => {}); });
+            });
+        }
+
+        function showLoading(title, statusMsg) {
+            const overlay = document.getElementById('loading-overlay');
+            if (!overlay) return;
+            overlay.style.display = 'flex'; overlay.style.opacity = '1'; overlay.style.visibility = 'visible';
+            overlay.querySelector('h3').innerHTML = title + '<span class="dots"></span>';
+            document.getElementById('loading-status').innerHTML = statusMsg + '<span class="dots"></span>';
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if (!overlay) return;
+            overlay.style.opacity = '0'; overlay.style.visibility = 'hidden';
+            setTimeout(() => { overlay.style.display = 'none'; }, 600);
+        }
 
         function navigateTo(pId, updateHistory = true) {
-            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(pId).classList.add('active');
-            const b = document.getElementById('back-btn'); b.style.display = (pId==='page-home'||pId==='page-dashboard')?'none':'block';
-            if(pId!=='page-gallery'&&pId!=='page-lobby') lastPage=pId;
-            const nav=document.getElementById('bottom-nav'); nav.style.display = (pId==='page-lobby'||pId==='page-home')?'none':'grid';
+            const b = document.getElementById('back-btn'); if(b) b.style.display = (pId==='page-home'||pId==='page-dashboard')?'none':'block';
+            if(pId!=='page-gallery'&&pId!=='page-dev-login'&&pId!=='page-profile'&&pId!=='page-lobby') lastPage=pId;
+            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+            const target = document.getElementById(pId); if (target) target.classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+            if(pId==='page-dashboard') document.getElementById('nav-dash').classList.add('active');
+            if(pId==='page-gallery') document.getElementById('nav-gall').classList.add('active');
+            if(pId==='page-profile') document.getElementById('nav-prof').classList.add('active');
+            const nav=document.getElementById('bottom-nav'); if(pId==='page-lobby'||pId==='page-home') nav.style.display='none'; else nav.style.display='grid';
+            updateActionButtons();
             if(pId==='page-gallery') showGallery();
             updateProfileUI();
             if (updateHistory) {
-                let path = pId === 'page-lobby' ? `/lobby/code=${currentRoomCode}` : Object.keys(routes).find(k=>routes[k]===pId) || '/home';
+                let path = Object.keys(routes).find(key => routes[key] === pId) || '/home';
+                if (pId === 'page-lobby' && currentRoomCode) path = `/lobby/code=${currentRoomCode}`;
                 history.pushState({ pageId: pId, roomCode: currentRoomCode }, '', path);
             }
         }
 
-        function updatePlayerListUI(ps) {
-            playersCache = ps; const g = document.getElementById('game-grid');
-            const me = ps.find(p => p.id === myId); if (me) isHost = me.isHost;
-            const isWolfRole = (r) => r && ["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF", "LYCAN"].includes(r.toUpperCase());
-            const myR = myRoleData ? (typeof myRoleData.role === 'string' ? myRoleData.role : myRoleData.role.name) : "";
-            const iAmWolf = isWolfRole(myR);
+        window.onpopstate = (event) => { if (event.state && event.state.pageId) navigateTo(event.state.pageId, false); else handleInitialRoute(); };
 
-            // SPECIAL SORTING FOR HUNT PHASE
+        function handleInitialRoute() {
+            const path = window.location.pathname;
+            if (path.startsWith('/lobby/code=')) { attemptAutoJoin(path.split('code=')[1]); return; }
+            navigateTo(routes[path] || 'page-home', false);
+        }
+
+        function goBack() {
+            const cur=document.querySelector('.page.active').id;
+            if(cur==='page-lobby') showConfirm("Rời?", leaveRoom);
+            else if (history.length > 1) history.back();
+            else navigateTo(lastPage);
+        }
+
+        function handleCredentialResponse(res) { const p=JSON.parse(atob(res.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); myId=p.sub; myName=p.name; myAvatar=p.picture; const s=localStorage.getItem('werewolf_user'); if(s){ const u=JSON.parse(s); myName=u.name; myAvatar=u.avatar; } updateProfileUI(); localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateHomeUI(); }
+
+        function updateProfileUI() {
+            const names=['dash-name','editName','self-mini-name']; names.forEach(id=>{const e=document.getElementById(id); if(e)(e.value!==undefined?e.value=myName:e.innerText=myName);});
+            const avas=['profile-ava-preview','self-mini-ava']; avas.forEach(id=>{const e=document.getElementById(id); if(e)e.src=myAvatar;});
+            const ed=document.getElementById('editAvatar'); if(ed)ed.value=myAvatar;
+        }
+
+        function updateHomeUI() {
+            const s=document.getElementById('home-auth-section'); if(!s) return;
+            if(myId){ s.innerHTML=`<img src="${myAvatar}" width="80" style="border-radius:50%; border:3px solid var(--primary);"><h3 style="margin:10px 0;">${myName}</h3><button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer;">Đăng xuất</p>`; }
+            else { s.innerHTML=`<h3>Vào game ngay</h3><div id="google-btn"></div>`; if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'rectangular'}); } }
+        }
+
+        function logout() { localStorage.removeItem('werewolf_user'); myId=null; updateHomeUI(); navigateTo('page-home'); }
+
+        function showNotification(message) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.3s ease;';
+            overlay.innerHTML = `<div class="card" style="max-width:320px; text-align:center; border:2px solid var(--primary); box-shadow: 0 0 30px var(--primary);"><h3 style="color:var(--primary); margin-top:0;">THÔNG BÁO</h3><p style="margin:20px 0; font-size:0.9em; line-height:1.5;">${message}</p><button onclick="this.parentElement.parentElement.remove()" style="margin:0; padding:12px;">XÁC NHẬN</button></div>`;
+            document.body.appendChild(overlay);
+        }
+
+        function showConfirm(message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.3s ease;';
+            overlay.innerHTML = `<div class="card" style="max-width:320px; text-align:center; border:2px solid var(--primary); box-shadow: 0 0 30px var(--primary);"><h3 style="color:var(--primary); margin-top:0;">XÁC NHẬN</h3><p style="margin:20px 0; font-size:0.9em; line-height:1.5;">${message}</p><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><button onclick="this.parentElement.parentElement.parentElement.remove()" style="margin:0; padding:12px; background:#555;">HỦY</button><button id="confirmBtn" style="margin:0; padding:12px;">ĐỒNG Ý</button></div></div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('#confirmBtn').onclick = () => { overlay.remove(); onConfirm(); };
+        }
+
+        function showDevLogin() { navigateTo('page-dev-login'); }
+        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else showNotification("Mật khẩu sai!"); }
+        function toggleDevBar() { document.getElementById('dev-sidebar').classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
+        function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
+        function toggleAvatarEdit() { const o = document.getElementById('avatar-options'); const img = document.getElementById('profile-ava-preview'); if (o.style.display === 'none' || o.style.display === '') { o.style.display = 'flex'; img.style.borderRadius = '20px'; } else { o.style.display = 'none'; img.style.borderRadius = '50%'; } }
+        function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e => {}); else if (document.exitFullscreen) document.exitFullscreen(); }
+        function previewFileAvatar(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = (e) => { document.getElementById('profile-ava-preview').src = e.target.result; }; r.readAsDataURL(input.files[0]); } }
+
+        window.onload=()=>{
+            const s=localStorage.getItem('werewolf_user');
+            if(s){ const u=JSON.parse(s); myId=u.id; myName=u.name; myAvatar=u.avatar; updateProfileUI(); }
+            realId = myId; realName = myName; realAvatar = myAvatar;
+            if(localStorage.getItem('werewolf_dev_auth') === 'true'){ isDev = true; document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display = 'flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); }
+            updateHomeUI(); handleInitialRoute(); preloadImages(); hideLoading();
+        };
+
+        function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); showNotification("Hồ sơ đã cập nhật!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
+        async function createRoom() { showLoading("ĐANG KHỞI TẠO", "Chuẩn bị sảnh..."); const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); setupRoom(await res.json(), true); setTimeout(hideLoading, 500); }
+        async function joinRoom() { const c=document.getElementById('roomCodeInput').value; showLoading("ĐANG GIA NHẬP", "Kết nối phòng " + c); const res=await fetch(`/join-room/${c}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); if(res.ok) { setupRoom(await res.json(), false); setTimeout(hideLoading, 500); } else { hideLoading(); showNotification("Lỗi kết nối!"); } }
+
+        async function attemptAutoJoin(code) {
+            showLoading("TỰ ĐỘNG GIA NHẬP", "Tìm kiếm phòng " + code);
+            if (!myId) { const s = localStorage.getItem('werewolf_user'); if (s) { const u = JSON.parse(s); myId = u.id; myName = u.name; myAvatar = u.avatar; updateProfileUI(); updateHomeUI(); } }
+            if (!myId) { hideLoading(); showNotification("Đăng nhập trước!"); navigateTo('page-home'); return; }
+            const res = await fetch(`/join-room/${code}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: myId, name: myName, avatar: myAvatar }) });
+            if (res.ok) { setupRoom(await res.json(), false); setTimeout(hideLoading, 500); } else { hideLoading(); showNotification("Không thể tự join!"); navigateTo('page-dashboard'); }
+        }
+
+        function leaveRoom() { if(currentRoomCode) fetch(`/leave-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId})}); currentRoomCode=null; myRoleData=null; if(socket) socket.close(); clearInterval(countdownInterval); document.getElementById('header-status-left').style.display = 'none'; document.getElementById('header-status-right').style.display = 'none'; document.getElementById('role-badge-mini').style.display = 'none'; navigateTo('page-dashboard'); }
+        function setupRoom(r, h) { currentRoomCode=r.code; isHost=h; currentPhase = r.phase || 'LOBBY'; document.getElementById('displayRoomCode').innerText=r.code; document.getElementById('host-action-bar').style.display=isHost?'flex':'none'; document.getElementById('lobby-controls').style.display = 'flex'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; connectWebSocket(); navigateTo('page-lobby', true); refreshPlayers(); }
+        function connectWebSocket() { const p=window.location.protocol==='https:'?'wss:':'ws:'; socket=new WebSocket(`${p}//${window.location.host}/ws/${myId}`); socket.onmessage=(e)=>{ const m=JSON.parse(e.data); if(m.type==="PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(m.data)); else if(m.type==="YOUR_ROLE") displayMyRole(JSON.parse(m.data)); else if(m.type==="PHASE_UPDATE") handlePhaseUpdate(m.data); else if(m.type==="WINNER") showWinnerOverlay(m.data); else if(m.type==="ANNOUNCEMENT") { announce(m.data); logDev(m.data); } else if(m.type==="KICKED"){ showNotification(m.data); setTimeout(() => window.location.reload(), 2000); } }; }
+
+        function showWinnerOverlay(winner) {
+            const transOverlay = document.createElement('div');
+            transOverlay.style.cssText = 'position:absolute; inset:0; background:rgba(0,0,0,0.9); z-index:20000; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;';
+            const color = winner === "WEREWOLF_TEAM" ? "#ff4d4d" : "#4da6ff";
+            const text = winner === "WEREWOLF_TEAM" ? "PHE MA SÓI THẮNG" : (winner === "VILLAGER_TEAM" ? "PHE DÂN LÀNG THẮNG" : "PHE THỨ 3 THẮNG");
+            transOverlay.innerHTML = `<h1 style="color:${color}; letter-spacing:10px; font-size:3em; text-shadow: 0 0 50px ${color};">${text}</h1><button onclick="location.reload()" style="margin-top:40px;">VỀ SẢNH CHỜ</button>`;
+            document.getElementById('main-content').appendChild(transOverlay);
+        }
+
+        function updatePlayerListUI(ps) {
+            playersCache = ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
+            const me = ps.find(p => p.id === myId);
+            if (me) { isHost = me.isHost; document.getElementById('host-action-bar').style.display = isHost ? 'flex' : 'none'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
+
+            const isWolfTeam = (p) => p.trulyTeam === "Sói";
+            const me = ps.find(p => p.id === myId);
+            if (me) { isHost = me.isHost; document.getElementById('host-action-bar').style.display = isHost ? 'flex' : 'none'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
+
+            const iAmWolf = isWolfTeam(me);
+            const isHuntPhase = ["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(currentPhase);
+
+            // XỬ LÝ SORT VÀ UI SĂN MỒI
             let sortedPs = [...ps];
-            if (currentPhase === "WEREWOLF" || currentPhase === "CURSER_WEREWOLF" || currentPhase === "PROPHET_WEREWOLF") {
-                sortedPs.sort((a,b) => {
+            if (isHuntPhase) {
+                document.getElementById('hunt-search-container').style.display = 'block';
+                if (iAmWolf) {
+                    document.getElementById('hunt-rank-panel').style.display = 'flex';
+                    renderHuntRank(ps);
+                }
+
+                sortedPs.sort((a, b) => {
                     if (a.isDead !== b.isDead) return a.isDead ? 1 : -1;
-                    const aWolf = isWolfRole(a.role); const bWolf = isWolfRole(b.role);
-                    if (aWolf !== bWolf) return aWolf ? 1 : -1;
-                    return b.werewolfMark - a.werewolfMark;
+                    const aWolf = isWolfTeam(a); const bWolf = isWolfTeam(b);
+                    if (aWolf !== bWolf) return aWolf ? 1 : -1; // Sói xuống cuối
+                    return (b.werewolfMark || 0) - (a.werewolfMark || 0); // Rank theo vote
                 });
-                document.getElementById('search-bar-container').style.display = 'block';
-                if (iAmWolf) document.getElementById('hunt-rank-panel').style.display = 'flex';
-                updateHuntRankList(sortedPs);
             } else {
-                document.getElementById('search-bar-container').style.display = 'none';
+                document.getElementById('hunt-search-container').style.display = 'none';
                 document.getElementById('hunt-rank-panel').style.display = 'none';
             }
 
-            g.innerHTML = sortedPs.map((p,i) => {
-                const isWolf = isWolfRole(p.role);
-                const showTeammate = iAmWolf && isWolf;
+            if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
+
+            let html = sortedPs.map((p, i) => {
+                const isWolf = isWolfTeam(p);
+                const showTeammate = iAmWolf && isWolf && p.id !== myId;
+                const originalIdx = ps.findIndex(x => x.id === p.id);
+
                 return `
-                <div id="player-card-${p.id}" class="game-player-card ${p.id===myId?'is-me':''} ${p.isDead?'is-dead':''} ${showTeammate?'is-teammate':''}"
-                     onclick="handleCardClick('${p.id}')" ondblclick="handleCardDblClick('${p.id}')">
-                    ${isHost && currentPhase==='LOBBY' && p.id!==myId ? `<div class="kick-btn" onclick="kickPlayer('${p.id}')">×</div>` : ''}
-                    <div class="player-num">${p.isDead ? '#DIE' : '#'+(ps.indexOf(p)+1)}</div>
+                <div id="p-card-${p.id}" class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''} ${p.isDead?'is-dead':''} ${showTeammate?'is-teammate':''}"
+                     onclick="selectPlayerHunt('${p.id}')" ondblclick="markTarget('${p.id}')">
+                    ${isHost&&p.id!==myId&&currentPhase==='LOBBY'?`<div class="kick-btn" onclick="event.stopPropagation(); kickPlayer('${p.id}')">×</div>`:''}
+                    <div class="player-num">${p.isDead ? '#DIE' : '#'+(originalIdx+1)}</div>
                     <img src="${p.avatar}">
                     <p>${p.name}</p>
-                    <div id="mark-btn-${p.id}" class="mark-btn" onclick="markTarget('${p.id}')">ĐÁNH DẤU</div>
+                    ${p.isDead?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.4); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:#fff; z-index:5;">RIP</div>':''}
+                    ${isHuntPhase && !p.isDead && !isWolf ? `<div class="mark-target-btn" id="mark-btn-${p.id}" onclick="event.stopPropagation(); markTarget('${p.id}')">ĐÁNH DẤU</div>` : ''}
+                    <div class="move-controls" onclick="event.stopPropagation()"><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx-1})">◀</div><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx+1})">▶</div></div>
                 </div>`;
-            }).join('') + Array.from({length: Math.max(0, 18-ps.length)}).map((_,i)=>`<div class="slot-empty">${ps.length+i+1}</div>`).join('');
+            }).join('');
 
-            document.getElementById('lobby-controls').style.display = currentPhase === 'LOBBY' ? 'flex' : 'none';
-            document.getElementById('host-action-bar').style.display = (isHost && currentPhase==='LOBBY') ? 'flex' : 'none';
+            for(let i = ps.length; i < 18; i++) html += `<div class="slot-empty">${i+1}</div>`;
+            g.innerHTML = html; if(mi!==-1) document.getElementById('self-mini-num').innerText=`#${mi+1}`;
+
+            const b=document.getElementById('player-count-badge'); const c=ps.length; const rc=ps.filter(p=>p.isReady).length;
+            if(c<8) b.innerText=`Cần ${8-c} nữa`; else if(rc<c) b.innerText=`Chờ (${rc}/${c})`; else b.innerText="Đủ!";
+            if(isHost){ const btn=document.getElementById('btnStartGame'); btn.disabled=(c<8||rc<c); btn.innerText=c<8?`CẦN THÊM ${8-c}`:rc<c?`CHỜ SẴN SÀNG`:"BẮT ĐẦU"; }
+            updateActionButtons();
         }
 
-        function handleCardClick(id) {
-            if (hasMarkedThisNight) return;
-            document.querySelectorAll('.mark-btn').forEach(b => b.style.display = 'none');
+        function selectPlayerHunt(id) {
+            if (hasMarkedThisNight || !["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(currentPhase)) {
+                selectPlayer(id); return;
+            }
+            selectedPlayerId = (selectedPlayerId === id) ? null : id;
+            document.querySelectorAll('.mark-target-btn').forEach(b => b.style.display = 'none');
             const btn = document.getElementById(`mark-btn-${id}`);
-            if (btn) btn.style.display = 'block';
-        }
-
-        function handleCardDblClick(id) {
-            if (hasMarkedThisNight) return;
-            markTarget(id);
+            if (btn && selectedPlayerId === id) btn.style.display = 'block';
         }
 
         function markTarget(id) {
             if (hasMarkedThisNight) return;
+            const target = playersCache.find(p => p.id === id);
+            if (!target || target.isDead) return;
+
             socket.send(JSON.stringify({type: "WEREWOLF_VOTE", data: id}));
             hasMarkedThisNight = true;
-            document.querySelectorAll('.mark-btn').forEach(b => b.style.display = 'none');
+            document.querySelectorAll('.mark-target-btn').forEach(b => b.style.display = 'none');
             showNotification("Đã đánh dấu mục tiêu!");
+            updatePlayerListUI(playersCache);
         }
 
-        function updateHuntRankList(ps) {
-            const list = document.getElementById('rank-list');
-            const ranked = ps.filter(p => !p.isDead && p.werewolfMark > 0).sort((a,b) => b.werewolfMark - a.werewolfMark);
-            list.innerHTML = ranked.map(p => `
+        function renderHuntRank(ps) {
+            const content = document.getElementById('rank-list-content');
+            const ranked = ps.filter(p => !p.isDead && (p.werewolfMark || 0) > 0)
+                            .sort((a, b) => (b.werewolfMark || 0) - (a.werewolfMark || 0));
+
+            content.innerHTML = ranked.map(p => `
                 <div class="rank-item">
                     <span>#${playersCache.indexOf(p)+1} ${p.name} (${p.werewolfMark})</span>
-                    ${!hasMarkedThisNight ? `<span class="quick-mark-btn" onclick="markTarget('${p.id}')">CẮN</span>` : ''}
+                    <button class="rank-mark-btn" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>CẮN</button>
                 </div>
-            `).join('') || "<p style='font-size:0.6em; color:#666;'>Chưa có ai bị nhắm...</p>";
+            `).join('') || "<p style='font-size:0.6em; color:#666;'>Chưa có mục tiêu...</p>";
         }
 
         function handleHuntSearch(val) {
@@ -366,63 +715,178 @@
                 target = playersCache.find(p => p.name.toLowerCase().includes(name));
             }
             if (target) {
-                const el = document.getElementById(`player-card-${target.id}`);
-                if (el) el.scrollIntoView({behavior: 'smooth', block: 'center'});
+                const el = document.getElementById(`p-card-${target.id}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
+        }
+
+        function movePlayer(from, to) { if (to >= 0 && to < playersCache.length) socket.send(JSON.stringify({type: "SWAP_PLAYERS", data: `${from}|${to}`})); }
+        function kickPlayer(id) { socket.send(JSON.stringify({type:"KICK_PLAYER", data:id})); }
+        function selectPlayer(id) { selectedPlayerId=(selectedPlayerId===id)?null:id; updatePlayerListUI(playersCache); }
+        function updateActionButtons() { const c=document.getElementById('action-buttons'); const o=document.getElementById('action-overlay'); if(document.querySelector('.page.active').id!=='page-lobby'){ o.style.display='none'; return; } o.style.display='block'; c.innerHTML=''; if(selectedPlayerId && selectedPlayerId!==myId) c.innerHTML+=`<button class="action-btn" onclick="sendAction('VOTE')">🗳️ VOTE</button>`; }
+        function sendAction(t) { if(!selectedPlayerId) return; socket.send(JSON.stringify({type:t, data:selectedPlayerId})); selectedPlayerId=null; updatePlayerListUI(playersCache); }
+        async function refreshPlayers() { if(currentRoomCode){ const res=await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
+
+        async function showGallery() {
+            const villagers = allRoles.filter(r => !r.role.includes('WOLF') && r.role !== 'LYCAN' && r.role !== 'CUPID' && r.role !== 'PIPER');
+            const wolves = allRoles.filter(r => r.role.includes('WOLF') || r.role === 'LYCAN');
+            const third = allRoles.filter(r => r.role === 'CUPID' || r.role === 'PIPER');
+            displayRoles = [...villagers, ...wolves, ...third];
+            const renderGrid = async (list, targetId) => {
+                const htmlParts = await Promise.all(list.map(async (r) => { const displayUrl = await getCachedImageUrl(r.image); return `<div class="gallery-card" onclick="openCardViewer(${displayRoles.indexOf(r)})"><img src="${displayUrl}"><h4>${r.role.replace(/_/g, ' ')}</h4></div>`; }));
+                document.getElementById(targetId).innerHTML = htmlParts.join('');
+            };
+            await renderGrid(villagers, 'gallery-villagers'); await renderGrid(wolves, 'gallery-wolves'); await renderGrid(third, 'gallery-3rd');
+        }
+
+        async function openCardViewer(idx) {
+            currentViewerIndex = idx; const r = displayRoles[idx]; const card = document.getElementById('mainViewerCard'); card.classList.remove('flipped');
+            const displayUrl = await getCachedImageUrl(r.image); const img = document.getElementById('viewer-img'); img.src = displayUrl;
+            try { await img.decode(); } catch(e) {}
+            document.getElementById('viewer-title').innerText = r.role.replace(/_/g, ' '); document.getElementById('viewer-desc').innerText = r.description;
+            document.getElementById('card-viewer').style.display = 'flex'; setTimeout(() => card.classList.add('flipped'), 50);
+        }
+        function closeCardViewer() { document.getElementById('card-viewer').style.display = 'none'; }
+        async function nextCard() { currentViewerIndex = (currentViewerIndex + 1) % displayRoles.length; document.getElementById('mainViewerCard').classList.remove('flipped'); setTimeout(() => openCardViewer(currentViewerIndex), 300); }
+        async function prevCard() { currentViewerIndex = (currentViewerIndex - 1 + displayRoles.length) % displayRoles.length; document.getElementById('mainViewerCard').classList.remove('flipped'); setTimeout(() => openCardViewer(currentViewerIndex), 300); }
+
+        async function displayMyRole(role) {
+            if (!role) return; myRoleData = role; document.getElementById('role-badge-mini').style.display = 'block'; document.getElementById('role-badge-mini').innerText = role.role.replace(/_/g, ' ');
+            const popup = document.getElementById('role-popup'); popup.innerHTML = ''; popup.style.display = 'flex';
+            const rData = allRoles.find(r => r.role === role.role) || allRoles[1]; const displayUrl = await getCachedImageUrl(rData.image);
+            const content = document.createElement('div'); content.className = 'viewer-content';
+            content.innerHTML = `<div class="viewer-card" id="myRoleCard"><div class="viewer-back"></div><div class="viewer-front"><img id="my-role-img" src="${displayUrl}"><div class="viewer-info"><h3 style="color:#d4af37; margin:0; font-size: 0.7em;">VAI DIỄN CỦA BẠN</h3><h2 style="color:${role.role.includes('WOLF') ? '#ff4d4d' : '#4da6ff'}; margin: 5px 0;">${role.role.replace(/_/g, ' ')}</h2><p style="font-size: 0.85em;">"${role.description}"</p><button id="btnUnderstand" onclick="confirmUnderstand()" style="background:#e74c3c; width: 100%; margin-top: 15px; padding: 12px; font-weight:bold;">XÁC NHẬN</button></div></div></div>`;
+            popup.appendChild(content); const img = document.getElementById('my-role-img'); const card = document.getElementById('myRoleCard');
+            const triggerFlip = () => { setTimeout(() => { if(card) card.classList.add('flipped'); }, 100); };
+            if (img.complete) triggerFlip(); else { img.onload = triggerFlip; img.onerror = () => { img.src = 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.png'; triggerFlip(); }; }
+        }
+
+        function confirmUnderstand() {
+            const btn = document.getElementById('btnUnderstand'); btn.style.background = '#7f8c8d'; btn.innerText = 'ĐÃ HIỂU'; btn.disabled = true; socket.send(JSON.stringify({type:"I_UNDERSTAND", data:""}));
+            const card = document.getElementById('myRoleCard'); if (card) card.classList.remove('flipped');
+            setTimeout(() => { document.getElementById('role-popup').style.display = 'none'; }, 600);
         }
 
         function handlePhaseUpdate(data) {
-            const [ph, du, rs, day, tick] = data.split('|');
+            const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0; const tick=parts.length>4?parseInt(parts[4]) : 1;
+
+            // RESET FLAGS ON PHASE CHANGE
             if (currentPhase !== ph) {
-                hasMarkedThisNight = false; // Reset marking flag
-                // Transition effects
-                const transitionMap = { "LOBBY-PREPARING": "TRÒ CHƠI BẮT ĐẦU", "PREPARING-NIGHT": "ĐÊM 1 BẮT ĐẦU", "NIGHT-DAY": `NGÀY ${day} ĐẾN` };
-                const text = transitionMap[`${currentPhase}-${ph}`] || (ph === "DAY" ? `BÌNH MINH NGÀY ${day}` : "");
-                if (text) {
-                    const o = document.createElement('div');
-                    o.style.cssText = 'position:absolute; inset:0; background:rgba(0,0,0,0.85); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2s forwards; pointer-events:none;';
-                    o.innerHTML = `<h1 style="color:var(--primary); letter-spacing:5px; text-shadow:0 0 20px red;">${text}</h1>`;
-                    document.getElementById('main-content').appendChild(o); setTimeout(()=>o.remove(), 2500);
+                hasMarkedThisNight = false;
+                selectedPlayerId = null;
+            }
+
+            const nightRoles = ["WEREWOLF", "SEER", "WITCH", "GUARDIAN", "CUPID", "PIPER", "CELESTIAL_FOX", "MOON_MAIDEN", "ELDER", "THREE_BROTHERS", "TWINS", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"];
+            const isNightTurn = nightRoles.includes(ph); currentPhase = ph;
+            const left = document.getElementById('header-status-left'); const right = document.getElementById('header-status-right');
+            const turnInd = document.getElementById('night-turn-indicator'); const nightOverlay = document.getElementById('night-overlay');
+
+            if (currentPhase !== ph && ph !== "LOBBY") {
+                let transitionText = ""; let subText = "";
+                if (currentPhase === "LOBBY" && ph === "PREPARING") transitionText = "TRÒ CHƠI BẮT ĐẦU";
+                else if (isNightTurn) { transitionText = `LƯỢT CỦA ${ph.replace(/_/g, ' ')}`; subText = "MỜI THỨC GIẤC"; }
+                else if (ph === "DAY") { transitionText = `HẾT ĐÊM ${day}`; subText = `NGÀY ${day} ĐÃ ĐẾN`; }
+                else if (ph === "TRIAL_DEFENSE") transitionText = "PHIÊN BIỆN HỘ BẮT ĐẦU";
+                else if (ph === "TRIAL_VOTING") transitionText = "PHIÊN BỎ PHIẾU BẮT ĐẦU";
+                else if (currentPhase === "TRIAL_VOTING" && (ph === "NIGHT" || isNightTurn)) { transitionText = "KẾT THÚC BỎ PHIẾU"; subText = `ĐÊM ${day} BẮT ĐẦU`; }
+
+                if (transitionText) {
+                    const transOverlay = document.createElement('div');
+                    transOverlay.style.cssText = 'position:absolute; inset:0; background:rgba(0,0,0,0.85); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2s forwards; pointer-events:none;';
+                    transOverlay.innerHTML = `<h1 style="color:var(--primary); letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px var(--primary); margin:0; text-align:center;">${transitionText}</h1>${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic;">${subText}</h2>` : ''}`;
+                    document.getElementById('main-content').appendChild(transOverlay); setTimeout(() => transOverlay.remove(), 3000);
                 }
             }
+
+            if (isNightTurn) {
+                turnInd.style.display = 'block'; turnInd.innerText = `Lượt của \\${ph.replace(/_/g, ' ')}`;
+                const myRoleName = myRoleData ? (typeof myRoleData.role === 'string' ? myRoleData.role : (myRoleData.role ? myRoleData.role.name : "") || "").toUpperCase() : "";
+                if (myRoleName === ph || (ph === "WEREWOLF" && ["CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(myRoleName))) nightOverlay.style.display = 'none';
+                else { nightOverlay.style.display = 'flex'; document.getElementById('night-overlay-sub').innerText = `Đang chờ \\${ph.replace(/_/g, ' ')} thực hiện chức năng`; }
+            } else { turnInd.style.display = 'none'; nightOverlay.style.display = 'none'; }
+
+            if (ph === "LOBBY") { left.style.display = 'none'; right.style.display = 'none'; clearInterval(countdownInterval); document.getElementById('lobby-controls').style.display = 'flex'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
+            else {
+                left.style.display = 'flex'; right.style.display = 'flex'; document.getElementById('lobby-controls').style.display = 'none';
+                const pIcon = document.getElementById('header-phase-icon'); const pText = document.getElementById('header-phase-text');
+                if (isNightTurn || ph === "NIGHT") { pIcon.innerText = "🌙"; pText.innerText = `Đêm ${day}`; }
+                else if (ph === "DAY") { pIcon.innerText = "☀️"; pText.innerText = `Ngày ${day}`; }
+                else if (ph === "TRIAL_DEFENSE" || ph === "TRIAL_VOTING") { pIcon.innerText = "⚖️"; pText.innerText = "Biện hộ"; }
+                else { pIcon.innerText = "⏳"; pText.innerText = "Chuẩn bị"; }
+            }
+
+            startCountdown(du, tick);
+            if (ph === "DAY") { let m = "Sáng rồi."; if (rs === "RUSSIAN_VODKA") m = "Gấu nốc rượu! " + m; announce(m); }
+            else if (isNightTurn) announce(`Mời ${ph.replace(/_/g, ' ')} thức giấc`);
+
+            if(isHost){
+                document.getElementById('host-action-bar').style.display= (document.querySelector('.page.active').id==='page-lobby') ? 'flex' : 'none';
+                document.getElementById('btnNextPhase').style.display=(ph!=="LOBBY")?'block':'none';
+                document.getElementById('btnStartGame').style.display=(ph==="LOBBY")?'block':'none';
+            }
             currentPhase = ph;
-            const isNight = ph !== "LOBBY" && ph !== "DAY" && !ph.includes("TRIAL");
-            document.getElementById('night-overlay').style.display = (isNight && !canISee()) ? 'flex' : 'none';
-            document.getElementById('header-status-left').style.display = ph==='LOBBY'?'none':'flex';
-            document.getElementById('header-status-right').style.display = ph==='LOBBY'?'none':'flex';
-            updatePlayerListUI(playersCache);
-            startCountdown(parseInt(du), parseInt(tick)||1);
         }
 
-        function canISee() {
-            if (!myRoleData) return false;
-            const r = (typeof myRoleData.role === 'string' ? myRoleData.role : myRoleData.role.name).toUpperCase();
-            if (r === currentPhase) return true;
-            if (currentPhase === "WEREWOLF" && ["CURSER_WEREWOLF", "PROPHET_WEREWOLF", "LYCAN"].includes(r)) return true;
-            return false;
+        async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
+        async function distributeRoles() { const r = await fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); if (!r.ok) showNotification("Lỗi phân vai!"); }
+        function startCountdown(s, tick = 1) {
+            clearInterval(countdownInterval);
+            if (tick === 0) {
+                document.getElementById('header-timer').innerText = "PAUSED";
+                return;
+            }
+            let t=s;
+            const updateT = () => { const m = Math.floor(t / 60).toString().padStart(2, '0'); const sc = (t % 60).toString().padStart(2, '0'); document.getElementById('header-timer').innerText = `${m}:${sc}`; };
+            updateT(); countdownInterval=setInterval(()=>{ t--; updateT(); if(t <= 0){ clearInterval(countdownInterval); if(isHost) nextPhase(); } }, 1000 / tick);
         }
+        function announce(t) { if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const m=new SpeechSynthesisUtterance(t); m.lang='vi-VN'; m.rate=0.9; window.speechSynthesis.speak(m); }
+        async function addBot() { const bc=playersCache.filter(p=>p.name.startsWith("Bot_")).length+1; await fetch(`/join-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:"bot_"+Date.now()+"_"+bc, name:"Bot_"+bc, avatar:"https://robohash.org/bot_"+bc, isReady:true})}); }
+        function executeDevCommand() {
+            const i=document.getElementById('devConsole'); const cmd=i.value.trim(); if(!cmd.startsWith('/')) return;
+            if(cmd.startsWith('/access')){
+                const param = cmd.substring(8).trim(); let target = null;
+                if (param.startsWith('@')) target = playersCache.find(p => p.name.toLowerCase().includes(param.substring(1).toLowerCase()));
+                else if (param.startsWith('#')) target = playersCache[parseInt(param.substring(1)) - 1];
+                else if (param.startsWith('\\')) target = playersCache.find(p => { if(!p.role) return false; const r = (typeof p.role === 'string') ? p.role : (p.role.role || p.role.name || ""); return r.toUpperCase().includes(param.substring(1).toUpperCase()); });
 
-        async function displayMyRole(role) {
-            myRoleData = role; document.getElementById('role-badge-mini').style.display = 'block'; document.getElementById('role-badge-mini').innerText = (role.role||role).replace(/_/g,' ');
-            const p = document.getElementById('role-popup'); p.innerHTML = ''; p.style.display = 'flex';
-            const r = allRoles.find(x => x.role === (role.role||role)) || allRoles[1];
-            const url = await getCachedImageUrl(r.image);
-            p.innerHTML = `<div class="viewer-content"><div class="viewer-card" id="myRoleCard"><div class="viewer-back"></div><div class="viewer-front"><img src="${url}"><div class="viewer-info"><h3>VAI DIỄN</h3><h2 style="color:${(role.role||role).includes('WOLF')?'#f44':'#4da6ff'}">${(role.role||role).replace(/_/g,' ')}</h2><p>"${r.description}"</p><button onclick="confirmUnderstand()" style="background:var(--primary); width:100%;">XÁC NHẬN</button></div></div></div></div>`;
-            setTimeout(()=>document.getElementById('myRoleCard').classList.add('flipped'), 100);
+                if (target) {
+                    logDev(`Đang thâm nhập: ${target.name}`);
+                    myId = target.id; myName = target.name; myAvatar = target.avatar;
+                    const roleName = (typeof target.role === 'string') ? target.role : (target.role ? (target.role.role || target.role.name) : "VILLAGER");
+                    myRoleData = {role: roleName, description: "Đang thâm nhập danh tính..."};
+
+                    connectWebSocket();
+                    updateProfileUI();
+                    updatePlayerListUI(playersCache); // Render lại toàn bộ để cập nhật # và quyền hạn
+                    displayMyRole(myRoleData);        // Ăn gian thời gian bằng màn lật bài 3D
+                    navigateTo('page-lobby');
+                }
+            } else if (cmd === '/getallrole') {
+                logDev("<span style='color:#f1c40f'>--- DANH SÁCH VAI DIỄN ---</span>");
+                playersCache.forEach((p, i) => {
+                    const rName = p.role ? (typeof p.role === 'string' ? p.role : (p.role.role || p.role.name || "??")) : "CHƯA CÓ";
+                    const teamColor = p.trulyTeam === "Sói" ? "#ff4d4d" : (p.trulyTeam === "Dân" ? "#4da6ff" : "#f1c40f");
+                    logDev(`#${i+1} ${p.name}: <span style="color:${teamColor}">${rName}</span>`);
+                });
+            } else if (cmd === '/return') {
+                logDev("Trở về danh tính gốc...");
+                myId = realId; myName = realName; myAvatar = realAvatar;
+                fetch(`/room/${currentRoomCode}/players`).then(r=>r.json()).then(ps => {
+                    const me = ps.find(p => p.id === myId);
+                    const roleName = me && me.role ? (typeof me.role === 'string' ? me.role : (me.role.role || me.role.name)) : null;
+                    myRoleData = roleName ? {role: roleName, description: "Chào mừng trở lại, thưa Ngài!"} : null;
+
+                    connectWebSocket();
+                    updateProfileUI();
+                    updatePlayerListUI(ps);
+                    if(myRoleData) displayMyRole(myRoleData);
+                    else document.getElementById('role-badge-mini').style.display = 'none';
+                    navigateTo('page-lobby');
+                });
+            } else if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"DEV_COMMAND", data:cmd}));
+            i.value='';
         }
-
-        function confirmUnderstand() { document.getElementById('myRoleCard').classList.remove('flipped'); setTimeout(()=>document.getElementById('role-popup').style.display='none', 600); socket.send(JSON.stringify({type:"I_UNDERSTAND", data:""})); }
-        function startCountdown(s, t) { clearInterval(countdownInterval); let c=s; const up = () => { const m=Math.floor(c/60).toString().padStart(2,'0'), sc=(c%60).toString().padStart(2,'0'); document.getElementById('header-timer').innerText = t===0?"PAUSED":`${m}:${sc}`; }; up(); if(t>0) countdownInterval=setInterval(()=>{c--; up(); if(c<=0){clearInterval(countdownInterval); if(isHost) nextPhase();}}, 1000/t); }
-        function connectWebSocket() { socket = new WebSocket(`${window.location.protocol==='https:'?'wss:':'ws:'}//${window.location.host}/ws/${myId}`); socket.onmessage=(e)=>{ const m=JSON.parse(e.data); if(m.type==="PLAYER_LIST_UPDATE") updatePlayerListUI(JSON.parse(m.data)); else if(m.type==="YOUR_ROLE") displayMyRole(JSON.parse(m.data)); else if(m.type==="PHASE_UPDATE") handlePhaseUpdate(m.data); else if(m.type==="WINNER") showWinnerOverlay(m.data); else if(m.type==="KICKED"){ showNotification(m.data); setTimeout(()=>location.reload(), 2000); } }; }
-        function executeDevCommand() { const i=document.getElementById('devConsole'), c=i.value.trim(); if(c.startsWith('/access')){ /* logic access */ } else if(c==='/return'){ /* logic return */ } else if(socket?.readyState===1) socket.send(JSON.stringify({type:"DEV_COMMAND", data:c})); i.value=''; }
-        function toggleDevBar() { document.getElementById('dev-sidebar').classList.toggle('active'); }
-        function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-        async function createRoom() { const r=await fetch('/create-room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:myId,name:myName,avatar:myAvatar})}); setupRoom(await r.json(),true); }
-        async function joinRoom() { const c=document.getElementById('roomCodeInput').value; const r=await fetch(`/join-room/${c}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:myId,name:myName,avatar:myAvatar})}); if(r.ok) setupRoom(await r.json(),false); }
-        async function setupRoom(r,h) { currentRoomCode=r.code; isHost=h; currentPhase=r.phase; document.getElementById('displayRoomCode').innerText=r.code; connectWebSocket(); navigateTo('page-lobby'); }
-        async function distributeRoles() { fetch(`/room/${currentRoomCode}/distribute?ratio=${document.getElementById('ratioSelect').value}`); }
-        async function nextPhase() { fetch(`/room/${currentRoomCode}/next-phase`,{method:'POST'}); }
-        window.onload=()=>{ const s=localStorage.getItem('werewolf_user'); if(s){ const u=JSON.parse(s); myId=u.id; myName=u.name; myAvatar=u.avatar; } realId=myId; realName=myName; realAvatar=myAvatar; updateHomeUI(); handleInitialRoute(); preloadImages(); hideLoading(); };
+        async function devCommand(c) { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "DEV_COMMAND", data: c})); }
     </script>
 </body>
 </html>
