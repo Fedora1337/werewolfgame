@@ -720,12 +720,15 @@
                 myId = realId; myName = realName; myAvatar = realAvatar;
                 fetch(`/room/${currentRoomCode}/players`).then(r=>r.json()).then(ps => {
                     const me = ps.find(p => p.id === myId);
-                    myRoleData = me ? me.role : null;
+                    const roleName = me && me.role ? (typeof me.role === 'string' ? me.role : (me.role.role || me.role.name)) : null;
+                    myRoleData = roleName ? {role: roleName, description: "Chào mừng trở lại, thưa Ngài!"} : null;
+
                     connectWebSocket();
                     updateProfileUI();
                     updatePlayerListUI(ps);
                     if(myRoleData) displayMyRole(myRoleData);
                     else document.getElementById('role-badge-mini').style.display = 'none';
+                    navigateTo('page-lobby');
                 });
             } else if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"DEV_COMMAND", data:cmd}));
             i.value='';
