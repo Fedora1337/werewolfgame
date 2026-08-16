@@ -150,21 +150,33 @@
 
         #hunt-rank-panel {
             position: fixed; right: 0; top: 0; bottom: 0; width: 240px;
-            background: rgba(15, 15, 15, 0.98); border-left: 2px solid var(--primary);
+            background: rgba(15, 15, 15, 0.98); border-left: 2px solid #e74c3c;
             display: none; flex-direction: column; padding: 20px; padding-top: 80px;
             box-sizing: border-box; transition: margin-right 0.3s ease; z-index: 3500;
             margin-right: -240px; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
         #hunt-rank-panel.active { margin-right: 0; }
 
-        #hunt-rank-toggle {
+        #vote-rank-panel {
+            position: fixed; right: 0; top: 0; bottom: 0; width: 240px;
+            background: rgba(15, 15, 15, 0.98); border-left: 2px solid #f1c40f;
+            display: none; flex-direction: column; padding: 20px; padding-top: 80px;
+            box-sizing: border-box; transition: margin-right 0.3s ease; z-index: 3500;
+            margin-right: -240px; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+        #vote-rank-panel.active { margin-right: 0; }
+
+        #hunt-rank-toggle, #vote-rank-toggle {
             position: fixed; right: 0; top: 40%; transform: translateY(-50%);
-            background: var(--primary); width: 35px; height: 60px; display: none;
+            width: 35px; height: 60px; display: none;
             align-items: center; justify-content: center; border-radius: 10px 0 0 10px;
             cursor: pointer; z-index: 3501; transition: right 0.3s; color: white;
-            box-shadow: -5px 0 15px rgba(231, 76, 60, 0.4); font-size: 1.2em;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.4); font-size: 1.2em;
         }
-        #hunt-rank-panel.active + #hunt-rank-toggle { right: 240px; }
+        #hunt-rank-toggle { background: #e74c3c; }
+        #vote-rank-toggle { background: #f1c40f; color: black; }
+
+        #hunt-rank-panel.active + #hunt-rank-toggle, #vote-rank-panel.active + #vote-rank-toggle { right: 240px; }
 
         .rank-title { font-size: 0.8em; color: #f1c40f; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
         .rank-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; color: #eee; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
@@ -346,6 +358,14 @@
                 </div>
             </div>
             <div id="hunt-rank-toggle" onclick="toggleHuntRankBar()">🐺</div>
+
+            <div id="vote-rank-panel">
+                <div class="rank-title" style="color: #f1c40f;">BẢNG BẦU CHỌN (RANKING)</div>
+                <div id="vote-list-content" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Sẽ được render bằng JS -->
+                </div>
+            </div>
+            <div id="vote-rank-toggle" onclick="toggleVoteRankBar()">⚖️</div>
 
             <div id="trial-controls" class="trial-controls">
                 <div class="trial-btn save" onclick="sendAction('TRIAL_VOTE_SAVE')">👍</div>
@@ -603,6 +623,7 @@
         function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else showNotification("Mật khẩu sai!"); }
         function toggleDevBar() { document.getElementById('dev-sidebar').classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
         function toggleHuntRankBar() { document.getElementById('hunt-rank-panel').classList.toggle('active'); }
+        function toggleVoteRankBar() { document.getElementById('vote-rank-panel').classList.toggle('active'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
         function toggleAvatarEdit() { const o = document.getElementById('avatar-options'); const img = document.getElementById('profile-ava-preview'); if (o.style.display === 'none' || o.style.display === '') { o.style.display = 'flex'; img.style.borderRadius = '20px'; } else { o.style.display = 'none'; img.style.borderRadius = '50%'; } }
         function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e => {}); else if (document.exitFullscreen) document.exitFullscreen(); }
@@ -663,16 +684,27 @@
             let sortedPs = [...ps];
             if (isHuntPhase || isVoteDayPhase) {
                 document.getElementById('hunt-search-container').style.display = 'block';
-                const rankPanel = document.getElementById('hunt-rank-panel');
-                const rankToggle = document.getElementById('hunt-rank-toggle');
-                const rankTitle = document.getElementById('rank-title-text');
+                const wolfPanel = document.getElementById('hunt-rank-panel');
+                const wolfToggle = document.getElementById('hunt-rank-toggle');
+                const votePanel = document.getElementById('vote-rank-panel');
+                const voteToggle = document.getElementById('vote-rank-toggle');
 
-                if (isVoteDayPhase || (isHuntPhase && iAmWolf)) {
-                    if(rankPanel) rankPanel.style.display = 'flex';
-                    if(rankToggle) rankToggle.style.display = 'flex';
-                    rankTitle.innerText = isVoteDayPhase ? "BẢNG BẦU CHỌN (RANKING)" : "BẢNG SĂN MỒI (RANKING)";
-                    rankTitle.style.color = isVoteDayPhase ? "#f1c40f" : "#e74c3c";
-                    renderHuntRank(ps, isVoteDayPhase ? "BẦU" : "CẮN");
+                if (isHuntPhase && iAmWolf) {
+                    if(wolfPanel) wolfPanel.style.display = 'flex';
+                    if(wolfToggle) wolfToggle.style.display = 'flex';
+                    renderWolfRank(ps);
+                } else {
+                    if(wolfPanel) wolfPanel.style.display = 'none';
+                    if(wolfToggle) wolfToggle.style.display = 'none';
+                }
+
+                if (isVoteDayPhase) {
+                    if(votePanel) votePanel.style.display = 'flex';
+                    if(voteToggle) voteToggle.style.display = 'flex';
+                    renderVoteRank(ps);
+                } else {
+                    if(votePanel) votePanel.style.display = 'none';
+                    if(voteToggle) voteToggle.style.display = 'none';
                 }
 
                 sortedPs.sort((a, b) => {
@@ -686,10 +718,10 @@
                 });
             } else {
                 document.getElementById('hunt-search-container').style.display = 'none';
-                const rankPanel = document.getElementById('hunt-rank-panel');
-                const rankToggle = document.getElementById('hunt-rank-toggle');
-                if(rankPanel) { rankPanel.style.display = 'none'; rankPanel.classList.remove('active'); }
-                if(rankToggle) rankToggle.style.display = 'none';
+                document.getElementById('hunt-rank-panel').style.display = 'none';
+                document.getElementById('hunt-rank-toggle').style.display = 'none';
+                document.getElementById('vote-rank-panel').style.display = 'none';
+                document.getElementById('vote-rank-toggle').style.display = 'none';
             }
 
             // HIỆN NÚT PHÁN QUYẾT (THẢ/GIẾT)
@@ -753,16 +785,28 @@
             updatePlayerListUI(playersCache);
         }
 
-        function renderHuntRank(ps, btnText = "CẮN") {
+        function renderWolfRank(ps) {
             const content = document.getElementById('rank-list-content');
-            const isDayLogic = ["DAY", "EXECUTION", "TRIAL_DEFENSE", "TRIAL_VOTING"].includes(currentPhase);
-            const ranked = ps.filter(p => !p.isDead && (isDayLogic ? p.vote > 0 : (p.werewolfMark || 0) > 0))
-                            .sort((a, b) => isDayLogic ? (b.vote - a.vote) : ((b.werewolfMark || 0) - (a.werewolfMark || 0)));
+            const ranked = ps.filter(p => !p.isDead && (p.werewolfMark || 0) > 0)
+                            .sort((a, b) => (b.werewolfMark || 0) - (a.werewolfMark || 0));
 
             content.innerHTML = ranked.map(p => `
                 <div class="rank-item">
-                    <span>#${playersCache.indexOf(p)+1} ${p.name} (${isDayLogic ? p.vote : p.werewolfMark})</span>
-                    <button class="rank-mark-btn ${isDayLogic?'vote-mode':''}" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>${btnText}</button>
+                    <span>#${playersCache.indexOf(p)+1} ${p.name} (${p.werewolfMark})</span>
+                    <button class="rank-mark-btn" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>CẮN</button>
+                </div>
+            `).join('') || "<p style='font-size:0.6em; color:#666;'>Chưa có mục tiêu...</p>";
+        }
+
+        function renderVoteRank(ps) {
+            const content = document.getElementById('vote-list-content');
+            const ranked = ps.filter(p => !p.isDead && (p.vote || 0) > 0)
+                            .sort((a, b) => (b.vote || 0) - (a.vote || 0));
+
+            content.innerHTML = ranked.map(p => `
+                <div class="rank-item">
+                    <span style="color:#f1c40f;">#${playersCache.indexOf(p)+1} ${p.name} (${p.vote})</span>
+                    <button class="rank-mark-btn vote-mode" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>BẦU</button>
                 </div>
             `).join('') || "<p style='font-size:0.6em; color:#666;'>Chưa có mục tiêu...</p>";
         }
