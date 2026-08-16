@@ -262,6 +262,27 @@ fun main() {
                                     val p = room.players.find { it.id == playerId }
                                     if (p?.role == Role.HUNTER && p.canHunterPassive && p.heal <= 0) { val d = room.players.find { it.id == msg.data }; if (d != null && !d.isDead) { d.heal = 0; p.canHunterPassive = false; broadcastPlayerList(room); triggerNextPhase(room) } }
                                 }
+                                "TRIAL_VOTE_KILL" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p != null && !p.isDead && room.phase == "TRIAL_VOTING" && playerId != room.trialTargetId) {
+                                        val target = room.players.find { it.id == room.trialTargetId }
+                                        if (target != null) {
+                                            target.killVote += 1
+                                            target.killersVotedForMe.add(p.name)
+                                            broadcastPlayerList(room)
+                                        }
+                                    }
+                                }
+                                "TRIAL_VOTE_SAVE" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p != null && !p.isDead && room.phase == "TRIAL_VOTING" && playerId != room.trialTargetId) {
+                                        val target = room.players.find { it.id == room.trialTargetId }
+                                        if (target != null) {
+                                            target.saveVote += 1
+                                            broadcastPlayerList(room)
+                                        }
+                                    }
+                                }
                                 "DEV_COMMAND" -> handleDevCommand(room, msg.data, playerId)
                                 "SKIP_DEFENSE" -> if (room.phase == "TRIAL_DEFENSE" && room.trialTargetId == playerId) triggerNextPhase(room)
                                 "DERP_REVENGE_KILL" -> if (room.derpWolfRevengeList.contains(msg.data)) { room.players.find { it.id == msg.data }?.heal = 0; room.derpWolfRevengeList.clear(); broadcastPlayerList(room) }

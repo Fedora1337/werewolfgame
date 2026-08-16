@@ -169,7 +169,22 @@
         .rank-title { font-size: 0.8em; color: #f1c40f; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
         .rank-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; color: #eee; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
         .rank-mark-btn { background: #e74c3c; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.9em; cursor: pointer; }
+        .rank-mark-btn.vote-mode { background: #f1c40f; color: black; font-weight: bold; }
         .rank-mark-btn:disabled { background: #555; opacity: 0.5; cursor: not-allowed; }
+
+        /* TRIAL BUTTONS */
+        .trial-controls {
+            position: absolute; bottom: 100px; right: 20px;
+            display: none; flex-direction: column; gap: 15px; z-index: 4000;
+        }
+        .trial-btn {
+            width: 60px; height: 60px; border-radius: 50%; border: 3px solid white;
+            display: flex; align-items: center; justify-content: center; font-size: 1.8em;
+            cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.5); transition: transform 0.2s;
+        }
+        .trial-btn:active { transform: scale(0.9); }
+        .trial-btn.kill { background: #e74c3c; }
+        .trial-btn.save { background: #27ae60; }
 
         .move-controls {
             position: absolute; bottom: -5px; left: 0; right: 0; display: none;
@@ -325,12 +340,17 @@
             </div>
 
             <div id="hunt-rank-panel">
-                <div class="rank-title">BẢNG SĂN MỒI (RANKING)</div>
+                <div id="rank-title-text" class="rank-title">BẢNG SĂN MỒI (RANKING)</div>
                 <div id="rank-list-content" style="display: flex; flex-direction: column; gap: 10px;">
                     <!-- Sẽ được render bằng JS -->
                 </div>
             </div>
             <div id="hunt-rank-toggle" onclick="toggleHuntRankBar()">🐺</div>
+
+            <div id="trial-controls" class="trial-controls">
+                <div class="trial-btn save" onclick="sendAction('TRIAL_VOTE_SAVE')">👍</div>
+                <div class="trial-btn kill" onclick="sendAction('TRIAL_VOTE_KILL')">👎</div>
+            </div>
 
             <!-- CARD VIEWER -->
             <div id="card-viewer">
@@ -454,7 +474,7 @@
     <script>
         let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY';
         let realId, realName, realAvatar;
-        let hasMarkedThisNight = false; // Cờ khóa hành động đêm
+        let hasMarkedThisNight = false; // Cờ khóa hành động (cả Sói và Dân bầu)
 
         const allRoles = [
             { role: 'WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
@@ -636,33 +656,47 @@
             const isWolfTeam = (p) => p && p.trulyTeam === "Sói";
             const iAmWolf = isWolfTeam(me);
             const isHuntPhase = ["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(currentPhase);
+            const isVoteDayPhase = currentPhase === "DAY";
+            const isTrialPhase = currentPhase === "TRIAL_VOTING";
 
-            // XỬ LÝ SORT VÀ UI SĂN MỒI
+            // XỬ LÝ SORT VÀ UI SĂN MỒI / BẦU CHỌN
             let sortedPs = [...ps];
-            if (isHuntPhase) {
-                const searchContainer = document.getElementById('hunt-search-container');
-                if(searchContainer) searchContainer.style.display = 'block';
-                if (iAmWolf) {
-                    const rankPanel = document.getElementById('hunt-rank-panel');
-                    const rankToggle = document.getElementById('hunt-rank-toggle');
+            if (isHuntPhase || isVoteDayPhase) {
+                document.getElementById('hunt-search-container').style.display = 'block';
+                const rankPanel = document.getElementById('hunt-rank-panel');
+                const rankToggle = document.getElementById('hunt-rank-toggle');
+                const rankTitle = document.getElementById('rank-title-text');
+
+                if (isVoteDayPhase || (isHuntPhase && iAmWolf)) {
                     if(rankPanel) rankPanel.style.display = 'flex';
                     if(rankToggle) rankToggle.style.display = 'flex';
-                    renderHuntRank(ps);
+                    rankTitle.innerText = isVoteDayPhase ? "BẢNG BẦU CHỌN (RANKING)" : "BẢNG SĂN MỒI (RANKING)";
+                    rankTitle.style.color = isVoteDayPhase ? "#f1c40f" : "#e74c3c";
+                    renderHuntRank(ps, isVoteDayPhase ? "BẦU" : "CẮN");
                 }
 
                 sortedPs.sort((a, b) => {
                     if (a.isDead !== b.isDead) return a.isDead ? 1 : -1;
-                    const aWolf = isWolfTeam(a); const bWolf = isWolfTeam(b);
-                    if (aWolf !== bWolf) return aWolf ? 1 : -1; // Sói xuống cuối
-                    return (b.werewolfMark || 0) - (a.werewolfMark || 0); // Rank theo vote
+                    if (isHuntPhase) {
+                        const aWolf = isWolfTeam(a); const bWolf = isWolfTeam(b);
+                        if (aWolf !== bWolf) return aWolf ? 1 : -1;
+                    }
+                    return (b.werewolfMark || 0 + b.vote) - (a.werewolfMark || 0 + a.vote);
                 });
             } else {
-                const searchContainer = document.getElementById('hunt-search-container');
-                if(searchContainer) searchContainer.style.display = 'none';
+                document.getElementById('hunt-search-container').style.display = 'none';
                 const rankPanel = document.getElementById('hunt-rank-panel');
                 const rankToggle = document.getElementById('hunt-rank-toggle');
                 if(rankPanel) { rankPanel.style.display = 'none'; rankPanel.classList.remove('active'); }
                 if(rankToggle) rankToggle.style.display = 'none';
+            }
+
+            // HIỆN NÚT PHÁN QUYẾT (THẢ/GIẾT)
+            const trialDiv = document.getElementById('trial-controls');
+            if (isTrialPhase && !me?.isDead && me?.id !== playersCache.find(p => p.id === selectedPlayerId)?.id) {
+                trialDiv.style.display = 'flex';
+            } else {
+                trialDiv.style.display = 'none';
             }
 
             if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
@@ -671,6 +705,7 @@
                 const isWolf = isWolfTeam(p);
                 const showTeammate = iAmWolf && isWolf && p.id !== myId;
                 const originalIdx = ps.findIndex(x => x.id === p.id);
+                const canInteract = (isHuntPhase || isVoteDayPhase) && !p.isDead && !me?.isDead;
 
                 return `
                 <div id="p-card-${p.id}" class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''} ${p.isDead?'is-dead':''} ${showTeammate?'is-teammate':''}"
@@ -680,8 +715,8 @@
                     <img src="${p.avatar}">
                     <p>${p.name}</p>
                     ${p.isDead?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.4); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:#fff; z-index:5;">RIP</div>':''}
-                    ${isHuntPhase && !p.isDead && !isWolf ? `<div class="mark-target-btn" id="mark-btn-${p.id}" onclick="event.stopPropagation(); markTarget('${p.id}')">ĐÁNH DẤU</div>` : ''}
-                    <div class="move-controls" onclick="event.stopPropagation()"><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx-1})">◀</div><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx+1})">▶</div></div>
+                    ${canInteract && !isWolf ? `<div class="mark-target-btn" id="mark-btn-${p.id}" onclick="event.stopPropagation(); markTarget('${p.id}')">${isVoteDayPhase?'BẦU CHỌN':'ĐÁNH DẤU'}</div>` : ''}
+                    <div class="move-controls" onclick="event.stopPropagation()"><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx-1})">◀</div><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx-1})">▶</div></div>
                 </div>`;
             }).join('');
 
@@ -695,7 +730,7 @@
         }
 
         function selectPlayerHunt(id) {
-            if (hasMarkedThisNight || !["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(currentPhase)) {
+            if (hasMarkedThisNight || !["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF", "DAY"].includes(currentPhase)) {
                 selectPlayer(id); return;
             }
             selectedPlayerId = (selectedPlayerId === id) ? null : id;
@@ -709,22 +744,24 @@
             const target = playersCache.find(p => p.id === id);
             if (!target || target.isDead) return;
 
-            socket.send(JSON.stringify({type: "WEREWOLF_VOTE", data: id}));
+            const type = (currentPhase === "DAY") ? "VOTE" : "WEREWOLF_VOTE";
+            socket.send(JSON.stringify({type: type, data: id}));
             hasMarkedThisNight = true;
             document.querySelectorAll('.mark-target-btn').forEach(b => b.style.display = 'none');
-            showNotification("Đã đánh dấu mục tiêu!");
+            showNotification(currentPhase === "DAY" ? "Đã bầu chọn mục tiêu!" : "Đã đánh dấu mục tiêu!");
             updatePlayerListUI(playersCache);
         }
 
-        function renderHuntRank(ps) {
+        function renderHuntRank(ps, btnText = "CẮN") {
             const content = document.getElementById('rank-list-content');
-            const ranked = ps.filter(p => !p.isDead && (p.werewolfMark || 0) > 0)
-                            .sort((a, b) => (b.werewolfMark || 0) - (a.werewolfMark || 0));
+            const isDay = currentPhase === "DAY";
+            const ranked = ps.filter(p => !p.isDead && (isDay ? p.vote > 0 : (p.werewolfMark || 0) > 0))
+                            .sort((a, b) => isDay ? (b.vote - a.vote) : ((b.werewolfMark || 0) - (a.werewolfMark || 0)));
 
             content.innerHTML = ranked.map(p => `
                 <div class="rank-item">
-                    <span>#${playersCache.indexOf(p)+1} ${p.name} (${p.werewolfMark})</span>
-                    <button class="rank-mark-btn" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>CẮN</button>
+                    <span>#${playersCache.indexOf(p)+1} ${p.name} (${isDay ? p.vote : p.werewolfMark})</span>
+                    <button class="rank-mark-btn ${isDay?'vote-mode':''}" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>${btnText}</button>
                 </div>
             `).join('') || "<p style='font-size:0.6em; color:#666;'>Chưa có mục tiêu...</p>";
         }
