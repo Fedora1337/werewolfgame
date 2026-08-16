@@ -472,7 +472,7 @@
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY';
+        let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY', currentTrialTargetId = null;
         let realId, realName, realAvatar;
         let hasMarkedThisNight = false; // Cờ khóa hành động (cả Sói và Dân bầu)
 
@@ -656,7 +656,7 @@
             const isWolfTeam = (p) => p && p.trulyTeam === "Sói";
             const iAmWolf = isWolfTeam(me);
             const isHuntPhase = ["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(currentPhase);
-            const isVoteDayPhase = currentPhase === "DAY";
+            const isVoteDayPhase = currentPhase === "EXECUTION";
             const isTrialPhase = currentPhase === "TRIAL_VOTING";
 
             // XỬ LÝ SORT VÀ UI SĂN MỒI / BẦU CHỌN
@@ -680,8 +680,9 @@
                     if (isHuntPhase) {
                         const aWolf = isWolfTeam(a); const bWolf = isWolfTeam(b);
                         if (aWolf !== bWolf) return aWolf ? 1 : -1;
+                        return (b.werewolfMark || 0) - (a.werewolfMark || 0);
                     }
-                    return (b.werewolfMark || 0 + b.vote) - (a.werewolfMark || 0 + a.vote);
+                    return (b.vote || 0) - (a.vote || 0);
                 });
             } else {
                 document.getElementById('hunt-search-container').style.display = 'none';
@@ -693,7 +694,7 @@
 
             // HIỆN NÚT PHÁN QUYẾT (THẢ/GIẾT)
             const trialDiv = document.getElementById('trial-controls');
-            if (isTrialPhase && !me?.isDead && me?.id !== playersCache.find(p => p.id === selectedPlayerId)?.id) {
+            if (isTrialPhase && !me?.isDead && me?.id !== currentTrialTargetId) {
                 trialDiv.style.display = 'flex';
             } else {
                 trialDiv.style.display = 'none';
@@ -715,7 +716,7 @@
                     <img src="${p.avatar}">
                     <p>${p.name}</p>
                     ${p.isDead?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.4); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:#fff; z-index:5;">RIP</div>':''}
-                    ${canInteract && !isWolf ? `<div class="mark-target-btn" id="mark-btn-${p.id}" onclick="event.stopPropagation(); markTarget('${p.id}')">${isVoteDayPhase?'BẦU CHỌN':'ĐÁNH DẤU'}</div>` : ''}
+                    ${canInteract && p.id !== myId ? `<div class="mark-target-btn" id="mark-btn-${p.id}" onclick="event.stopPropagation(); markTarget('${p.id}')">${isVoteDayPhase?'BẦU CHỌN':'ĐÁNH DẤU'}</div>` : ''}
                     <div class="move-controls" onclick="event.stopPropagation()"><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx-1})">◀</div><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx-1})">▶</div></div>
                 </div>`;
             }).join('');
@@ -730,7 +731,7 @@
         }
 
         function selectPlayerHunt(id) {
-            if (hasMarkedThisNight || !["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF", "DAY"].includes(currentPhase)) {
+            if (hasMarkedThisNight || !["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF", "EXECUTION"].includes(currentPhase)) {
                 selectPlayer(id); return;
             }
             selectedPlayerId = (selectedPlayerId === id) ? null : id;
@@ -744,24 +745,24 @@
             const target = playersCache.find(p => p.id === id);
             if (!target || target.isDead) return;
 
-            const type = (currentPhase === "DAY") ? "VOTE" : "WEREWOLF_VOTE";
+            const type = (currentPhase === "EXECUTION") ? "VOTE" : "WEREWOLF_VOTE";
             socket.send(JSON.stringify({type: type, data: id}));
             hasMarkedThisNight = true;
             document.querySelectorAll('.mark-target-btn').forEach(b => b.style.display = 'none');
-            showNotification(currentPhase === "DAY" ? "Đã bầu chọn mục tiêu!" : "Đã đánh dấu mục tiêu!");
+            showNotification(currentPhase === "EXECUTION" ? "Đã bầu chọn mục tiêu!" : "Đã đánh dấu mục tiêu!");
             updatePlayerListUI(playersCache);
         }
 
         function renderHuntRank(ps, btnText = "CẮN") {
             const content = document.getElementById('rank-list-content');
-            const isDay = currentPhase === "DAY";
-            const ranked = ps.filter(p => !p.isDead && (isDay ? p.vote > 0 : (p.werewolfMark || 0) > 0))
-                            .sort((a, b) => isDay ? (b.vote - a.vote) : ((b.werewolfMark || 0) - (a.werewolfMark || 0)));
+            const isDayLogic = ["DAY", "EXECUTION", "TRIAL_DEFENSE", "TRIAL_VOTING"].includes(currentPhase);
+            const ranked = ps.filter(p => !p.isDead && (isDayLogic ? p.vote > 0 : (p.werewolfMark || 0) > 0))
+                            .sort((a, b) => isDayLogic ? (b.vote - a.vote) : ((b.werewolfMark || 0) - (a.werewolfMark || 0)));
 
             content.innerHTML = ranked.map(p => `
                 <div class="rank-item">
-                    <span>#${playersCache.indexOf(p)+1} ${p.name} (${isDay ? p.vote : p.werewolfMark})</span>
-                    <button class="rank-mark-btn ${isDay?'vote-mode':''}" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>${btnText}</button>
+                    <span>#${playersCache.indexOf(p)+1} ${p.name} (${isDayLogic ? p.vote : p.werewolfMark})</span>
+                    <button class="rank-mark-btn ${isDayLogic?'vote-mode':''}" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>${btnText}</button>
                 </div>
             `).join('') || "<p style='font-size:0.6em; color:#666;'>Chưa có mục tiêu...</p>";
         }
@@ -831,7 +832,8 @@
         }
 
         function handlePhaseUpdate(data) {
-            const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0; const tick=parts.length>4?parseInt(parts[4]) : 1;
+            const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0; const tick=parts.length>4?parseInt(parts[4]) : 1; const trialTargetId=parts.length>5?parts[5] : "";
+            currentTrialTargetId = trialTargetId;
 
             // RESET FLAGS ON PHASE CHANGE
             if (currentPhase !== ph) {
@@ -859,6 +861,13 @@
                     transOverlay.innerHTML = `<h1 style="color:var(--primary); letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px var(--primary); margin:0; text-align:center;">${transitionText}</h1>${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic;">${subText}</h2>` : ''}`;
                     document.getElementById('main-content').appendChild(transOverlay); setTimeout(() => transOverlay.remove(), 3000);
                 }
+            }
+
+            if (ph === "DAY") {
+                const dayOverlay = document.createElement('div');
+                dayOverlay.style.cssText = 'position:absolute; inset:0; background:rgba(255,255,255,0.1); z-index:4500; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2.5s forwards; pointer-events:none;';
+                dayOverlay.innerHTML = `<h1 style="color:#f1c40f; letter-spacing:10px; font-size:4em;">☀️</h1><h2 style="color:white; letter-spacing:5px;">THẢO LUẬN BẮT ĐẦU</h2>`;
+                document.getElementById('main-content').appendChild(dayOverlay); setTimeout(() => dayOverlay.remove(), 3000);
             }
 
             if (isNightTurn) {

@@ -96,9 +96,10 @@ fun getNightActionDuration(room: Room, roleName: String): Int {
 fun getPhaseDuration(room: Room): Int {
     val count = room.players.size; val isDay1 = room.dayCount <= 1; val buffer = 5
     return when (room.phase) {
-        "DAY" -> (if (count >= 46) (if (isDay1) 900 else 420) else if (count >= 31) (if (isDay1) 600 else 300) else if (count >= 21) (if (isDay1) 420 else 240) else if (count >= 16) (if (isDay1) 300 else 180) else if (count >= 12) (if (isDay1) 210 else 150) else (if (isDay1) 120 else 90)) + buffer
+        "DAY" -> (if (count >= 21) 180 else if (count >= 12) 120 else 90) + buffer
+        "EXECUTION" -> (if (count >= 21) 60 else if (count >= 12) 45 else 30) + buffer
         "TRIAL_DEFENSE" -> (if (count >= 21) 60 else if (count >= 12) 45 else 30) + buffer
-        "TRIAL_VOTING" -> (if (count >= 46) 45 else if (count >= 31) 30 else if (count >= 21) 20 else if (count >= 12) 15 else 10) + buffer
+        "TRIAL_VOTING" -> 10
         "PREPARING" -> 60; "HUNTER_REVENGE" -> 25; else -> 0
     }
 }
@@ -217,7 +218,7 @@ fun main() {
                                     val p = room.players.find { it.id == playerId }
                                     if (p != null && !p.isDead && p.moonCurse != 1 && p.role != Role.DERP_WOLF && (p.trulyTeam == "Sói" || p.trulyTeam == "cupid") && p.team == "Sói") {
                                         val d = room.players.find { it.id == msg.data }
-                                        if (d != null && !d.isDead && !((d.trulyTeam == "Sói" || d.trulyTeam == "cupid") && d.team == "Sói")) { d.werewolfMark += 1; broadcastPlayerList(room) }
+                                        if (d != null && !d.isDead) { d.werewolfMark += 1; broadcastPlayerList(room) }
                                     }
                                 }
                                 "CUPID_SELECT" -> {
@@ -417,7 +418,8 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
                     if (room.currentNightActionIndex < room.nightActionList.size - 1) room.currentNightActionIndex++ 
                     else { processGameLogic(room); room.phase = "DAY" } 
                 }
-                "DAY" -> {
+                "DAY" -> room.phase = "EXECUTION"
+                "EXECUTION" -> {
                     val alive = room.players.filter { !it.isDead }; val max = if (alive.isNotEmpty()) alive.maxOf { it.vote } else 0
                     val top = alive.filter { it.vote == max && max > 0 }
                     if (top.size == 1) { room.phase = "TRIAL_DEFENSE"; room.trialTargetId = top[0].id } 
@@ -454,7 +456,7 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
 
             room.players.forEach { p -> launch { 
                 val cur = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) room.nightActionList[room.currentNightActionIndex] else room.phase
-                playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}")) 
+                playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}|${room.trialTargetId ?: ""}")) 
                 if (room.winner != null) {
                     playerSessions[p.id]?.sendSerialized(SocketMessage("WINNER", room.winner!!))
                     // GIẢI TÁN PHÒNG: Tự động xóa khỏi rooms map sau 60 giây
@@ -486,7 +488,7 @@ fun processGameLogic(room: Room) {
     if (room.phase == "TRIAL_VOTING") { val t = room.players.find { it.id == room.trialTargetId }; if (t != null && !t.isDead && t.killVote > t.saveVote) { t.heal -= 1; if (t.role == Role.DERP_WOLF) { room.derpWolfRevengeList.clear(); room.derpWolfRevengeList.addAll(t.killersVotedForMe) } } }
     if (room.phase == "DAY" || room.phase == "TRIAL_VOTING") room.players.forEach { it.vote = 0; it.saveVote = 0; it.killVote = 0; it.killersVotedForMe.clear() }
     if (room.phase == "NIGHT") {
-        val targets = room.players.filter { !it.isDead && !((it.trulyTeam == "Sói" || it.trulyTeam == "cupid") && it.team == "Sói") }
+        val targets = room.players.filter { !it.isDead }
         if (targets.isNotEmpty()) { val max = targets.maxOf { it.werewolfMark }; if (max > 0) { val top = targets.filter { it.werewolfMark == max }; if (top.size == 1) { top[0].shield -= 1; if (room.isCurseActiveThisNight && top[0].role != Role.LYCAN && top[0].shield == -1) { top[0].trulyTeam = "Sói"; top[0].team = "Sói"; top[0].shield = 0 } } } }
         room.isCurseActiveThisNight = false
         val russian = room.players.find { it.role == Role.RUSSIAN && !it.isDead }
@@ -706,7 +708,7 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                     }
                     room.players.forEach { p -> GlobalScope.launch { 
                         val cur = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) room.nightActionList[room.currentNightActionIndex] else room.phase
-                        playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}")) 
+                        playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}|${room.trialTargetId ?: ""}"))
                     } }
                 }
             }
