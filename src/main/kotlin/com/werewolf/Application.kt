@@ -499,7 +499,10 @@ fun processGameLogic(room: Room) {
             p.team = "Sói"; p.trulyTeam = "Sói"; p.shield = 0 
         }
         if (p.role != Role.LYCAN && p.shield < 0) { p.heal += p.shield; p.shield = 0 }; 
-        if (room.phase == "NIGHT") { if (p.role != Role.ELDER && p.shield > 0) p.shield = 0; p.vote = 0; p.werewolfMark = 0; p.moonCurse = 0; p.killersVotedForMe.clear() } 
+        if (room.phase == "NIGHT" || room.phase == "EXECUTION") { 
+            if (p.role != Role.ELDER && p.shield > 0) p.shield = 0
+            p.vote = 0; p.werewolfMark = 0; p.moonCurse = 0; p.killersVotedForMe.clear() 
+        }
     }
     room.charmedPlayerIds.removeIf { id -> room.players.any { it.id == id && it.isDead } }
     val couple = room.players.filter { it.linked == 2 }
