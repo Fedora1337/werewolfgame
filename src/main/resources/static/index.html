@@ -148,35 +148,29 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
 
-        #hunt-rank-panel {
+        #huntranking, #voteranking {
             position: fixed; right: 0; top: 0; bottom: 0; width: 240px;
-            background: rgba(15, 15, 15, 0.98); border-left: 2px solid #e74c3c;
+            background: rgba(15, 15, 15, 0.98);
             display: none; flex-direction: column; padding: 20px; padding-top: 80px;
             box-sizing: border-box; transition: margin-right 0.3s ease; z-index: 3500;
             margin-right: -240px; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
-        #hunt-rank-panel.active { margin-right: 0; }
+        #huntranking { border-left: 2px solid #e74c3c; }
+        #voteranking { border-left: 2px solid #f1c40f; }
 
-        #vote-rank-panel {
-            position: fixed; right: 0; top: 0; bottom: 0; width: 240px;
-            background: rgba(15, 15, 15, 0.98); border-left: 2px solid #f1c40f;
-            display: none; flex-direction: column; padding: 20px; padding-top: 80px;
-            box-sizing: border-box; transition: margin-right 0.3s ease; z-index: 3500;
-            margin-right: -240px; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-        }
-        #vote-rank-panel.active { margin-right: 0; }
+        #huntranking.active, #voteranking.active { margin-right: 0; }
 
-        #hunt-rank-toggle, #vote-rank-toggle {
+        #huntranking-toggle, #voteranking-toggle {
             position: fixed; right: 0; top: 40%; transform: translateY(-50%);
             width: 35px; height: 60px; display: none;
             align-items: center; justify-content: center; border-radius: 10px 0 0 10px;
             cursor: pointer; z-index: 3501; transition: right 0.3s; color: white;
             box-shadow: -5px 0 15px rgba(0,0,0,0.4); font-size: 1.2em;
         }
-        #hunt-rank-toggle { background: #e74c3c; }
-        #vote-rank-toggle { background: #f1c40f; color: black; }
+        #huntranking-toggle { background: #e74c3c; }
+        #voteranking-toggle { background: #f1c40f; color: black; }
 
-        #hunt-rank-panel.active + #hunt-rank-toggle, #vote-rank-panel.active + #vote-rank-toggle { right: 240px; }
+        #huntranking.active + #huntranking-toggle, #voteranking.active + #voteranking-toggle { right: 240px; }
 
         .rank-title { font-size: 0.8em; color: #f1c40f; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
         .rank-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; color: #eee; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
@@ -351,21 +345,21 @@
                 <input type="text" id="hunt-search-input" placeholder="Tìm mục tiêu: #số hoặc @tên..." oninput="handleHuntSearch(this.value)">
             </div>
 
-            <div id="hunt-rank-panel">
+            <div id="huntranking">
                 <div id="rank-title-text" class="rank-title">BẢNG SĂN MỒI (RANKING)</div>
-                <div id="rank-list-content" style="display: flex; flex-direction: column; gap: 10px;">
+                <div id="huntranking-list" style="display: flex; flex-direction: column; gap: 10px;">
                     <!-- Sẽ được render bằng JS -->
                 </div>
             </div>
-            <div id="hunt-rank-toggle" onclick="toggleHuntRankBar()">🐺</div>
+            <div id="huntranking-toggle" onclick="toggleHuntRankBar()">🐺</div>
 
-            <div id="vote-rank-panel">
+            <div id="voteranking">
                 <div class="rank-title" style="color: #f1c40f;">BẢNG BẦU CHỌN (RANKING)</div>
-                <div id="vote-list-content" style="display: flex; flex-direction: column; gap: 10px;">
+                <div id="voteranking-list" style="display: flex; flex-direction: column; gap: 10px;">
                     <!-- Sẽ được render bằng JS -->
                 </div>
             </div>
-            <div id="vote-rank-toggle" onclick="toggleVoteRankBar()">⚖️</div>
+            <div id="voteranking-toggle" onclick="toggleVoteRankBar()">⚖️</div>
 
             <div id="trial-controls" class="trial-controls">
                 <div class="trial-btn save" onclick="sendAction('TRIAL_VOTE_SAVE')">👍</div>
@@ -622,8 +616,8 @@
         function showDevLogin() { navigateTo('page-dev-login'); }
         function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else showNotification("Mật khẩu sai!"); }
         function toggleDevBar() { document.getElementById('dev-sidebar').classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
-        function toggleHuntRankBar() { document.getElementById('hunt-rank-panel').classList.toggle('active'); }
-        function toggleVoteRankBar() { document.getElementById('vote-rank-panel').classList.toggle('active'); }
+        function toggleHuntRankBar() { document.getElementById('huntranking').classList.toggle('active'); }
+        function toggleVoteRankBar() { document.getElementById('voteranking').classList.toggle('active'); }
         function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
         function toggleAvatarEdit() { const o = document.getElementById('avatar-options'); const img = document.getElementById('profile-ava-preview'); if (o.style.display === 'none' || o.style.display === '') { o.style.display = 'flex'; img.style.borderRadius = '20px'; } else { o.style.display = 'none'; img.style.borderRadius = '50%'; } }
         function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e => {}); else if (document.exitFullscreen) document.exitFullscreen(); }
@@ -663,10 +657,14 @@
 
             // CLEANUP HUNT UI
             document.getElementById('hunt-search-container').style.display = 'none';
-            const rankPanel = document.getElementById('hunt-rank-panel');
-            const rankToggle = document.getElementById('hunt-rank-toggle');
-            if(rankPanel) { rankPanel.style.display = 'none'; rankPanel.classList.remove('active'); }
-            if(rankToggle) rankToggle.style.display = 'none';
+            const wolfPanel = document.getElementById('huntranking');
+            const wolfToggle = document.getElementById('huntranking-toggle');
+            const votePanel = document.getElementById('voteranking');
+            const voteToggle = document.getElementById('voteranking-toggle');
+            if(wolfPanel) { wolfPanel.style.display = 'none'; wolfPanel.classList.remove('active'); }
+            if(wolfToggle) wolfToggle.style.display = 'none';
+            if(votePanel) { votePanel.style.display = 'none'; votePanel.classList.remove('active'); }
+            if(voteToggle) voteToggle.style.display = 'none';
         }
 
         function updatePlayerListUI(ps) {
@@ -684,10 +682,10 @@
             let sortedPs = [...ps];
             if (isHuntPhase || isVoteDayPhase) {
                 document.getElementById('hunt-search-container').style.display = 'block';
-                const wolfPanel = document.getElementById('hunt-rank-panel');
-                const wolfToggle = document.getElementById('hunt-rank-toggle');
-                const votePanel = document.getElementById('vote-rank-panel');
-                const voteToggle = document.getElementById('vote-rank-toggle');
+                const wolfPanel = document.getElementById('huntranking');
+                const wolfToggle = document.getElementById('huntranking-toggle');
+                const votePanel = document.getElementById('voteranking');
+                const voteToggle = document.getElementById('voteranking-toggle');
 
                 if (isHuntPhase && iAmWolf) {
                     if(wolfPanel) wolfPanel.style.display = 'flex';
@@ -718,10 +716,10 @@
                 });
             } else {
                 document.getElementById('hunt-search-container').style.display = 'none';
-                document.getElementById('hunt-rank-panel').style.display = 'none';
-                document.getElementById('hunt-rank-toggle').style.display = 'none';
-                document.getElementById('vote-rank-panel').style.display = 'none';
-                document.getElementById('vote-rank-toggle').style.display = 'none';
+                document.getElementById('huntranking').style.display = 'none';
+                document.getElementById('huntranking-toggle').style.display = 'none';
+                document.getElementById('voteranking').style.display = 'none';
+                document.getElementById('voteranking-toggle').style.display = 'none';
             }
 
             // HIỆN NÚT PHÁN QUYẾT (THẢ/GIẾT)
@@ -786,7 +784,7 @@
         }
 
         function renderWolfRank(ps) {
-            const content = document.getElementById('rank-list-content');
+            const content = document.getElementById('huntranking-list');
             const ranked = ps.filter(p => !p.isDead && (p.werewolfMark || 0) > 0)
                             .sort((a, b) => (b.werewolfMark || 0) - (a.werewolfMark || 0));
 
@@ -799,7 +797,7 @@
         }
 
         function renderVoteRank(ps) {
-            const content = document.getElementById('vote-list-content');
+            const content = document.getElementById('voteranking-list');
             const ranked = ps.filter(p => !p.isDead && (p.vote || 0) > 0)
                             .sort((a, b) => (b.vote || 0) - (a.vote || 0));
 
@@ -895,8 +893,9 @@
                 if (currentPhase === "LOBBY" && ph === "PREPARING") transitionText = "TRÒ CHƠI BẮT ĐẦU";
                 else if (isNightTurn) { transitionText = `LƯỢT CỦA ${ph.replace(/_/g, ' ')}`; subText = "MỜI THỨC GIẤC"; }
                 else if (ph === "DAY") { transitionText = `HẾT ĐÊM ${day}`; subText = `NGÀY ${day} ĐÃ ĐẾN`; }
+                else if (ph === "EXECUTION") { transitionText = "BẮT ĐẦU BẦU CHỌN"; subText = "HÃY TÌM RA MA SÓI"; }
                 else if (ph === "TRIAL_DEFENSE") transitionText = "PHIÊN BIỆN HỘ BẮT ĐẦU";
-                else if (ph === "TRIAL_VOTING") transitionText = "PHIÊN BỎ PHIẾU BẮT ĐẦU";
+                else if (ph === "TRIAL_VOTING") transitionText = "PHIÊN PHÁN QUYẾT BẮT ĐẦU";
                 else if (currentPhase === "TRIAL_VOTING" && (ph === "NIGHT" || isNightTurn)) { transitionText = "KẾT THÚC BỎ PHIẾU"; subText = `ĐÊM ${day} BẮT ĐẦU`; }
 
                 if (transitionText) {
@@ -935,16 +934,21 @@
 
                 // CLEANUP HUNT UI
                 document.getElementById('hunt-search-container').style.display = 'none';
-                const rankPanel = document.getElementById('hunt-rank-panel');
-                const rankToggle = document.getElementById('hunt-rank-toggle');
-                if(rankPanel) { rankPanel.style.display = 'none'; rankPanel.classList.remove('active'); }
-                if(rankToggle) rankToggle.style.display = 'none';
+                const wolfPanel = document.getElementById('huntranking');
+                const wolfToggle = document.getElementById('huntranking-toggle');
+                const votePanel = document.getElementById('voteranking');
+                const voteToggle = document.getElementById('voteranking-toggle');
+                if(wolfPanel) { wolfPanel.style.display = 'none'; wolfPanel.classList.remove('active'); }
+                if(wolfToggle) wolfToggle.style.display = 'none';
+                if(votePanel) { votePanel.style.display = 'none'; votePanel.classList.remove('active'); }
+                if(voteToggle) voteToggle.style.display = 'none';
             }
             else {
                 left.style.display = 'flex'; right.style.display = 'flex'; document.getElementById('lobby-controls').style.display = 'none';
                 const pIcon = document.getElementById('header-phase-icon'); const pText = document.getElementById('header-phase-text');
                 if (isNightTurn || ph === "NIGHT") { pIcon.innerText = "🌙"; pText.innerText = `Đêm ${day}`; }
                 else if (ph === "DAY") { pIcon.innerText = "☀️"; pText.innerText = `Ngày ${day}`; }
+                else if (ph === "EXECUTION") { pIcon.innerText = "🗳️"; pText.innerText = "Bầu chọn"; }
                 else if (ph === "TRIAL_DEFENSE" || ph === "TRIAL_VOTING") { pIcon.innerText = "⚖️"; pText.innerText = "Biện hộ"; }
                 else { pIcon.innerText = "⏳"; pText.innerText = "Chuẩn bị"; }
             }

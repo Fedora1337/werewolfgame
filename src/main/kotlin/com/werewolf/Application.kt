@@ -214,6 +214,13 @@ fun main() {
                                     if (p != null) { room.players[room.players.indexOf(p)] = p.copy(name = data["name"] ?: p.name, avatar = data["avatar"] ?: p.avatar); broadcastPlayerList(room) }
                                 }
                                 "TOGGLE_READY" -> if (room.phase == "LOBBY" && room.hostId != playerId) { val p = room.players.find { it.id == playerId }; if (p != null) { p.isReady = !p.isReady; broadcastPlayerList(room) } }
+                                "VOTE" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p != null && !p.isDead && room.phase == "EXECUTION") {
+                                        val d = room.players.find { it.id == msg.data }
+                                        if (d != null && !d.isDead) { d.vote += 1; broadcastPlayerList(room) }
+                                    }
+                                }
                                 "WEREWOLF_VOTE" -> {
                                     val p = room.players.find { it.id == playerId }
                                     if (p != null && !p.isDead && p.moonCurse != 1 && p.role != Role.DERP_WOLF && (p.trulyTeam == "Sói" || p.trulyTeam == "cupid") && p.team == "Sói") {
@@ -418,7 +425,10 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
                     if (room.currentNightActionIndex < room.nightActionList.size - 1) room.currentNightActionIndex++ 
                     else { processGameLogic(room); room.phase = "DAY" } 
                 }
-                "DAY" -> room.phase = "EXECUTION"
+                "DAY" -> {
+                    room.phase = "EXECUTION"
+                    room.players.forEach { it.vote = 0 } // Reset phiếu bầu khi bắt đầu phase Bầu chọn
+                }
                 "EXECUTION" -> {
                     val alive = room.players.filter { !it.isDead }; val max = if (alive.isNotEmpty()) alive.maxOf { it.vote } else 0
                     val top = alive.filter { it.vote == max && max > 0 }
@@ -433,6 +443,7 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
                     processGameLogic(room)
                     if (room.phase != "HUNTER_REVENGE") { 
                         room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0; room.trialTargetId = null 
+                        room.players.forEach { it.werewolfMark = 0 } // Reset dấu cắn khi đêm xuống
                         if (room.nightActionList.isEmpty()) { processGameLogic(room); room.phase = "DAY" }
                     } 
                 }
@@ -486,7 +497,7 @@ fun processGameLogic(room: Room) {
     room.players.forEach { if (it.heal <= 0 && !it.isDead) room.tempDeadIds.add(it.id) else if (it.heal >= 1) room.tempDeadIds.remove(it.id) }
     if (!room.elderIsDead) { val elder = room.players.find { it.role == Role.ELDER }; if (elder != null && elder.heal <= 0) room.elderIsDead = true }
     if (room.phase == "TRIAL_VOTING") { val t = room.players.find { it.id == room.trialTargetId }; if (t != null && !t.isDead && t.killVote > t.saveVote) { t.heal -= 1; if (t.role == Role.DERP_WOLF) { room.derpWolfRevengeList.clear(); room.derpWolfRevengeList.addAll(t.killersVotedForMe) } } }
-    if (room.phase == "DAY" || room.phase == "TRIAL_VOTING") room.players.forEach { it.vote = 0; it.saveVote = 0; it.killVote = 0; it.killersVotedForMe.clear() }
+
     if (room.phase == "NIGHT") {
         val targets = room.players.filter { !it.isDead }
         if (targets.isNotEmpty()) { val max = targets.maxOf { it.werewolfMark }; if (max > 0) { val top = targets.filter { it.werewolfMark == max }; if (top.size == 1) { top[0].shield -= 1; if (room.isCurseActiveThisNight && top[0].role != Role.LYCAN && top[0].shield == -1) { top[0].trulyTeam = "Sói"; top[0].team = "Sói"; top[0].shield = 0 } } } }
