@@ -190,23 +190,35 @@ fun main() {
                         if (frame is Frame.Text) {
                             val msg = Json.decodeFromString<SocketMessage>(frame.readText())
                             
-                            // Xử lý lệnh DEV GLOBAL (Ưu tiên tuyệt đối)
-                            if (msg.type == "DEV_COMMAND" && (msg.data == "/end all" || msg.data == "/clean")) {
-                                println("SERVER-WIDE CLEANUP INITIATED BY $playerId")
-                                rooms.values.forEach { r ->
-                                    r.players.forEach { p ->
-                                        launch { 
-                                            try { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Hệ thống đã được dọn dẹp bởi Admin!")) } catch(e:Exception){}
+                            // === PRIORITY 1: DEV COMMANDS (GLOBAL & ROOM) ===
+                            if (msg.type == "DEV_COMMAND") {
+                                val parts = msg.data.split(" ")
+                                val action = parts[0].lowercase()
+                                
+                                // A. Global Admin Actions
+                                if ((action == "/end" && parts.size >= 2 && parts[1] == "all") || action == "/clean") {
+                                    println("GLOBAL CLEANUP BY ADMIN $playerId")
+                                    rooms.values.forEach { r ->
+                                        r.players.forEach { p ->
+                                            launch { try { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Server reset!")) } catch(e:Exception){} }
                                         }
                                     }
+                                    rooms.clear()
+                                    launch { playerSessions[playerId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[GOD] Toàn bộ Server đã được thanh lọc!")) }
+                                    continue
                                 }
-                                rooms.clear()
-                                launch { 
-                                    try { playerSessions[playerId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[CLEAN] Hệ thống đã được thanh lọc hoàn toàn!")) } catch(e:Exception){}
+                                
+                                // B. Room Admin Actions
+                                val room = rooms.values.find { r -> r.players.any { it.id == playerId } }
+                                if (room != null) {
+                                    handleDevCommand(room, msg.data, playerId)
+                                } else {
+                                    launch { playerSessions[playerId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[LỖI] Không tìm thấy phòng context để thực hiện: ${msg.data}")) }
                                 }
                                 continue
                             }
 
+                            // === PRIORITY 2: NORMAL GAME LOGIC ===
                             val room = rooms.values.find { r -> r.players.any { it.id == playerId } } ?: continue
                             when (msg.type) {
                                 "I_UNDERSTAND" -> if (room.phase == "PREPARING") { 
