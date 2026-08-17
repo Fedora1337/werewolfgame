@@ -190,15 +190,20 @@ fun main() {
                         if (frame is Frame.Text) {
                             val msg = Json.decodeFromString<SocketMessage>(frame.readText())
                             
-                            // Xử lý lệnh DEV GLOBAL (Không cần room)
+                            // Xử lý lệnh DEV GLOBAL (Ưu tiên tuyệt đối)
                             if (msg.type == "DEV_COMMAND" && (msg.data == "/end all" || msg.data == "/clean")) {
+                                println("SERVER-WIDE CLEANUP INITIATED BY $playerId")
                                 rooms.values.forEach { r ->
                                     r.players.forEach { p ->
-                                        launch { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Hệ thống đã được dọn dẹp bởi Admin!")) }
+                                        launch { 
+                                            try { playerSessions[p.id]?.sendSerialized(SocketMessage("KICKED", "Hệ thống đã được dọn dẹp bởi Admin!")) } catch(e:Exception){}
+                                        }
                                     }
                                 }
                                 rooms.clear()
-                                launch { playerSessions[playerId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[CLEAN] Đã xóa sạch mọi Lobby trên Server!")) }
+                                launch { 
+                                    try { playerSessions[playerId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[CLEAN] Hệ thống đã được thanh lọc hoàn toàn!")) } catch(e:Exception){}
+                                }
                                 continue
                             }
 
@@ -325,19 +330,34 @@ fun main() {
                 } finally { playerSessions.remove(playerId) }
             }
             post("/create-room") { 
-                val host = call.receive<Player>(); 
-                val code = (100000..999999).random().toString(); 
+                val host = call.receive<Player>()
+                
+                // ANTI-OVERLAP: Xóa người chơi khỏi mọi phòng khác trước khi tạo phòng mới
+                rooms.values.forEach { r -> 
+                    if (r.players.removeIf { it.id == host.id }) {
+                        launch { broadcastPlayerList(r) }
+                    }
+                }
+
+                val code = (100000..999999).random().toString()
                 val newPlayer = host.copy(isReady = true, isHost = true)
-                rooms[code] = Room(code, host.id, mutableListOf(newPlayer)); 
+                rooms[code] = Room(code, host.id, mutableListOf(newPlayer))
                 call.respond(rooms[code]!!) 
             }
             post("/join-room/{code}") { 
                 val code = call.parameters["code"] ?: ""; val player = call.receive<Player>(); val room = rooms[code]
                 if (room != null) { 
+                    // ANTI-OVERLAP: Xóa người chơi khỏi mọi phòng khác trước khi gia nhập phòng mới
+                    rooms.values.forEach { r -> 
+                        if (r.code != code && r.players.removeIf { it.id == player.id }) {
+                            launch { broadcastPlayerList(r) }
+                        }
+                    }
+
                     if (room.players.none { it.id == player.id }) { 
                         room.players.add(player.copy(isReady = true, isHost = (player.id == room.hostId)))
                         broadcastPlayerList(room) 
-                    }; 
+                    }
                     call.respond(room) 
                 } else call.respond(io.ktor.http.HttpStatusCode.NotFound) 
             }
