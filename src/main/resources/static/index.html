@@ -193,6 +193,17 @@
         .trial-btn.kill { background: #e74c3c; }
         .trial-btn.save { background: #27ae60; }
 
+        /* TRIAL COUNTERS */
+        .trial-counters {
+            display: none; flex-direction: column; gap: 5px;
+            background: rgba(0, 0, 0, 0.7); padding: 8px 12px;
+            border-radius: 12px; border: 1px solid #444;
+            font-family: monospace; font-weight: bold; font-size: 0.8em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .counter-kill { color: #e74c3c; }
+        .counter-save { color: #2ecc71; }
+
         .move-controls {
             position: absolute; bottom: -5px; left: 0; right: 0; display: none;
             justify-content: center; gap: 15px; z-index: 10;
@@ -474,6 +485,10 @@
                         <button onclick="goBack()" class="ghost-btn" style="color:var(--primary); font-size: 0.85em; margin:0; padding:8px; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(0,0,0,0.6) !important;">RỜI PHÒNG</button>
                     </div>
                     <div style="display: flex; align-items: center; gap: 15px;">
+                        <div id="trial-counters" class="trial-counters">
+                            <div class="counter-kill">Giết: <span id="count-kill">0</span></div>
+                            <div class="counter-save">Cứu: <span id="count-save">0</span></div>
+                        </div>
                         <div id="trial-controls" class="trial-controls">
                             <div class="trial-btn save" onclick="handleTrialVote('TRIAL_VOTE_SAVE')">👍</div>
                             <div class="trial-btn kill" onclick="handleTrialVote('TRIAL_VOTE_KILL')">👎</div>
@@ -727,12 +742,24 @@
                 document.getElementById('voteranking-toggle').style.display = 'none';
             }
 
-            // HIỆN NÚT PHÁN QUYẾT (THẢ/GIẾT)
+            // HIỆN NÚT PHÁN QUYẾT (THẢ/GIẾT) VÀ CẬP NHẬT COUNTERS
             const trialDiv = document.getElementById('trial-controls');
-            if (isTrialPhase && !me?.isDead && me?.id !== currentTrialTargetId && !hasVotedInTrial) {
-                trialDiv.style.display = 'flex';
+            const counterDiv = document.getElementById('trial-counters');
+
+            if (isTrialPhase) {
+                counterDiv.style.display = 'flex';
+                const targetP = ps.find(p => p.id === currentTrialTargetId);
+                document.getElementById('count-kill').innerText = targetP ? (targetP.killVote || 0) : 0;
+                document.getElementById('count-save').innerText = targetP ? (targetP.saveVote || 0) : 0;
+
+                if (!me?.isDead && me?.id !== currentTrialTargetId && !hasVotedInTrial) {
+                    trialDiv.style.display = 'flex';
+                } else {
+                    trialDiv.style.display = 'none';
+                }
             } else {
                 trialDiv.style.display = 'none';
+                counterDiv.style.display = 'none';
             }
 
             if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
