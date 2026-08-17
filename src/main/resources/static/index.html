@@ -180,13 +180,14 @@
 
         /* TRIAL BUTTONS */
         .trial-controls {
-            position: absolute; bottom: 100px; right: 20px;
-            display: none; flex-direction: column; gap: 15px; z-index: 4000;
+            display: none; flex-direction: row; gap: 12px; z-index: 4000;
+            align-items: center;
         }
         .trial-btn {
-            width: 60px; height: 60px; border-radius: 50%; border: 3px solid white;
-            display: flex; align-items: center; justify-content: center; font-size: 1.8em;
-            cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.5); transition: transform 0.2s;
+            width: 45px; height: 45px; border-radius: 50%; border: 2px solid white;
+            display: flex; align-items: center; justify-content: center; font-size: 1.4em;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.4); transition: transform 0.2s;
+            padding-bottom: 4px;
         }
         .trial-btn:active { transform: scale(0.9); }
         .trial-btn.kill { background: #e74c3c; }
@@ -477,8 +478,16 @@
                         <button id="btnReady" onclick="toggleReady()" style="background:#2980b9; margin:0; padding:12px; font-size: 0.85em; box-shadow: 0 5px 15px rgba(41, 128, 185, 0.4);">SẴN SÀNG</button>
                         <button onclick="goBack()" class="ghost-btn" style="color:var(--primary); font-size: 0.85em; margin:0; padding:8px; border: 1px solid rgba(231, 76, 60, 0.3) !important; background: rgba(0,0,0,0.6) !important;">RỜI PHÒNG</button>
                     </div>
-                    <div id="role-badge-mini" class="role-badge-mini" onclick="displayMyRole(myRoleData)">Xem vai</div>
-                    <div class="self-card-mini"><img id="self-mini-ava" src=""><div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">Name</p></div></div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div id="trial-controls" class="trial-controls">
+                            <div class="trial-btn save" onclick="handleTrialVote('TRIAL_VOTE_SAVE')">👍</div>
+                            <div class="trial-btn kill" onclick="handleTrialVote('TRIAL_VOTE_KILL')">👎</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                            <div id="role-badge-mini" class="role-badge-mini" onclick="displayMyRole(myRoleData)">Xem vai</div>
+                            <div class="self-card-mini"><img id="self-mini-ava" src=""><div><h5 id="self-mini-num">#0</h5><p id="self-mini-name">Name</p></div></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -489,6 +498,7 @@
         let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY', currentTrialTargetId = null;
         let realId, realName, realAvatar;
         let hasMarkedThisNight = false; // Cờ khóa hành động (cả Sói và Dân bầu)
+        let hasVotedInTrial = false;    // Cờ khóa phán quyết 👍/👎
 
         const allRoles = [
             { role: 'WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
@@ -724,7 +734,7 @@
 
             // HIỆN NÚT PHÁN QUYẾT (THẢ/GIẾT)
             const trialDiv = document.getElementById('trial-controls');
-            if (isTrialPhase && !me?.isDead && me?.id !== currentTrialTargetId) {
+            if (isTrialPhase && !me?.isDead && me?.id !== currentTrialTargetId && !hasVotedInTrial) {
                 trialDiv.style.display = 'flex';
             } else {
                 trialDiv.style.display = 'none';
@@ -825,6 +835,14 @@
             }
         }
 
+        function handleTrialVote(t) {
+            if (hasVotedInTrial) return;
+            socket.send(JSON.stringify({type: t, data: ""}));
+            hasVotedInTrial = true;
+            document.getElementById('trial-controls').style.display = 'none';
+            showNotification(t === "TRIAL_VOTE_SAVE" ? "Đã chọn Tha Bổng!" : "Đã chọn Xử Tử!");
+        }
+
         function toggleReady() { if(socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "TOGGLE_READY", data: ""})); }
         function movePlayer(from, to) { if (to >= 0 && to < playersCache.length) socket.send(JSON.stringify({type: "SWAP_PLAYERS", data: `${from}|${to}`})); }
         function kickPlayer(id) { socket.send(JSON.stringify({type:"KICK_PLAYER", data:id})); }
@@ -880,6 +898,7 @@
             // RESET FLAGS ON PHASE CHANGE
             if (currentPhase !== ph) {
                 hasMarkedThisNight = false;
+                hasVotedInTrial = false;
                 selectedPlayerId = null;
             }
 
