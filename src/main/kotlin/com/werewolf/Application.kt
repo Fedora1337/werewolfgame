@@ -32,7 +32,8 @@ data class Player(
     var hunterBullets: Int = 0, var canHunterPassive: Boolean = false,
     var isBloodlust: Boolean = false,
     var isHost: Boolean = false,
-    val killersVotedForMe: MutableList<String> = mutableListOf()
+    val killersVotedForMe: MutableList<String> = mutableListOf(),
+    val saversVotedForMe: MutableList<String> = mutableListOf()
 )
 
 @Serializable
@@ -296,6 +297,7 @@ fun main() {
                                         val target = room.players.find { it.id == room.trialTargetId }
                                         if (target != null) {
                                             target.saveVote += 1
+                                            target.saversVotedForMe.add(p.name)
                                             broadcastPlayerList(room)
                                         }
                                     }
@@ -325,6 +327,7 @@ fun main() {
                                         val target = room.players.find { it.id == room.trialTargetId }
                                         if (target != null) {
                                             target.saveVote += 1
+                                            target.saversVotedForMe.add(p.name)
                                             broadcastPlayerList(room)
                                         }
                                     }
@@ -453,7 +456,7 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
                     room.witchSaveUsed = false; room.witchKillUsed = false; room.elderIsDead = false;
                     room.charmedPlayerIds.clear(); room.tempDeadIds.clear(); room.derpWolfRevengeList.clear();
                     room.players.forEach { p -> 
-                        p.heal = 1; p.shield = 0; p.isDead = false; p.vote = 0; p.werewolfMark = 0; p.moonCurse = 0; p.linked = -1; p.killersVotedForMe.clear() 
+                        p.heal = 1; p.shield = 0; p.isDead = false; p.vote = 0; p.werewolfMark = 0; p.moonCurse = 0; p.linked = -1; p.killersVotedForMe.clear(); p.saversVotedForMe.clear()
                     }
 
                     // Tự động phân vai nếu chưa có (dành cho /start Dev)

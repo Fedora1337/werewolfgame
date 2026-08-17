@@ -204,6 +204,18 @@
         .counter-kill { color: #e74c3c; }
         .counter-save { color: #2ecc71; }
 
+        /* VOTERS LOG PANEL */
+        #trial-voters-panel {
+            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 500px; background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid #444;
+            padding: 15px; display: none; flex-direction: row; gap: 20px; z-index: 3000;
+        }
+        .voter-list-section { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .voter-list-title { font-size: 0.7em; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .voter-names { font-size: 0.8em; color: #ccc; line-height: 1.4; max-height: 150px; overflow-y: auto; }
+        .voter-names span { display: block; }
+
         .move-controls {
             position: absolute; bottom: -5px; left: 0; right: 0; display: none;
             justify-content: center; gap: 15px; z-index: 10;
@@ -396,6 +408,17 @@
                 <h1 style="font-size: 5em; margin:0;">🌑</h1>
                 <h2 style="color:var(--primary); letter-spacing:3px; margin-top:20px;">TRỜI TỐI RỒI...</h2>
                 <p id="night-overlay-sub" style="color:#444; font-style:italic; margin-top:10px;">Làng đang chìm trong giấc ngủ</p>
+            </div>
+
+            <div id="trial-voters-panel">
+                <div class="voter-list-section">
+                    <div class="voter-list-title" style="color: #e74c3c;">👎 PHIẾU XỬ TỬ</div>
+                    <div id="killers-list" class="voter-names"></div>
+                </div>
+                <div class="voter-list-section">
+                    <div class="voter-list-title" style="color: #2ecc71;">👍 PHIẾU THA BỔNG</div>
+                    <div id="savers-list" class="voter-names"></div>
+                </div>
             </div>
 
             <header>
@@ -652,7 +675,7 @@
         };
 
         function saveProfile() { const n=document.getElementById('editName').value.trim(); const u=document.getElementById('editAvatar').value.trim(); const f=document.getElementById('fileAvatar').files[0]; const fn=(ava)=>{ myName=n; myAvatar=ava; localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar})); updateProfileUI(); if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:"UPDATE_PROFILE", data:JSON.stringify({name:myName, avatar:myAvatar})})); showNotification("Hồ sơ đã cập nhật!"); }; if(f){ const r=new FileReader(); r.onload=(e)=>fn(e.target.result); r.readAsDataURL(f); } else fn(u||myAvatar); }
-        async function createRoom() { showLoading("ĐANG KHỞI TẠO", "Chuẩn bị sảnh..."); const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); setupRoom(await res.json(), true); setTimeout(hideLoading, 500); }
+        async function createRoom() { showLoading("ĐANG KHỞI TẠO", "Chuẩn bị sảnh"); const res=await fetch('/create-room', {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); setupRoom(await res.json(), true); setTimeout(hideLoading, 500); }
         async function joinRoom() { const c=document.getElementById('roomCodeInput').value; showLoading("ĐANG GIA NHẬP", "Kết nối phòng " + c); const res=await fetch(`/join-room/${c}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:myId, name:myName, avatar:myAvatar})}); if(res.ok) { setupRoom(await res.json(), false); setTimeout(hideLoading, 500); } else { hideLoading(); showNotification("Lỗi kết nối!"); } }
 
         async function attemptAutoJoin(code) {
@@ -745,12 +768,22 @@
             // HIỆN NÚT PHÁN QUYẾT (THẢ/GIẾT) VÀ CẬP NHẬT COUNTERS
             const trialDiv = document.getElementById('trial-controls');
             const counterDiv = document.getElementById('trial-counters');
+            const votersPanel = document.getElementById('trial-voters-panel');
 
             if (isTrialPhase) {
                 counterDiv.style.display = 'flex';
+                votersPanel.style.display = 'flex';
                 const targetP = ps.find(p => p.id === currentTrialTargetId);
                 document.getElementById('count-kill').innerText = targetP ? (targetP.killVote || 0) : 0;
                 document.getElementById('count-save').innerText = targetP ? (targetP.saveVote || 0) : 0;
+
+                // Cập nhật danh sách tên người vote
+                const killersList = document.getElementById('killers-list');
+                const saversList = document.getElementById('savers-list');
+                if (targetP) {
+                    killersList.innerHTML = (targetP.killersVotedForMe || []).map(name => `<span>• ${name}</span>`).join('');
+                    saversList.innerHTML = (targetP.saversVotedForMe || []).map(name => `<span>• ${name}</span>`).join('');
+                }
 
                 if (!me?.isDead && me?.id !== currentTrialTargetId && !hasVotedInTrial) {
                     trialDiv.style.display = 'flex';
@@ -760,6 +793,7 @@
             } else {
                 trialDiv.style.display = 'none';
                 counterDiv.style.display = 'none';
+                votersPanel.style.display = 'none';
             }
 
             if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
