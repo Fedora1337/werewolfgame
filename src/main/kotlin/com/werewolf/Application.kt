@@ -279,6 +279,27 @@ fun main() {
                                     val p = room.players.find { it.id == playerId }; val ids = Json.decodeFromString<List<String>>(msg.data)
                                     if (p?.role == Role.PIPER && p.moonCurse != 1 && ids.size == 2) { ids.forEach { room.charmedPlayerIds.add(it) }; room.charmedPlayerIds.add(playerId); broadcastPlayerList(room) }
                                 }
+                                "TRIAL_VOTE_KILL" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p != null && !p.isDead && room.phase == "TRIAL_VOTING" && playerId != room.trialTargetId) {
+                                        val target = room.players.find { it.id == room.trialTargetId }
+                                        if (target != null) {
+                                            target.killVote += 1
+                                            target.killersVotedForMe.add(p.name)
+                                            broadcastPlayerList(room)
+                                        }
+                                    }
+                                }
+                                "TRIAL_VOTE_SAVE" -> {
+                                    val p = room.players.find { it.id == playerId }
+                                    if (p != null && !p.isDead && room.phase == "TRIAL_VOTING" && playerId != room.trialTargetId) {
+                                        val target = room.players.find { it.id == room.trialTargetId }
+                                        if (target != null) {
+                                            target.saveVote += 1
+                                            broadcastPlayerList(room)
+                                        }
+                                    }
+                                }
                                 "HUNTER_KILL" -> {
                                     val p = room.players.find { it.id == playerId }
                                     if (p?.role == Role.HUNTER && p.moonCurse != 1 && p.hunterBullets > 0 && !p.isDead) { val d = room.players.find { it.id == msg.data }; if (d != null && !d.isDead) { p.hunterBullets -= 1; d.heal -= 1; if (d.trulyTeam == "Dân" || (d.trulyTeam == "cupid" && d.team == "Dân") || d.trulyTeam == "piper") p.heal = 0; broadcastPlayerList(room) } }
