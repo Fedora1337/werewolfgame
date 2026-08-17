@@ -971,6 +971,7 @@
                 else if (ph === "EXECUTION") { transitionText = "BẮT ĐẦU BẦU CHỌN"; subText = "HÃY TÌM RA MA SÓI"; }
                 else if (ph === "TRIAL_DEFENSE") transitionText = "PHIÊN BIỆN HỘ BẮT ĐẦU";
                 else if (ph === "TRIAL_VOTING") transitionText = "PHIÊN PHÁN QUYẾT BẮT ĐẦU";
+                else if (currentPhase === "EXECUTION" && (ph === "NIGHT" || isNightTurn)) { transitionText = "KHÔNG AI PHẢI LÊN GIÀN"; subText = "LÀNG KHÔNG THỂ THỐNG NHẤT BẦU CHỌN"; }
                 else if (currentPhase === "TRIAL_VOTING" && (ph === "NIGHT" || isNightTurn)) { transitionText = "KẾT THÚC BỎ PHIẾU"; subText = `ĐÊM ${day} BẮT ĐẦU`; }
 
                 if (transitionText) {
