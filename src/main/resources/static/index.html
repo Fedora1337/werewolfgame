@@ -965,20 +965,58 @@
 
             if (currentPhase !== ph && ph !== "LOBBY") {
                 let transitionText = ""; let subText = "";
-                if (currentPhase === "LOBBY" && ph === "PREPARING") transitionText = "TRÒ CHƠI BẮT ĐẦU";
-                else if (isNightTurn) { transitionText = `LƯỢT CỦA ${ph.replace(/_/g, ' ')}`; subText = "MỜI THỨC GIẤC"; }
-                else if (ph === "DAY") { transitionText = `HẾT ĐÊM ${day}`; subText = `NGÀY ${day} ĐÃ ĐẾN`; }
-                else if (ph === "EXECUTION") { transitionText = "BẮT ĐẦU BẦU CHỌN"; subText = "HÃY TÌM RA MA SÓI"; }
-                else if (ph === "TRIAL_DEFENSE") transitionText = "PHIÊN BIỆN HỘ BẮT ĐẦU";
-                else if (ph === "TRIAL_VOTING") transitionText = "PHIÊN PHÁN QUYẾT BẮT ĐẦU";
-                else if (currentPhase === "EXECUTION" && (ph === "NIGHT" || isNightTurn)) { transitionText = "KHÔNG AI PHẢI LÊN GIÀN"; subText = "LÀNG KHÔNG THỂ THỐNG NHẤT BẦU CHỌN"; }
-                else if (currentPhase === "TRIAL_VOTING" && (ph === "NIGHT" || isNightTurn)) { transitionText = "KẾT THÚC BỎ PHIẾU"; subText = `ĐÊM ${day} BẮT ĐẦU`; }
+                const target = playersCache.find(p => p.id === currentTrialTargetId);
+
+                if (currentPhase === "LOBBY" && ph === "PREPARING") {
+                    transitionText = "TRÒ CHƠI BẮT ĐẦU";
+                }
+                else if (currentPhase === "TRIAL_VOTING") {
+                    // ƯU TIÊN HIỆN KẾT QUẢ PHIÊN TÒA
+                    if (target) {
+                        if (target.isDead) {
+                            transitionText = "THỰC THI CÔNG LÝ";
+                            subText = `${target.name} ĐÃ BỊ XỬ TỬ`;
+                        } else {
+                            transitionText = "BẢN ÁN CUỐI CÙNG";
+                            subText = `${target.name} ĐƯỢC THA BỔNG`;
+                        }
+                    } else {
+                        transitionText = "KẾT THÚC PHIÊN TÒA";
+                        subText = "ĐÊM NAY ĐÃ BẮT ĐẦU";
+                    }
+                }
+                else if (!isNightTurn && (ph === "NIGHT" || isNightTurn)) {
+                    // CHUYỂN TỪ NGÀY SANG ĐÊM
+                    transitionText = "TRỜI TỐI RỒI";
+                    subText = "LÀNG ĐANG CHÌM VÀO GIẤC NGỦ";
+                }
+                else if (isNightTurn) {
+                    transitionText = `LƯỢT CỦA ${ph.replace(/_/g, ' ')}`;
+                    subText = "MỜI THỨC GIẤC";
+                }
+                else if (ph === "DAY") {
+                    transitionText = `HẾT ĐÊM ${day}`;
+                    subText = `NGÀY ${day} ĐÃ ĐẾN`;
+                }
+                else if (ph === "EXECUTION") {
+                    transitionText = "BẮT ĐẦU BẦU CHỌN";
+                    subText = "HÃY TÌM RA MA SÓI";
+                }
+                else if (ph === "TRIAL_DEFENSE") {
+                    transitionText = "PHIÊN BIỆN HỘ";
+                    subText = `${target ? target.name : 'Mục tiêu'} ĐANG BIỆN HỘ`;
+                }
 
                 if (transitionText) {
                     const transOverlay = document.createElement('div');
-                    transOverlay.style.cssText = 'position:absolute; inset:0; background:rgba(0,0,0,0.85); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2s forwards; pointer-events:none;';
-                    transOverlay.innerHTML = `<h1 style="color:var(--primary); letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px var(--primary); margin:0; text-align:center;">${transitionText}</h1>${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic;">${subText}</h2>` : ''}`;
-                    document.getElementById('main-content').appendChild(transOverlay); setTimeout(() => transOverlay.remove(), 3000);
+                    transOverlay.style.cssText = `position:absolute; inset:0; background:rgba(0,0,0,0.9); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2.5s forwards; pointer-events:none;`;
+
+                    // Đổi màu text theo kết quả
+                    const color = transitionText.includes("XỬ TỬ") || transitionText.includes("CÔNG LÝ") ? "#e74c3c" :
+                                  (transitionText.includes("THA BỔNG") ? "#2ecc71" : "var(--primary)");
+
+                    transOverlay.innerHTML = `<h1 style="color:${color}; letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px ${color}; margin:0; text-align:center;">${transitionText}</h1>${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic; text-align:center;">${subText}</h2>` : ''}`;
+                    document.getElementById('main-content').appendChild(transOverlay); setTimeout(() => transOverlay.remove(), 3500);
                 }
             }
 
