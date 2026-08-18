@@ -284,7 +284,8 @@ fun main() {
                                     val p = room.players.find { it.id == playerId }
                                     if (p != null && !p.isDead && room.phase == "TRIAL_VOTING" && playerId != room.trialTargetId) {
                                         val target = room.players.find { it.id == room.trialTargetId }
-                                        if (target != null) {
+                                        // CHẶN DOUBLE VOTE: Chỉ cho phép vote nếu chưa có tên trong cả 2 danh sách
+                                        if (target != null && !target.killersVotedForMe.contains(p.name) && !target.saversVotedForMe.contains(p.name)) {
                                             target.killVote += 1
                                             target.killersVotedForMe.add(p.name)
                                             broadcastPlayerList(room)
@@ -295,7 +296,8 @@ fun main() {
                                     val p = room.players.find { it.id == playerId }
                                     if (p != null && !p.isDead && room.phase == "TRIAL_VOTING" && playerId != room.trialTargetId) {
                                         val target = room.players.find { it.id == room.trialTargetId }
-                                        if (target != null) {
+                                        // CHẶN DOUBLE VOTE: Chỉ cho phép vote nếu chưa có tên trong cả 2 danh sách
+                                        if (target != null && !target.saversVotedForMe.contains(p.name) && !target.killersVotedForMe.contains(p.name)) {
                                             target.saveVote += 1
                                             target.saversVotedForMe.add(p.name)
                                             broadcastPlayerList(room)
@@ -314,7 +316,8 @@ fun main() {
                                     val p = room.players.find { it.id == playerId }
                                     if (p != null && !p.isDead && room.phase == "TRIAL_VOTING" && playerId != room.trialTargetId) {
                                         val target = room.players.find { it.id == room.trialTargetId }
-                                        if (target != null) {
+                                        // CHẶN DOUBLE VOTE: Chỉ cho phép vote nếu chưa có tên trong cả 2 danh sách
+                                        if (target != null && !target.killersVotedForMe.contains(p.name) && !target.saversVotedForMe.contains(p.name)) {
                                             target.killVote += 1
                                             target.killersVotedForMe.add(p.name)
                                             broadcastPlayerList(room)
@@ -325,7 +328,8 @@ fun main() {
                                     val p = room.players.find { it.id == playerId }
                                     if (p != null && !p.isDead && room.phase == "TRIAL_VOTING" && playerId != room.trialTargetId) {
                                         val target = room.players.find { it.id == room.trialTargetId }
-                                        if (target != null) {
+                                        // CHẶN DOUBLE VOTE: Chỉ cho phép vote nếu chưa có tên trong cả 2 danh sách
+                                        if (target != null && !target.saversVotedForMe.contains(p.name) && !target.killersVotedForMe.contains(p.name)) {
                                             target.saveVote += 1
                                             target.saversVotedForMe.add(p.name)
                                             broadcastPlayerList(room)
@@ -553,6 +557,17 @@ fun processGameLogic(room: Room) {
     room.players.forEach { if (it.heal <= 0 && !it.isDead) room.tempDeadIds.add(it.id) else if (it.heal >= 1) room.tempDeadIds.remove(it.id) }
     if (!room.elderIsDead) { val elder = room.players.find { it.role == Role.ELDER }; if (elder != null && elder.heal <= 0) room.elderIsDead = true }
     if (room.phase == "TRIAL_VOTING") { val t = room.players.find { it.id == room.trialTargetId }; if (t != null && !t.isDead && t.killVote > t.saveVote) { t.heal -= 1; if (t.role == Role.DERP_WOLF) { room.derpWolfRevengeList.clear(); room.derpWolfRevengeList.addAll(t.killersVotedForMe) } } }
+
+    // RESET CÁC BIẾN ĐẾM VOTE SAU MỖI GIAI ĐOẠN QUAN TRỌNG
+    if (room.phase == "DAY" || room.phase == "EXECUTION" || room.phase == "TRIAL_VOTING") {
+        room.players.forEach { p ->
+            p.vote = 0
+            p.killVote = 0
+            p.saveVote = 0
+            p.killersVotedForMe.clear()
+            p.saversVotedForMe.clear()
+        }
+    }
 
     if (room.phase == "NIGHT") {
         val targets = room.players.filter { !it.isDead }
