@@ -101,7 +101,9 @@ fun getPhaseDuration(room: Room): Int {
         "EXECUTION" -> (if (count >= 21) 60 else if (count >= 12) 45 else 30) + buffer
         "TRIAL_DEFENSE" -> (if (count >= 21) 60 else if (count >= 12) 45 else 30) + buffer
         "TRIAL_VOTING" -> 10
-        "PREPARING" -> 60; "HUNTER_REVENGE" -> 25; else -> 0
+        "PREPARING" -> 60; "HUNTER_REVENGE" -> 25; 
+        "ANNOUNCING_VOTES" -> 3;
+        else -> 0
     }
 }
 
@@ -492,8 +494,13 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
                 "EXECUTION" -> {
                     val alive = room.players.filter { !it.isDead }; val max = if (alive.isNotEmpty()) alive.maxOf { it.vote } else 0
                     val top = alive.filter { it.vote == max && max > 0 }
-                    if (top.size == 1) { room.phase = "TRIAL_DEFENSE"; room.trialTargetId = top[0].id } 
-                    else { 
+                    if (top.size == 1) { room.trialTargetId = top[0].id } else { room.trialTargetId = null }
+                    room.phase = "ANNOUNCING_VOTES"
+                }
+                "ANNOUNCING_VOTES" -> {
+                    if (room.trialTargetId != null) {
+                        room.phase = "TRIAL_DEFENSE"
+                    } else {
                         processGameLogic(room); room.phase = "NIGHT"; room.dayCount++; room.nightActionList = getNightOrder(room); room.currentNightActionIndex = 0 
                         if (room.nightActionList.isEmpty()) { processGameLogic(room); room.phase = "DAY" }
                     }

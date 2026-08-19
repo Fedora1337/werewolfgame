@@ -1002,6 +1002,11 @@
                     transitionText = "BẮT ĐẦU BẦU CHỌN";
                     subText = "HÃY TÌM RA MA SÓI";
                 }
+                else if (ph === "ANNOUNCING_VOTES") {
+                    const target = playersCache.find(p => p.id === currentTrialTargetId);
+                    transitionText = target ? "KẾT QUẢ BẦU CHỌN" : "KHÔNG AI PHẢI LÊN GIÀN";
+                    subText = target ? `${target.name} PHẢI LÊN GIÀN` : "LÀNG KHÔNG THỂ THỐNG NHẤT BẦU CHỌN";
+                }
                 else if (ph === "TRIAL_DEFENSE") {
                     transitionText = "PHIÊN BIỆN HỘ";
                     subText = `${target ? target.name : 'Mục tiêu'} ĐANG BIỆN HỘ`;
