@@ -95,14 +95,15 @@ fun getNightActionDuration(room: Room, roleName: String): Int {
 }
 
 fun getPhaseDuration(room: Room): Int {
-    val count = room.players.size; val isDay1 = room.dayCount <= 1; val buffer = 5
+    val count = room.players.size; val buffer = 5
     return when (room.phase) {
-        "DAY" -> (if (count >= 21) 180 else if (count >= 12) 120 else 90) + buffer
+        "DAY" -> (if (count >= 21) 120 else if (count >= 12) 90 else 60) + buffer
         "EXECUTION" -> (if (count >= 21) 60 else if (count >= 12) 45 else 30) + buffer
+        "ANNOUNCING_VOTES" -> 3
         "TRIAL_DEFENSE" -> (if (count >= 21) 60 else if (count >= 12) 45 else 30) + buffer
-        "TRIAL_VOTING" -> 10
-        "PREPARING" -> 60; "HUNTER_REVENGE" -> 25; 
-        "ANNOUNCING_VOTES" -> 3;
+        "TRIAL_VOTING" -> 15 // Tăng lên 15s để bù trừ delay render
+        "PREPARING" -> 60
+        "HUNTER_REVENGE" -> 25
         else -> 0
     }
 }
@@ -588,7 +589,7 @@ fun processGameLogic(room: Room) {
             p.team = "Sói"; p.trulyTeam = "Sói"; p.shield = 0 
         }
         if (p.role != Role.LYCAN && p.shield < 0) { p.heal += p.shield; p.shield = 0 }; 
-        if (room.phase == "NIGHT" || room.phase == "EXECUTION") { 
+        if (room.phase == "NIGHT") {
             if (p.role != Role.ELDER && p.shield > 0) p.shield = 0
             p.vote = 0; p.werewolfMark = 0; p.moonCurse = 0; p.killersVotedForMe.clear() 
         }
