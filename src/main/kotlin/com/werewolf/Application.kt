@@ -611,9 +611,11 @@ fun processGameLogic(room: Room) {
         if (wolves.size >= others.size) room.winner = "WEREWOLF_TEAM"
         else if (wolves.isEmpty()) room.winner = "VILLAGER_TEAM"
     }
-    if (room.phase == "NIGHT" || room.phase == "DAY" || room.phase == "TRIAL_VOTING") room.tempDeadIds.clear()
     val deadHunter = room.players.find { it.role == Role.HUNTER && it.isDead && it.canHunterPassive }
     if (deadHunter != null && room.winner == null) room.phase = "HUNTER_REVENGE"
+    
+    // CHỈ XÓA TEMP DEAD KHI THỰC SỰ KẾT THÚC CÁC PHASE LIÊN QUAN ĐẾN THÔNG BÁO
+    if (room.phase == "NIGHT" || room.phase == "TRIAL_VOTING") room.tempDeadIds.clear()
 }
 
 suspend fun broadcastPlayerList(room: Room) {
@@ -659,7 +661,22 @@ fun handleDevCommand(room: Room, cmd: String, devId: String) {
                 if (parts.size >= 2 && parts[1].lowercase() == "day") {
                     processGameLogic(room)
                     room.phase = "DAY"
-                    triggerNextPhase(room, true)
+                    // Gửi lệnh cập nhật phase trực tiếp cho cả làng, reset timer
+                    val duration = getPhaseDuration(room)
+                    room.nightJob?.cancel()
+                    if (room.tickSpeed > 0) {
+                        room.nightJob = GlobalScope.launch {
+                            delay((duration * 1000L) / room.tickSpeed)
+                            triggerNextPhase(room)
+                        }
+                    }
+                    room.players.forEach { p -> 
+                        launch { 
+                            val deadInfo = room.tempDeadIds.mapNotNull { id -> room.players.find { it.id == id }?.name }.joinToString(", ")
+                            playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "DAY|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}|${room.trialTargetId ?: ""}|$deadInfo"))
+                        } 
+                    }
+                    broadcastPlayerList(room)
                 } else if (parts.size >= 2 && parts[1].lowercase() == "night") {
                     processGameLogic(room)
                     room.phase = "NIGHT"
