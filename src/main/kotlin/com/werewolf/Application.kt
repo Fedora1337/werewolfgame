@@ -215,6 +215,7 @@ fun main() {
                                 // B. Room Admin Actions
                                 val room = rooms.values.find { r -> r.players.any { it.id == playerId } }
                                 if (room != null) {
+                                    room.nightJob?.cancel() // Dừng mọi hẹn giờ cũ trước khi thực hiện lệnh Dev
                                     handleDevCommand(room, msg.data, playerId)
                                 } else {
                                     launch { playerSessions[playerId]?.sendSerialized(SocketMessage("ANNOUNCEMENT", "[LỖI] Không tìm thấy phòng context để thực hiện: ${msg.data}")) }
@@ -535,7 +536,9 @@ fun triggerNextPhase(room: Room, isDevJump: Boolean = false) {
 
             room.players.forEach { p -> launch { 
                 val cur = if (room.phase == "NIGHT" && room.nightActionList.isNotEmpty()) room.nightActionList[room.currentNightActionIndex] else room.phase
-                playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}|${room.trialTargetId ?: ""}")) 
+                // Gửi kèm danh sách người chết đêm nay trong gói tin PHASE_UPDATE
+                val deadInfo = if (room.phase == "DAY") room.tempDeadIds.mapNotNull { id -> room.players.find { it.id == id }?.name }.joinToString(", ") else ""
+                playerSessions[p.id]?.sendSerialized(SocketMessage("PHASE_UPDATE", "$cur|$duration|${room.russianStatus ?: ""}|${room.dayCount}|${room.tickSpeed}|${room.trialTargetId ?: ""}|$deadInfo"))
                 if (room.winner != null) {
                     playerSessions[p.id]?.sendSerialized(SocketMessage("WINNER", room.winner!!))
                     // GIẢI TÁN PHÒNG: Tự động xóa khỏi rooms map sau 60 giây

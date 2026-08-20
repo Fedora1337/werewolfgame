@@ -948,7 +948,7 @@
         }
 
         function handlePhaseUpdate(data) {
-            const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0; const tick=parts.length>4?parseInt(parts[4]) : 1; const trialTargetId=parts.length>5?parts[5] : "";
+            const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0; const tick=parts.length>4?parseInt(parts[4]) : 1; const trialTargetId=parts.length>5?parts[5] : ""; const deadList=parts.length>6?parts[6] : "";
             currentTrialTargetId = trialTargetId;
 
             // RESET FLAGS ON PHASE CHANGE
@@ -995,8 +995,8 @@
                     subText = "MỜI THỨC GIẤC";
                 }
                 else if (ph === "DAY") {
-                    transitionText = `HẾT ĐÊM ${day}`;
-                    subText = `NGÀY ${day} ĐÃ ĐẾN`;
+                    transitionText = deadList ? "ĐÊM QUA CÓ BIẾN" : "ĐÊM QUA BÌNH YÊN";
+                    subText = deadList ? `${deadList} ĐÃ RA ĐI...` : "Không có ai tử nạn trong đêm";
                 }
                 else if (ph === "EXECUTION") {
                     transitionText = "BẮT ĐẦU BẦU CHỌN";
@@ -1014,14 +1014,14 @@
 
                 if (transitionText) {
                     const transOverlay = document.createElement('div');
-                    transOverlay.style.cssText = `position:absolute; inset:0; background:rgba(0,0,0,0.9); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2.5s forwards; pointer-events:none;`;
+                    transOverlay.style.cssText = `position:absolute; inset:0; background:rgba(0,0,0,0.9); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 4s forwards; pointer-events:none;`;
 
                     // Đổi màu text theo kết quả
-                    const color = transitionText.includes("XỬ TỬ") || transitionText.includes("CÔNG LÝ") ? "#e74c3c" :
-                                  (transitionText.includes("THA BỔNG") ? "#2ecc71" : "var(--primary)");
+                    const color = (transitionText.includes("XỬ TỬ") || transitionText.includes("CÔNG LÝ") || transitionText.includes("CÓ BIẾN")) ? "#e74c3c" :
+                                  (transitionText.includes("THA BỔNG") || transitionText.includes("BÌNH YÊN") ? "#2ecc71" : "var(--primary)");
 
                     transOverlay.innerHTML = `<h1 style="color:${color}; letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px ${color}; margin:0; text-align:center;">${transitionText}</h1>${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic; text-align:center;">${subText}</h2>` : ''}`;
-                    document.getElementById('main-content').appendChild(transOverlay); setTimeout(() => transOverlay.remove(), 3500);
+                    document.getElementById('main-content').appendChild(transOverlay); setTimeout(() => transOverlay.remove(), 5000);
                 }
             }
 
