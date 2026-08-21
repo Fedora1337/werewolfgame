@@ -318,7 +318,15 @@
         button:active { transform: scale(0.98); }
         .ghost-btn { background: rgba(255,255,255,0.05) !important; color: var(--primary) !important; border: 1px solid rgba(231, 76, 60, 0.3) !important; }
         .ghost-btn:hover { background: rgba(255,255,255,0.1) !important; }
-        .kick-btn { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #111; z-index: 5; cursor: pointer; }
+        .kick-btn { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #111; z-index: 10; cursor: pointer; transition: all 0.3s; }
+        .kick-btn.is-ready { background: #555 !important; opacity: 0.7; }
+        .not-ready-tag { position: absolute; top: -8px; left: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; border: 2px solid #111; z-index: 5; pointer-events: none; animation: pulse-red 1.5s infinite; }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
 
         /* LOADING OVERLAY */
         #loading-overlay {
@@ -713,7 +721,16 @@
         function updatePlayerListUI(ps) {
             playersCache = ps; const g=document.getElementById('game-grid'); const mi=ps.findIndex(p=>p.id===myId);
             const me = ps.find(p => p.id === myId);
-            if (me) { isHost = me.isHost; document.getElementById('host-action-bar').style.display = isHost ? 'flex' : 'none'; document.getElementById('btnReady').style.display = isHost ? 'none' : 'block'; }
+            if (me) {
+                isHost = me.isHost;
+                document.getElementById('host-action-bar').style.display = isHost ? 'flex' : 'none';
+                const btnReady = document.getElementById('btnReady');
+                if (btnReady) {
+                    btnReady.style.display = isHost ? 'none' : 'block';
+                    btnReady.innerText = me.isReady ? "HỦY SẴN SÀNG" : "SẴN SÀNG";
+                    btnReady.style.background = me.isReady ? "#e67e22" : "#2980b9";
+                }
+            }
 
             const isWolfTeam = (p) => p && p.trulyTeam === "Sói";
             const iAmWolf = isWolfTeam(me);
@@ -724,28 +741,22 @@
             // XỬ LÝ SORT VÀ UI SĂN MỒI / BẦU CHỌN
             let sortedPs = [...ps];
             if (isHuntPhase || isVoteDayPhase) {
-                document.getElementById('hunt-search-container').style.display = 'block';
-                const wolfPanel = document.getElementById('huntranking');
-                const wolfToggle = document.getElementById('huntranking-toggle');
-                const votePanel = document.getElementById('voteranking');
-                const voteToggle = document.getElementById('voteranking-toggle');
-
-                if (isHuntPhase && iAmWolf) {
-                    if(wolfPanel) wolfPanel.style.display = 'flex';
-                    if(wolfToggle) wolfToggle.style.display = 'flex';
+                const searchContainer = document.getElementById('hunt-search-container');
+                if(searchContainer) searchContainer.style.display = 'block';
+                if (iAmWolf) {
+                    const rankPanel = document.getElementById('huntranking');
+                    const rankToggle = document.getElementById('huntranking-toggle');
+                    if(rankPanel) rankPanel.style.display = 'flex';
+                    if(rankToggle) rankToggle.style.display = 'flex';
                     renderWolfRank(ps);
-                } else {
-                    if(wolfPanel) wolfPanel.style.display = 'none';
-                    if(wolfToggle) wolfToggle.style.display = 'none';
                 }
 
                 if (isVoteDayPhase) {
+                    const votePanel = document.getElementById('voteranking');
+                    const voteToggle = document.getElementById('voteranking-toggle');
                     if(votePanel) votePanel.style.display = 'flex';
                     if(voteToggle) voteToggle.style.display = 'flex';
                     renderVoteRank(ps);
-                } else {
-                    if(votePanel) votePanel.style.display = 'none';
-                    if(voteToggle) voteToggle.style.display = 'none';
                 }
 
                 sortedPs.sort((a, b) => {
@@ -758,11 +769,16 @@
                     return (b.vote || 0) - (a.vote || 0);
                 });
             } else {
-                document.getElementById('hunt-search-container').style.display = 'none';
-                document.getElementById('huntranking').style.display = 'none';
-                document.getElementById('huntranking-toggle').style.display = 'none';
-                document.getElementById('voteranking').style.display = 'none';
-                document.getElementById('voteranking-toggle').style.display = 'none';
+                const searchContainer = document.getElementById('hunt-search-container');
+                if(searchContainer) searchContainer.style.display = 'none';
+                const wolfPanel = document.getElementById('huntranking');
+                const wolfToggle = document.getElementById('huntranking-toggle');
+                const votePanel = document.getElementById('voteranking');
+                const voteToggle = document.getElementById('voteranking-toggle');
+                if(wolfPanel) { wolfPanel.style.display = 'none'; wolfPanel.classList.remove('active'); }
+                if(wolfToggle) wolfToggle.style.display = 'none';
+                if(votePanel) { votePanel.style.display = 'none'; votePanel.classList.remove('active'); }
+                if(voteToggle) voteToggle.style.display = 'none';
             }
 
             // HIỆN NÚT PHÁN QUYẾT (THẢ/GIẾT) VÀ CẬP NHẬT COUNTERS
@@ -771,29 +787,30 @@
             const votersPanel = document.getElementById('trial-voters-panel');
 
             if (isTrialPhase) {
-                counterDiv.style.display = 'flex';
-                votersPanel.style.display = 'flex';
+                if(counterDiv) counterDiv.style.display = 'flex';
+                if(votersPanel) votersPanel.style.display = 'flex';
                 const targetP = ps.find(p => p.id === currentTrialTargetId);
-                document.getElementById('count-kill').innerText = targetP ? (targetP.killVote || 0) : 0;
-                document.getElementById('count-save').innerText = targetP ? (targetP.saveVote || 0) : 0;
+                const cKill = document.getElementById('count-kill');
+                const cSave = document.getElementById('count-save');
+                if(cKill) cKill.innerText = targetP ? (targetP.killVote || 0) : 0;
+                if(cSave) cSave.innerText = targetP ? (targetP.saveVote || 0) : 0;
 
-                // Cập nhật danh sách tên người vote
                 const killersList = document.getElementById('killers-list');
                 const saversList = document.getElementById('savers-list');
                 if (targetP) {
-                    killersList.innerHTML = (targetP.killersVotedForMe || []).map(name => `<span>• ${name}</span>`).join('');
-                    saversList.innerHTML = (targetP.saversVotedForMe || []).map(name => `<span>• ${name}</span>`).join('');
+                    if(killersList) killersList.innerHTML = (targetP.killersVotedForMe || []).map(name => `<span>• ${name}</span>`).join('');
+                    if(saversList) saversList.innerHTML = (targetP.saversVotedForMe || []).map(name => `<span>• ${name}</span>`).join('');
                 }
 
                 if (!me?.isDead && me?.id !== currentTrialTargetId && !hasVotedInTrial) {
-                    trialDiv.style.display = 'flex';
+                    if(trialDiv) trialDiv.style.display = 'flex';
                 } else {
-                    trialDiv.style.display = 'none';
+                    if(trialDiv) trialDiv.style.display = 'none';
                 }
             } else {
-                trialDiv.style.display = 'none';
-                counterDiv.style.display = 'none';
-                votersPanel.style.display = 'none';
+                if(trialDiv) trialDiv.style.display = 'none';
+                if(counterDiv) counterDiv.style.display = 'none';
+                if(votersPanel) votersPanel.style.display = 'none';
             }
 
             if (isHost && currentPhase === 'LOBBY') g.classList.add('is-host-view'); else g.classList.remove('is-host-view');
@@ -805,9 +822,13 @@
                 const canInteract = (isHuntPhase || isVoteDayPhase) && !p.isDead && !me?.isDead;
 
                 return `
+                return `
                 <div id="p-card-${p.id}" class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''} ${p.isDead?'is-dead':''} ${showTeammate?'is-teammate':''}"
                      onclick="selectPlayerHunt('${p.id}')" ondblclick="markTarget('${p.id}')">
-                    ${isHost&&p.id!==myId&&currentPhase==='LOBBY'?`<div class="kick-btn" onclick="event.stopPropagation(); kickPlayer('${p.id}')">×</div>`:''}
+                    ${isHost && p.id !== myId && currentPhase === 'LOBBY' ?
+                        `<div class="kick-btn ${p.isReady ? 'is-ready' : ''}" onclick="event.stopPropagation(); kickPlayer('${p.id}')">✕</div>` :
+                        (currentPhase === 'LOBBY' && !p.isReady ? `<div class="not-ready-tag">!</div>` : '')
+                    }
                     <div class="player-num">${p.isDead ? '#DIE' : '#'+(originalIdx+1)}</div>
                     <img src="${p.avatar}">
                     <p>${p.name}</p>
@@ -818,11 +839,16 @@
             }).join('');
 
             for(let i = ps.length; i < 18; i++) html += `<div class="slot-empty">${i+1}</div>`;
-            g.innerHTML = html; if(mi!==-1) document.getElementById('self-mini-num').innerText=`#${mi+1}`;
+            g.innerHTML = html; if(mi!==-1) {
+                const miniNum = document.getElementById('self-mini-num');
+                if(miniNum) miniNum.innerText=`#${mi+1}`;
+            }
 
             const b=document.getElementById('player-count-badge'); const c=ps.length; const rc=ps.filter(p=>p.isReady).length;
-            if(c<8) b.innerText=`Cần ${8-c} nữa`; else if(rc<c) b.innerText=`Chờ (${rc}/${c})`; else b.innerText="Đủ!";
-            if(isHost){ const btn=document.getElementById('btnStartGame'); btn.disabled=(c<8||rc<c); btn.innerText=c<8?`CẦN THÊM ${8-c}`:rc<c?`CHỜ SẴN SÀNG`:"BẮT ĐẦU"; }
+            if(b) {
+                if(c<8) b.innerText=`Cần ${8-c} nữa`; else if(rc<c) b.innerText=`Chờ (${rc}/${c})`; else b.innerText="Đủ!";
+            }
+            if(isHost){ const btn=document.getElementById('btnStartGame'); if(btn){ btn.disabled=(c<8||rc<c); btn.innerText=c<8?`CẦN THÊM ${8-c}`:rc<c?`CHỜ SẴN SÀNG`:"BẮT ĐẦU"; } }
             updateActionButtons();
         }
 
