@@ -822,7 +822,6 @@
                 const canInteract = (isHuntPhase || isVoteDayPhase) && !p.isDead && !me?.isDead;
 
                 return `
-                return `
                 <div id="p-card-${p.id}" class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''} ${p.isDead?'is-dead':''} ${showTeammate?'is-teammate':''}"
                      onclick="selectPlayerHunt('${p.id}')" ondblclick="markTarget('${p.id}')">
                     ${isHost && p.id !== myId && currentPhase === 'LOBBY' ?
