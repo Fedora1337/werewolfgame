@@ -4,17 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Môn Sói Là</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #e74c3c; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0;
-            --nav-h: calc(75px + env(safe-area-inset-bottom));
-            --header-h: calc(60px + env(safe-area-inset-top));
+            --primary: #ff4757;
+            --primary-glow: rgba(255, 71, 87, 0.45);
+            --gold: #f1c40f;
+            --gold-glow: rgba(241, 196, 15, 0.45);
+            --bg: #0c0b0e;
+            --card: #16151a;
+            --text: #f1f2f6;
+            --nav-h: calc(68px + env(safe-area-inset-bottom));
+            --header-h: calc(64px + env(safe-area-inset-top));
             --dev-w: 300px;
         }
 
         body, html {
             margin: 0; padding: 0; height: 100dvh; background: var(--bg); color: var(--text);
-            font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden;
+            font-family: 'Outfit', 'Segoe UI', Tahoma, sans-serif; overflow: hidden;
             user-select: none; -webkit-user-select: none;
         }
 
@@ -61,27 +70,208 @@
             overflow: hidden; width: 100%; background: var(--bg);
         }
 
+        /* HEADER - MYSTIC GLASS & BLOOD MOON */
         header {
-            height: var(--header-h); background: rgba(26,26,26,0.95);
+            height: var(--header-h);
+            background: linear-gradient(180deg, rgba(22, 17, 24, 0.88) 0%, rgba(13, 11, 16, 0.72) 100%);
             display: flex; align-items: flex-end; justify-content: center;
-            border-bottom: 1px solid #333; flex-shrink: 0; backdrop-filter: blur(10px);
-            position: relative; width: 100%; padding-bottom: 15px; box-sizing: border-box;
+            border-bottom: 1px solid rgba(255, 71, 87, 0.22); flex-shrink: 0;
+            backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%);
+            position: relative; width: 100%; padding-bottom: 12px; box-sizing: border-box;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.6), 0 1px 12px rgba(255, 71, 87, 0.15);
+            z-index: 1000;
         }
-        header h2 { color: var(--primary); margin: 0; font-size: 1.2em; text-transform: uppercase; letter-spacing: 2px; }
 
-        #scroll-area { flex: 1; overflow-y: auto; padding: 20px; box-sizing: border-box; width: 100%; }
+        /* Ambient glowing laser sweep under header */
+        header::after {
+            content: ''; position: absolute; bottom: -1px; left: 15%; right: 15%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 71, 87, 0.85), rgba(241, 196, 15, 0.85), transparent);
+            box-shadow: 0 0 12px rgba(255, 71, 87, 0.6); pointer-events: none;
+            animation: headerGlowSweep 6s ease-in-out infinite alternate;
+        }
+        @keyframes headerGlowSweep {
+            0% { opacity: 0.35; transform: scaleX(0.9); }
+            50% { opacity: 0.95; transform: scaleX(1.05); }
+            100% { opacity: 0.35; transform: scaleX(0.9); }
+        }
+
+        .header-logo-wrap { display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .header-title {
+            margin: 0; font-size: 1.22em; font-family: 'Cinzel', 'Georgia', serif;
+            text-transform: uppercase; letter-spacing: 3px; display: flex; align-items: center; gap: 8px; font-weight: 800;
+        }
+        .header-title .logo-text {
+            background: linear-gradient(135deg, #ffffff 0%, #ff8da1 45%, #ff4757 80%, #c0392b 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 12px rgba(255, 71, 87, 0.6));
+        }
+        .logo-wolf-icon {
+            font-size: 0.95em; filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.8));
+            animation: wolfPulse 4s ease-in-out infinite;
+        }
+        .logo-moon-glow {
+            font-size: 0.85em; filter: drop-shadow(0 0 10px rgba(241, 196, 15, 0.9));
+            animation: moonPulse 5s ease-in-out infinite alternate;
+        }
+        @keyframes wolfPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(255, 71, 87, 0.6)); }
+            50% { transform: scale(1.12) rotate(-5deg); filter: drop-shadow(0 0 14px rgba(255, 71, 87, 0.95)); }
+        }
+        @keyframes moonPulse {
+            0% { transform: scale(1); opacity: 0.85; filter: drop-shadow(0 0 8px rgba(241, 196, 15, 0.7)); }
+            100% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 16px rgba(255, 71, 87, 0.9)); }
+        }
+
+        .header-action-btn {
+            position: absolute; bottom: 12px; width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: rgba(255, 255, 255, 0.85); font-size: 1.1em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .header-action-btn:hover {
+            background: rgba(255, 71, 87, 0.22); border-color: rgba(255, 71, 87, 0.5);
+            color: #fff; transform: scale(1.1); box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+        }
+        .header-action-btn:active { transform: scale(0.92); }
+        .header-back-btn { left: 15px; font-weight: bold; }
+        .header-right-actions { position: absolute; right: 15px; bottom: 12px; display: flex; gap: 10px; align-items: center; }
+        .header-fs-btn { position: static; }
+        .header-dev-btn { opacity: 0.0001; cursor: pointer; padding: 6px; }
+
+        .header-status-badge {
+            position: absolute; bottom: 12px; background: rgba(18, 18, 24, 0.75);
+            backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px; padding: 4px 12px; display: none; align-items: center; gap: 6px;
+            font-size: 0.75em; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); transition: all 0.3s ease;
+        }
+        .header-status-badge.status-left {
+            left: 60px; border-color: rgba(241, 196, 15, 0.4); color: #f1c40f; font-weight: bold;
+            box-shadow: 0 0 12px rgba(241, 196, 15, 0.2);
+        }
+        .header-status-badge.status-right {
+            right: 70px; border-color: rgba(255, 71, 87, 0.4); color: #ff4757;
+            font-family: 'Consolas', 'Courier New', monospace; font-weight: bold;
+            box-shadow: 0 0 12px rgba(255, 71, 87, 0.2); animation: timerGlowPulse 2s infinite ease-in-out;
+        }
+        @keyframes timerGlowPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 71, 87, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(255, 71, 87, 0.5); }
+        }
+
+        .night-indicator {
+            margin-left: 8px; background: rgba(255, 71, 87, 0.18); padding: 2px 8px;
+            border-radius: 6px; border: 1px solid rgba(255, 71, 87, 0.45); color: #ff4757;
+            display: none; font-size: 0.9em; animation: pulse-red 2s infinite;
+        }
+
+        #scroll-area { flex: 1; overflow-y: auto; padding: 20px 20px calc(90px + env(safe-area-inset-bottom)) 20px; box-sizing: border-box; width: 100%; }
         .container { width: 100%; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; }
 
-        /* NAVBAR REDESIGN */
+        /* FLOATING ISLAND BOTTOM NAVIGATION */
         nav#bottom-nav {
-            height: var(--nav-h); background: #151515; border-top: 1px solid #333;
-            display: none; grid-template-columns: repeat(3, 1fr); flex-shrink: 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5); padding-bottom: env(safe-area-inset-bottom);
+            position: fixed;
+            bottom: calc(16px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 440px;
+            height: 64px;
+            background: rgba(18, 17, 24, 0.78);
+            backdrop-filter: blur(20px) saturate(190%);
+            -webkit-backdrop-filter: blur(20px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 36px;
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            align-items: center;
+            padding: 6px;
+            box-sizing: border-box;
+            z-index: 2500;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 71, 87, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75em; color: #aaa; cursor: pointer; transition: all 0.3s; position: relative; }
-        .nav-item.active { color: var(--primary); font-weight: bold; }
-        .nav-item.active::after { content: ""; position: absolute; bottom: 0; left: 20%; right: 20%; height: 4px; background: var(--primary); border-radius: 4px 4px 0 0; box-shadow: 0 -2px 10px var(--primary); }
-        .nav-item span { font-size: 1.6em; margin-bottom: 4px; }
+
+        #nav-indicator {
+            position: absolute;
+            top: 6px;
+            bottom: 6px;
+            left: 6px;
+            width: calc((100% - 12px) / 3);
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.28) 0%, rgba(255, 107, 129, 0.14) 100%);
+            border: 1px solid rgba(255, 71, 87, 0.5);
+            border-radius: 30px;
+            box-shadow: 0 0 18px rgba(255, 71, 87, 0.38), inset 0 0 12px rgba(255, 71, 87, 0.25);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #bottom-nav[data-active="0"] #nav-indicator { transform: translateX(0%); }
+        #bottom-nav[data-active="1"] #nav-indicator { transform: translateX(100%); }
+        #bottom-nav[data-active="2"] #nav-indicator { transform: translateX(200%); }
+
+        .nav-item {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 0.72em;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.55);
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 28px;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .nav-item:hover { color: rgba(255, 255, 255, 0.85); }
+        .nav-item.active { color: #fff; font-weight: 700; }
+
+        .nav-item .nav-icon {
+            font-size: 1.5em;
+            margin-bottom: 2px;
+            display: inline-block;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+        }
+
+        .nav-item.active .nav-icon {
+            transform: scale(1.18) translateY(-2px);
+            filter: drop-shadow(0 0 10px rgba(255, 71, 87, 0.85));
+        }
+
+        .nav-item .nav-label {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .nav-item.active .nav-label {
+            color: #ff6b81;
+            text-shadow: 0 0 8px rgba(255, 71, 87, 0.6);
+        }
+
+        /* Micro click wave effect */
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            background: radial-gradient(circle, rgba(255, 71, 87, 0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
+            pointer-events: none;
+        }
+        .nav-item:active::before {
+            width: 130px; height: 130px;
+            opacity: 1; transition: 0s;
+        }
 
         /* PAGE SYSTEM - FIX "LOẠN CÀO CÀO" */
         .page { display: none !important; width: 100%; flex-direction: column; }
@@ -419,24 +609,30 @@
             </div>
 
             <header>
-                <div id="back-btn" onclick="goBack()" style="position: absolute; left: 15px; bottom: 15px; cursor: pointer; display: none; font-size: 1.5em;">←</div>
+                <div id="back-btn" onclick="goBack()" class="header-action-btn header-back-btn">←</div>
 
                 <!-- STATUS TRÁI: ICON + PHASE -->
-                <div id="header-status-left" style="position: absolute; left: 55px; bottom: 18px; display: none; align-items: center; gap: 6px; font-size: 0.75em; color: #f1c40f; font-weight: bold;">
+                <div id="header-status-left" class="header-status-badge status-left">
                     <span id="header-phase-icon"></span> <span id="header-phase-text"></span>
-                    <div id="night-turn-indicator" style="margin-left: 10px; background: rgba(231, 76, 60, 0.2); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--primary); color: var(--primary); display: none;">Lượt của \NONE</div>
+                    <div id="night-turn-indicator" class="night-indicator">Lượt của \NONE</div>
                 </div>
 
-                <h2>Môn Sói Là</h2>
+                <div class="header-logo-wrap">
+                    <h2 class="header-title">
+                        <span class="logo-wolf-icon">🐺</span>
+                        <span class="logo-text">MÔN SÓI LÀ</span>
+                        <span class="logo-moon-glow">🌕</span>
+                    </h2>
+                </div>
 
                 <!-- STATUS PHẢI: CLOCK + TIMER -->
-                <div id="header-status-right" style="position: absolute; right: 85px; bottom: 18px; display: none; align-items: center; gap: 6px; font-size: 0.75em; color: var(--primary); font-family: monospace; font-weight: bold;">
+                <div id="header-status-right" class="header-status-badge status-right">
                     <span>🕒</span> <span id="header-timer">00:00</span>
                 </div>
 
-                <div style="position: absolute; right: 15px; bottom: 15px; display: flex; gap: 15px; align-items: center;">
-                    <div onclick="showDevLogin()" style="opacity: 0.00005; cursor: pointer;">🛠️</div>
-                    <div onclick="toggleFullscreen()" style="opacity: 1; cursor: pointer; font-size: 1.2em;">⛶</div>
+                <div class="header-right-actions">
+                    <div onclick="showDevLogin()" class="header-dev-btn" title="Dev Portal">🛠️</div>
+                    <div onclick="toggleFullscreen()" class="header-action-btn header-fs-btn" title="Toàn màn hình">⛶</div>
                 </div>
             </header>
 
@@ -486,10 +682,20 @@
                 </div>
             </main>
 
-            <nav id="bottom-nav">
-                <div id="nav-dash" class="nav-item active" onclick="navigateTo('page-dashboard')"><span>🏠</span>Sảnh</div>
-                <div id="nav-gall" class="nav-item" onclick="navigateTo('page-gallery')"><span>📖</span>Bộ bài</div>
-                <div id="nav-prof" class="nav-item" onclick="navigateTo('page-profile')"><span>👤</span>Hồ sơ</div>
+            <nav id="bottom-nav" data-active="0">
+                <div id="nav-indicator"></div>
+                <div id="nav-dash" class="nav-item active" onclick="navigateTo('page-dashboard')">
+                    <span class="nav-icon">🏰</span>
+                    <span class="nav-label">Sảnh</span>
+                </div>
+                <div id="nav-gall" class="nav-item" onclick="navigateTo('page-gallery')">
+                    <span class="nav-icon">🐺</span>
+                    <span class="nav-label">Bộ bài</span>
+                </div>
+                <div id="nav-prof" class="nav-item" onclick="navigateTo('page-profile')">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">Hồ sơ</span>
+                </div>
             </nav>
 
             <div id="trial-voters-panel">
@@ -599,15 +805,29 @@
         }
 
         function navigateTo(pId, updateHistory = true) {
-            const b = document.getElementById('back-btn'); if(b) b.style.display = (pId==='page-home'||pId==='page-dashboard')?'none':'block';
+            const b = document.getElementById('back-btn'); if(b) b.style.display = (pId==='page-home'||pId==='page-dashboard')?'none':'flex';
             if(pId!=='page-gallery'&&pId!=='page-dev-login'&&pId!=='page-profile'&&pId!=='page-lobby') lastPage=pId;
             document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
             const target = document.getElementById(pId); if (target) target.classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-            if(pId==='page-dashboard') document.getElementById('nav-dash').classList.add('active');
-            if(pId==='page-gallery') document.getElementById('nav-gall').classList.add('active');
-            if(pId==='page-profile') document.getElementById('nav-prof').classList.add('active');
-            const nav=document.getElementById('bottom-nav'); if(pId==='page-lobby'||pId==='page-home') nav.style.display='none'; else nav.style.display='grid';
+            const nav = document.getElementById('bottom-nav');
+            if(pId==='page-lobby'||pId==='page-home') {
+                if(nav) nav.style.display = 'none';
+            } else {
+                if(nav) {
+                    nav.style.display = 'grid';
+                    if(pId==='page-dashboard') {
+                        document.getElementById('nav-dash')?.classList.add('active');
+                        nav.setAttribute('data-active', '0');
+                    } else if(pId==='page-gallery') {
+                        document.getElementById('nav-gall')?.classList.add('active');
+                        nav.setAttribute('data-active', '1');
+                    } else if(pId==='page-profile') {
+                        document.getElementById('nav-prof')?.classList.add('active');
+                        nav.setAttribute('data-active', '2');
+                    }
+                }
+            }
             updateActionButtons();
             if(pId==='page-gallery') showGallery();
             updateProfileUI();
