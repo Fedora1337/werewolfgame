@@ -417,56 +417,247 @@
         }
         .move-btn:hover { background: var(--primary); }
 
-        /* GALLERY & CARD VIEWER */
-        .gallery-card { background: #1a1a1a; border-radius: 12px; border: 2px solid #d4af37; overflow: hidden; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .gallery-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: center 95%; border-bottom: 2px solid #d4af37; }
-        .gallery-card h4 {
-            margin: 0;
-            color: #d4af37;
-            font-size: 0.8em;
-            font-family: 'Georgia', serif;
-            text-transform: uppercase;
-            padding: 5px;
-            height: 45px; /* Chiều cao cố định tương đương 2 dòng chữ */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            box-sizing: border-box;
-            line-height: 1.2;
+        /* GALLERY - MYSTIC HOLOGRAM & FILTERS */
+        .gallery-header-wrap { text-align: center; margin-bottom: 25px; }
+        .gallery-main-title {
+            font-family: 'Cinzel', serif; font-size: 1.6em; font-weight: 800; letter-spacing: 2px;
+            margin: 0 0 8px 0;
+            background: linear-gradient(135deg, #ffffff 0%, #f1c40f 50%, #e67e22 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(241, 196, 15, 0.4));
+        }
+        .gallery-sub-title { color: rgba(255, 255, 255, 0.6); font-size: 0.85em; margin: 0; font-style: italic; }
+
+        .gallery-controls-wrap { display: flex; flex-direction: column; gap: 14px; margin-bottom: 25px; }
+        .gallery-search-box { position: relative; width: 100%; max-width: 480px; margin: 0 auto; }
+        .gallery-search-box input {
+            width: 100%; background: rgba(20, 18, 26, 0.75); backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 30px;
+            padding: 12px 20px 12px 45px; color: #fff; font-size: 0.9em; box-sizing: border-box;
+            transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); margin: 0;
+        }
+        .gallery-search-box input:focus {
+            border-color: rgba(241, 196, 15, 0.65); box-shadow: 0 0 20px rgba(241, 196, 15, 0.35); outline: none;
+        }
+        .gallery-search-box .search-icon {
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5); font-size: 1.1em; pointer-events: none;
         }
 
-        #card-viewer { position: absolute; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .viewer-content { position: relative; height: 90vh; width: 90%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gallery-chips-bar { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .gallery-chip {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 8px 14px; border-radius: 20px; font-size: 0.78em; font-weight: 600;
+            color: rgba(255, 255, 255, 0.7); cursor: pointer; backdrop-filter: blur(8px);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); user-select: none;
+        }
+        .gallery-chip:hover { background: rgba(255, 255, 255, 0.12); color: #fff; transform: translateY(-2px); }
+        .gallery-chip.active { color: #fff; font-weight: 700; transform: scale(1.04); }
+        .gallery-chip.active[data-filter="ALL"] {
+            background: rgba(241, 196, 15, 0.22); border-color: rgba(241, 196, 15, 0.65);
+            box-shadow: 0 0 15px rgba(241, 196, 15, 0.35); color: #f1c40f;
+        }
+        .gallery-chip.active[data-filter="VILLAGER"] {
+            background: rgba(77, 166, 255, 0.22); border-color: rgba(77, 166, 255, 0.65);
+            box-shadow: 0 0 15px rgba(77, 166, 255, 0.35); color: #70b8ff;
+        }
+        .gallery-chip.active[data-filter="WOLF"] {
+            background: rgba(255, 71, 87, 0.22); border-color: rgba(255, 71, 87, 0.65);
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.35); color: #ff6b81;
+        }
+        .gallery-chip.active[data-filter="THIRD"] {
+            background: rgba(155, 89, 182, 0.25); border-color: rgba(155, 89, 182, 0.65);
+            box-shadow: 0 0 15px rgba(155, 89, 182, 0.35); color: #c39bd3;
+        }
 
-        /* 3D FLIP CARD LOGIC */
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; margin-bottom: 30px;
+        }
+        @media (min-width: 600px) { .gallery-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; } }
+        @media (min-width: 1000px) { .gallery-grid { grid-template-columns: repeat(6, 1fr); gap: 18px; } }
+
+        .gallery-card {
+            position: relative; background: linear-gradient(180deg, #1f1b26 0%, #131118 100%);
+            border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden; cursor: pointer; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+        .gallery-card:hover {
+            transform: translateY(-8px) scale(1.04);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+        }
+        .gallery-card.faction-wolf { border-color: rgba(255, 71, 87, 0.35); }
+        .gallery-card.faction-wolf:hover { border-color: rgba(255, 71, 87, 0.85); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 71, 87, 0.4); }
+        .gallery-card.faction-villager { border-color: rgba(77, 166, 255, 0.35); }
+        .gallery-card.faction-villager:hover { border-color: rgba(77, 166, 255, 0.85); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(77, 166, 255, 0.4); }
+        .gallery-card.faction-third { border-color: rgba(241, 196, 15, 0.35); }
+        .gallery-card.faction-third:hover { border-color: rgba(241, 196, 15, 0.85); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(241, 196, 15, 0.4); }
+
+        .gallery-card .card-img-wrap { width: 100%; position: relative; overflow: hidden; }
+        .gallery-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: center 95%; transition: transform 0.4s ease; display: block; }
+        .gallery-card:hover img { transform: scale(1.06); }
+        .gallery-card .card-badge {
+            position: absolute; top: 6px; right: 6px; font-size: 0.65em; font-weight: bold;
+            padding: 2px 7px; border-radius: 10px; background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px); border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gallery-card h4 {
+            margin: 0; font-size: 0.78em; font-family: 'Cinzel', serif; font-weight: 700;
+            text-transform: uppercase; padding: 6px 4px; height: 44px; display: flex;
+            align-items: center; justify-content: center; width: 100%; box-sizing: border-box;
+            line-height: 1.2; letter-spacing: 0.5px;
+        }
+        .gallery-card.faction-wolf h4 { color: #ff6b81; }
+        .gallery-card.faction-villager h4 { color: #70b8ff; }
+        .gallery-card.faction-third h4 { color: #f1c40f; }
+
+        /* PROFILE - MYSTIC IDENTITY CARD & PRESETS */
+        .profile-card {
+            background: linear-gradient(180deg, rgba(26, 22, 33, 0.88) 0%, rgba(15, 13, 19, 0.88) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 28px; padding: 28px 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 71, 87, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px); max-width: 460px; margin: 0 auto 30px auto;
+            display: flex; flex-direction: column; align-items: center; box-sizing: border-box; width: 100%;
+        }
+        .profile-rank-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: linear-gradient(90deg, rgba(255, 71, 87, 0.2), rgba(241, 196, 15, 0.2));
+            border: 1px solid rgba(241, 196, 15, 0.4); padding: 5px 14px; border-radius: 20px;
+            font-size: 0.75em; font-weight: 700; letter-spacing: 1px; color: #f1c40f;
+            margin-bottom: 18px; box-shadow: 0 0 15px rgba(241, 196, 15, 0.2);
+        }
+        .profile-avatar-wrapper { position: relative; cursor: pointer; margin-bottom: 15px; }
+        .profile-avatar-aura {
+            position: absolute; inset: -6px; border-radius: 50%;
+            background: linear-gradient(135deg, #ff4757, #f1c40f, #9b59b6);
+            filter: blur(8px); opacity: 0.75;
+            animation: avatarAuraPulse 4s infinite alternate ease-in-out;
+        }
+        @keyframes avatarAuraPulse {
+            0% { transform: scale(0.96) rotate(0deg); opacity: 0.5; }
+            100% { transform: scale(1.04) rotate(180deg); opacity: 0.9; }
+        }
+        #profile-ava-preview {
+            position: relative; width: 140px; height: 140px; border-radius: 50%;
+            border: 4px solid #1a1622; object-fit: cover; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease; z-index: 2; display: block;
+        }
+        .profile-avatar-cam {
+            position: absolute; bottom: 4px; right: 4px;
+            background: linear-gradient(135deg, #ff4757, #e84118);
+            border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1em; border: 3px solid #16141a; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.6);
+            z-index: 3; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .profile-avatar-cam:hover { transform: scale(1.15); }
+
+        .preset-avatars-section { width: 100%; margin: 15px 0 18px 0; text-align: left; }
+        .preset-title {
+            font-size: 0.75em; color: rgba(255, 255, 255, 0.65); font-weight: 700;
+            letter-spacing: 1px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .preset-scroll-row {
+            display: flex; gap: 10px; overflow-x: auto; padding: 6px 2px 10px 2px;
+            scrollbar-width: thin;
+        }
+        .preset-item {
+            flex-shrink: 0; width: 50px; height: 50px; border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.15); overflow: hidden; cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        .preset-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preset-item:hover { transform: scale(1.15); border-color: #f1c40f; box-shadow: 0 0 15px rgba(241, 196, 15, 0.6); }
+
+        .profile-input-group { text-align: left; width: 100%; margin-top: 10px; }
+        .profile-label {
+            font-size: 0.75em; color: rgba(255, 255, 255, 0.6); font-weight: 700;
+            letter-spacing: 1.5px; display: block; margin-bottom: 8px;
+        }
+        .profile-input {
+            width: 100%; background: rgba(10, 8, 14, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            border-radius: 12px !important; padding: 12px 16px !important; color: #fff !important;
+            font-size: 15px !important; font-weight: 600 !important; box-sizing: border-box !important;
+            transition: all 0.3s ease !important; margin: 0 !important;
+        }
+        .profile-input:focus {
+            border-color: rgba(255, 71, 87, 0.6) !important; box-shadow: 0 0 18px rgba(255, 71, 87, 0.3) !important;
+            outline: none !important;
+        }
+
+        .btn-save-profile {
+            background: linear-gradient(135deg, #2ed573 0%, #26af5f 100%) !important; color: #fff !important;
+            padding: 14px !important; border-radius: 12px !important; font-weight: 700 !important;
+            letter-spacing: 1px !important; box-shadow: 0 6px 20px rgba(46, 213, 115, 0.35) !important;
+            border: none !important; cursor: pointer !important; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+        .btn-save-profile:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 25px rgba(46, 213, 115, 0.5) !important; }
+        .btn-logout-profile {
+            background: rgba(255, 71, 87, 0.1) !important; border: 1px solid rgba(255, 71, 87, 0.35) !important;
+            color: #ff6b81 !important; padding: 12px !important; border-radius: 12px !important;
+            font-weight: 600 !important; letter-spacing: 1px !important; cursor: pointer !important; transition: all 0.25s ease !important;
+        }
+        .btn-logout-profile:hover {
+            background: rgba(255, 71, 87, 0.25) !important; color: #fff !important;
+            border-color: rgba(255, 71, 87, 0.7) !important; box-shadow: 0 0 15px rgba(255, 71, 87, 0.4) !important;
+        }
+
+        /* CARD VIEWER 3D MODAL */
+        #card-viewer {
+            position: fixed; inset: 0; background: rgba(6, 5, 8, 0.92);
+            backdrop-filter: blur(25px) saturate(180%); -webkit-backdrop-filter: blur(25px) saturate(180%);
+            z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .viewer-content {
+            position: relative; height: 88vh; max-height: 660px; width: 90%; max-width: 380px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
         .viewer-card {
             perspective: 1000px; background: transparent; width: 100%; height: auto; transition: transform 0.6s; transform-style: preserve-3d;
         }
         .viewer-card.flipped { transform: rotateY(180deg); }
         .viewer-card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
-        .viewer-front, .viewer-back { position: relative; inset: 0; width: 100%; backface-visibility: hidden; background: #1a1a1a; border: 4px solid #d4af37; border-radius: 20px; overflow: hidden; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); }
+        .viewer-front, .viewer-back {
+            position: relative; inset: 0; width: 100%; backface-visibility: hidden;
+            background: linear-gradient(180deg, #1c1924 0%, #100e14 100%);
+            border: 2px solid rgba(241, 196, 15, 0.6); border-radius: 22px; overflow: hidden;
+            box-shadow: 0 0 50px rgba(241, 196, 15, 0.35), 0 20px 40px rgba(0,0,0,0.8);
+        }
         .viewer-front { transform: rotateY(180deg); }
         .viewer-back {
             position: absolute; top: 0; left: 0; bottom: 0; right: 0; transform: rotateY(0deg);
-            background: #111; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle, #251e30 0%, #0e0c12 100%);
+            display: flex; align-items: center; justify-content: center;
         }
-        .viewer-back::after { content: "MÔN SÓI LÀ"; color: #d4af37; font-family: 'Georgia', serif; letter-spacing: 4px; font-weight: bold; border: 2px solid #d4af37; padding: 20px; }
+        .viewer-back::after {
+            content: "MÔN SÓI LÀ"; color: #f1c40f; font-family: 'Cinzel', serif; letter-spacing: 4px; font-weight: 800;
+            border: 2px solid rgba(241, 196, 15, 0.6); padding: 15px 25px; border-radius: 12px;
+            box-shadow: 0 0 25px rgba(241, 196, 15, 0.3), inset 0 0 15px rgba(241, 196, 15, 0.2);
+        }
+        .viewer-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: center 95%; border-bottom: 2px solid rgba(241, 196, 15, 0.4); }
+        .viewer-info { padding: 16px 18px; text-align: center; }
+        .viewer-faction-badge {
+            display: inline-block; font-size: 0.7em; font-weight: 800; letter-spacing: 1.5px;
+            text-transform: uppercase; padding: 3px 12px; border-radius: 15px; margin-bottom: 8px;
+        }
+        .viewer-info h2 { color: #f1c40f; margin: 0; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 1.3em; letter-spacing: 1px; }
+        .viewer-info p { font-size: 0.9em; color: #d1d2d6; font-style: italic; margin-top: 8px; line-height: 1.5; }
 
-        .viewer-card img { width: 100%; aspect-ratio: 20 / 28.1; object-fit: cover; object-position: center 95%; border-bottom: 3px solid #d4af37; }
-        .viewer-info { padding: 20px; text-align: center; }
-        .viewer-info h2 { color: #d4af37; margin: 0; font-family: 'Georgia', serif; text-transform: uppercase; }
-        .viewer-info p { font-size: 0.95em; color: #ccc; font-style: italic; margin-top: 10px; line-height: 1.5; }
-
-        /* FIXED NAV BUTTONS FOR MOBILE */
-        .viewer-nav { position: absolute; top: 40%; width: 100%; display: flex; justify-content: space-between; padding: 0 10px; box-sizing: border-box; pointer-events: none; z-index: 6005; }
+        .viewer-nav { position: absolute; top: 40%; width: 100%; display: flex; justify-content: space-between; padding: 0 6px; box-sizing: border-box; pointer-events: none; z-index: 6005; }
         .nav-btn {
-            background: rgba(0,0,0,0.6); color: white; width: 45px; height: 45px; border-radius: 50%;
+            background: rgba(20, 18, 25, 0.85); color: white; width: 46px; height: 46px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center; font-size: 1.8em;
-            cursor: pointer; pointer-events: auto; border: 1px solid #d4af37; backdrop-filter: blur(5px);
-            padding-bottom: 5px;
+            cursor: pointer; pointer-events: auto; border: 1px solid rgba(241, 196, 15, 0.5); backdrop-filter: blur(10px);
+            padding-bottom: 4px; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .close-viewer { position: absolute; top: -50px; right: 0; color: white; font-size: 2.5em; cursor: pointer; pointer-events: auto; }
+        .nav-btn:hover { background: rgba(241, 196, 15, 0.35); border-color: rgba(241, 196, 15, 0.9); transform: scale(1.15); box-shadow: 0 0 20px rgba(241, 196, 15, 0.5); }
+        .close-viewer {
+            position: absolute; top: -50px; right: 0; color: rgba(255, 255, 255, 0.8); font-size: 2.2em;
+            cursor: pointer; pointer-events: auto; transition: all 0.25s ease; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .close-viewer:hover { color: #ff4757; transform: scale(1.15) rotate(90deg); background: rgba(255, 71, 87, 0.25); border-color: rgba(255, 71, 87, 0.6); }
 
         .role-popup { position: absolute; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center; }
         .role-card-big { position: relative; width: 90%; max-width: 400px; transform-style: preserve-3d; transition: transform 0.6s; }
@@ -590,7 +781,12 @@
                     <div class="viewer-card" id="mainViewerCard">
                         <div class="viewer-back"></div>
                         <div class="viewer-front">
-                            <img id="viewer-img" src=""><div class="viewer-info"><h2 id="viewer-title">ROLE</h2><p id="viewer-desc">Description</p></div>
+                            <img id="viewer-img" src="">
+                            <div class="viewer-info">
+                                <div id="viewer-faction-badge" class="viewer-faction-badge">PHE DÂN LÀNG</div>
+                                <h2 id="viewer-title">ROLE</h2>
+                                <p id="viewer-desc">Description</p>
+                            </div>
                         </div>
                     </div>
                     <div class="viewer-nav">
@@ -641,24 +837,47 @@
                     <div id="page-home" class="page active"><div id="home-auth-section" class="card"><h3>Đang tải...</h3></div></div>
                     <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng (6 số)..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
                     <div id="page-profile" class="page">
-                        <div class="card" style="align-items: center; display: flex; flex-direction: column;">
-                            <div style="position: relative; cursor: pointer;" onclick="toggleAvatarEdit()">
-                                <img id="profile-ava-preview" src="" width="200" height="200" style="border-radius: 50%; border: 5px solid var(--primary); object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: border-radius 0.3s ease;">
-                                <div style="position: absolute; bottom: 10px; right: 10px; background: var(--primary); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; border: 3px solid var(--card);">📷</div>
+                        <div class="profile-card">
+                            <div class="profile-rank-badge">
+                                <span>🐺</span>
+                                <span id="profile-rank-text">NGƯỜI CHƠI HUYỀN THOẠI</span>
                             </div>
-                            <div id="avatar-options" style="display: none; flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; animation: fadeIn 0.3s ease;">
-                                <label style="font-size:0.7em; color:#888; text-align: left;">CẬP NHẬT ẢNH ĐẠI DIỆN</label>
-                                <input type="file" id="fileAvatar" onchange="previewFileAvatar(this)" style="font-size: 0.8em; padding: 8px;">
-                                <input type="text" id="editAvatar" placeholder="Dán URL ảnh vào đây..." style="margin-top: 0;">
-                                <button onclick="toggleAvatarEdit()" class="ghost-btn" style="padding: 10px; font-size: 0.8em;">Đóng</button>
+
+                            <div class="profile-avatar-wrapper" onclick="toggleAvatarEdit()">
+                                <div class="profile-avatar-aura"></div>
+                                <img id="profile-ava-preview" src="" alt="Avatar">
+                                <div class="profile-avatar-cam" title="Thay đổi Avatar">📷</div>
                             </div>
-                            <div style="text-align:left; width: 100%; margin-top: 25px;">
-                                <label style="font-size:0.8em;color:#888; font-weight: bold; letter-spacing: 1px;">TÊN HIỂN THỊ</label>
-                                <input type="text" id="editName" placeholder="Nhập tên mới...">
+
+                            <!-- PRESET AVATAR QUICK PICKER -->
+                            <div class="preset-avatars-section">
+                                <div class="preset-title">
+                                    <span>CHỌN AVATAR NHANH THEO VAI</span>
+                                    <span style="font-size:0.85em; color:var(--gold);">✨ 1-Click</span>
+                                </div>
+                                <div class="preset-scroll-row" id="preset-avatars-list">
+                                    <!-- Rendered dynamically -->
+                                </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; width: 100%; margin-top: 20px; gap: 15px;">
-                                <button onclick="saveProfile()" style="background:#27ae60; margin: 0; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);">LƯU HỒ SƠ</button>
-                                <button onclick="logout()" style="background: #e74c3c; color: white; margin: 0; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);">ĐĂNG XUẤT</button>
+
+                            <!-- AVATAR CUSTOM UPLOAD OPTIONS -->
+                            <div id="avatar-options" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 20px; width: 100%; animation: fadeIn 0.3s ease; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-sizing: border-box;">
+                                <label style="font-size:0.75em; color:#aaa; font-weight: 700; text-align: left; letter-spacing: 1px;">HOẶC TẢI ẢNH TÙY CHỌN</label>
+                                <input type="file" id="fileAvatar" onchange="previewFileAvatar(this)" style="font-size: 0.8em; padding: 10px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 10px; cursor: pointer; color:#ddd; margin:0;">
+                                <input type="text" id="editAvatar" placeholder="Hoặc dán URL ảnh trực tiếp..." class="profile-input" style="font-size: 0.85em;">
+                                <button onclick="toggleAvatarEdit()" class="ghost-btn" style="padding: 8px 12px; font-size: 0.8em; border-radius: 8px; margin:0;">Đóng tùy chọn</button>
+                            </div>
+
+                            <!-- NAME INPUT -->
+                            <div class="profile-input-group">
+                                <label class="profile-label">TÊN HIỂN THỊ TRONG LÀNG</label>
+                                <input type="text" id="editName" class="profile-input" placeholder="Nhập tên hiển thị..." maxlength="24">
+                            </div>
+
+                            <!-- ACTION BUTTONS -->
+                            <div style="display: flex; flex-direction: column; width: 100%; margin-top: 25px; gap: 12px;">
+                                <button onclick="saveProfile()" class="btn-save-profile">✨ LƯU HỒ SƠ</button>
+                                <button onclick="logout()" class="btn-logout-profile">🚪 ĐĂNG XUẤT</button>
                             </div>
                         </div>
                     </div>
@@ -670,13 +889,28 @@
                         </div>
                     </div>
                     <div id="page-gallery" class="page">
-                        <h2 style="color:#f1c40f; margin-bottom: 30px;">Bộ Bài Môn Sói Là</h2>
-                        <h3 style="color: #4da6ff; text-align: left; border-left: 5px solid #4da6ff; padding-left: 15px; margin: 20px 0;">PHE DÂN LÀNG</h3>
-                        <div class="gallery-grid" id="gallery-villagers"></div>
-                        <h3 style="color: #ff4d4d; text-align: left; border-left: 5px solid #ff4d4d; padding-left: 15px; margin: 40px 0 20px 0;">PHE MA SÓI</h3>
-                        <div class="gallery-grid" id="gallery-wolves"></div>
-                        <h3 style="color: #f1c40f; text-align: left; border-left: 5px solid #f1c40f; padding-left: 15px; margin: 40px 0 20px 0;">PHE THỨ 3</h3>
-                        <div class="gallery-grid" id="gallery-3rd"></div>
+                        <div class="gallery-header-wrap">
+                            <h2 class="gallery-main-title">BỘ BÀI MÔN SÓI LÀ</h2>
+                            <p class="gallery-sub-title">Khám phá các thế lực huyền bí và năng lực của từng nhân vật</p>
+                        </div>
+
+                        <div class="gallery-controls-wrap">
+                            <div class="gallery-search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="gallery-search-input" placeholder="Tìm kiếm vai diễn, chức năng, phe phái..." oninput="handleGallerySearch(this.value)">
+                            </div>
+
+                            <div class="gallery-chips-bar">
+                                <div class="gallery-chip active" data-filter="ALL" onclick="filterGallery('ALL')">🌟 Tất cả (<span id="count-all">0</span>)</div>
+                                <div class="gallery-chip" data-filter="VILLAGER" onclick="filterGallery('VILLAGER')">🛡️ Dân Làng (<span id="count-villager">0</span>)</div>
+                                <div class="gallery-chip" data-filter="WOLF" onclick="filterGallery('WOLF')">🐺 Ma Sói (<span id="count-wolf">0</span>)</div>
+                                <div class="gallery-chip" data-filter="THIRD" onclick="filterGallery('THIRD')">🔮 Phe Thứ 3 (<span id="count-third">0</span>)</div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-grid" id="gallery-cards-container">
+                            <!-- Rendered dynamically -->
+                        </div>
                     </div>
                     <div id="page-dev-login" class="page"><div class="card"><h3>Developer Portal</h3><input type="password" id="devPassword" placeholder="Mật khẩu..."><button onclick="checkDevPassword()">Kích hoạt</button></div></div>
                 </div>
@@ -859,6 +1093,33 @@
             const names=['dash-name','editName','self-mini-name']; names.forEach(id=>{const e=document.getElementById(id); if(e)(e.value!==undefined?e.value=myName:e.innerText=myName);});
             const avas=['profile-ava-preview','self-mini-ava']; avas.forEach(id=>{const e=document.getElementById(id); if(e)e.src=myAvatar;});
             const ed=document.getElementById('editAvatar'); if(ed)ed.value=myAvatar;
+            renderPresetAvatars();
+        }
+
+        async function renderPresetAvatars() {
+            const listEl = document.getElementById('preset-avatars-list');
+            if (!listEl) return;
+            const popularRoles = [
+                'WEREWOLF', 'SEER', 'VILLAGER', 'WITCH', 'GUARDIAN', 'HUNTER',
+                'CELESTIAL_FOX', 'CUPID', 'ELDER', 'MOON_MAIDEN', 'CURSER_WEREWOLF', 'PIPER'
+            ];
+            const html = await Promise.all(popularRoles.map(async roleKey => {
+                const r = allRoles.find(x => x.role === roleKey);
+                if (!r) return '';
+                const url = await getCachedImageUrl(r.image);
+                const isCur = myAvatar === r.image || myAvatar === url;
+                return `<div class="preset-item ${isCur ? 'active' : ''}" onclick="selectPresetAvatar('${r.image}')" title="${r.role.replace(/_/g, ' ')}"><img src="${url}" alt="${roleKey}"></div>`;
+            }));
+            listEl.innerHTML = html.join('');
+        }
+
+        function selectPresetAvatar(imgUrl) {
+            const preview = document.getElementById('profile-ava-preview');
+            if (preview) preview.src = imgUrl;
+            const editInput = document.getElementById('editAvatar');
+            if (editInput) editInput.value = imgUrl;
+            document.querySelectorAll('.preset-item').forEach(p => p.classList.remove('active'));
+            if (event?.currentTarget) event.currentTarget.classList.add('active');
         }
 
         function updateHomeUI() {
@@ -1152,28 +1413,152 @@
         function sendAction(t) { if(!selectedPlayerId) return; socket.send(JSON.stringify({type:t, data:selectedPlayerId})); selectedPlayerId=null; updatePlayerListUI(playersCache); }
         async function refreshPlayers() { if(currentRoomCode){ const res=await fetch(`/room/${currentRoomCode}/players`); updatePlayerListUI(await res.json()); } }
 
+        let currentGalleryFilter = 'ALL';
+        let currentGallerySearch = '';
+
+        function getRoleFaction(r) {
+            if (r.role.includes('WOLF') || r.role === 'LYCAN') return 'WOLF';
+            if (r.role === 'CUPID' || r.role === 'PIPER') return 'THIRD';
+            return 'VILLAGER';
+        }
+
+        function getFactionInfo(faction) {
+            if (faction === 'WOLF') return { name: 'PHE MA SÓI', color: '#ff4757', icon: '🐺' };
+            if (faction === 'THIRD') return { name: 'PHE THỨ 3', color: '#f1c40f', icon: '🔮' };
+            return { name: 'PHE DÂN LÀNG', color: '#4da6ff', icon: '🛡️' };
+        }
+
+        function filterGallery(f) {
+            currentGalleryFilter = f;
+            document.querySelectorAll('.gallery-chip').forEach(c => {
+                if (c.getAttribute('data-filter') === f) c.classList.add('active');
+                else c.classList.remove('active');
+            });
+            renderGallery();
+        }
+
+        function handleGallerySearch(val) {
+            currentGallerySearch = val.toLowerCase().trim();
+            renderGallery();
+        }
+
         async function showGallery() {
-            const villagers = allRoles.filter(r => !r.role.includes('WOLF') && r.role !== 'LYCAN' && r.role !== 'CUPID' && r.role !== 'PIPER');
-            const wolves = allRoles.filter(r => r.role.includes('WOLF') || r.role === 'LYCAN');
-            const third = allRoles.filter(r => r.role === 'CUPID' || r.role === 'PIPER');
-            displayRoles = [...villagers, ...wolves, ...third];
-            const renderGrid = async (list, targetId) => {
-                const htmlParts = await Promise.all(list.map(async (r) => { const displayUrl = await getCachedImageUrl(r.image); return `<div class="gallery-card" onclick="openCardViewer(${displayRoles.indexOf(r)})"><img src="${displayUrl}"><h4>${r.role.replace(/_/g, ' ')}</h4></div>`; }));
-                document.getElementById(targetId).innerHTML = htmlParts.join('');
-            };
-            await renderGrid(villagers, 'gallery-villagers'); await renderGrid(wolves, 'gallery-wolves'); await renderGrid(third, 'gallery-3rd');
+            renderGallery();
+        }
+
+        async function renderGallery() {
+            const container = document.getElementById('gallery-cards-container');
+            if (!container) return;
+
+            // Update Counts
+            const totalCount = allRoles.length;
+            const villagerCount = allRoles.filter(r => getRoleFaction(r) === 'VILLAGER').length;
+            const wolfCount = allRoles.filter(r => getRoleFaction(r) === 'WOLF').length;
+            const thirdCount = allRoles.filter(r => getRoleFaction(r) === 'THIRD').length;
+
+            const cAll = document.getElementById('count-all'); if (cAll) cAll.innerText = totalCount;
+            const cVil = document.getElementById('count-villager'); if (cVil) cVil.innerText = villagerCount;
+            const cWolf = document.getElementById('count-wolf'); if (cWolf) cWolf.innerText = wolfCount;
+            const c3rd = document.getElementById('count-third'); if (c3rd) c3rd.innerText = thirdCount;
+
+            // Filter Roles
+            displayRoles = allRoles.filter(r => {
+                const faction = getRoleFaction(r);
+                if (currentGalleryFilter !== 'ALL' && faction !== currentGalleryFilter) return false;
+                if (currentGallerySearch) {
+                    const name = r.role.replace(/_/g, ' ').toLowerCase();
+                    const desc = (r.description || '').toLowerCase();
+                    const factInfo = getFactionInfo(faction).name.toLowerCase();
+                    if (!name.includes(currentGallerySearch) && !desc.includes(currentGallerySearch) && !factInfo.includes(currentGallerySearch)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            if (displayRoles.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: #888;">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">🔍</div>
+                    <p style="font-size: 0.9em; margin: 0;">Không tìm thấy nhân vật nào phù hợp với từ khóa "${currentGallerySearch}"</p>
+                </div>`;
+                return;
+            }
+
+            const htmlParts = await Promise.all(displayRoles.map(async (r, idx) => {
+                const displayUrl = await getCachedImageUrl(r.image);
+                const faction = getRoleFaction(r);
+                const factInfo = getFactionInfo(faction);
+                const factionClass = faction === 'WOLF' ? 'faction-wolf' : (faction === 'THIRD' ? 'faction-third' : 'faction-villager');
+                return `
+                    <div class="gallery-card ${factionClass}" onclick="openCardViewer(${idx})">
+                        <div class="card-img-wrap">
+                            <img src="${displayUrl}" loading="lazy" alt="${r.role}">
+                            <div class="card-badge" style="color:${factInfo.color};">${factInfo.icon}</div>
+                        </div>
+                        <h4>${r.role.replace(/_/g, ' ')}</h4>
+                    </div>
+                `;
+            }));
+
+            container.innerHTML = htmlParts.join('');
         }
 
         async function openCardViewer(idx) {
-            currentViewerIndex = idx; const r = displayRoles[idx]; const card = document.getElementById('mainViewerCard'); card.classList.remove('flipped');
-            const displayUrl = await getCachedImageUrl(r.image); const img = document.getElementById('viewer-img'); img.src = displayUrl;
-            try { await img.decode(); } catch(e) {}
-            document.getElementById('viewer-title').innerText = r.role.replace(/_/g, ' '); document.getElementById('viewer-desc').innerText = r.description;
-            document.getElementById('card-viewer').style.display = 'flex'; setTimeout(() => card.classList.add('flipped'), 50);
+            if (idx < 0 || idx >= displayRoles.length) return;
+            currentViewerIndex = idx;
+            const r = displayRoles[idx];
+            const card = document.getElementById('mainViewerCard');
+            if (card) card.classList.remove('flipped');
+
+            const faction = getRoleFaction(r);
+            const factInfo = getFactionInfo(faction);
+            const badgeEl = document.getElementById('viewer-faction-badge');
+            if (badgeEl) {
+                badgeEl.innerText = `${factInfo.icon} ${factInfo.name}`;
+                badgeEl.style.color = factInfo.color;
+                badgeEl.style.background = `rgba(${faction === 'WOLF' ? '255, 71, 87' : (faction === 'THIRD' ? '241, 196, 15' : '77, 166, 255')}, 0.18)`;
+                badgeEl.style.border = `1px solid ${factInfo.color}`;
+            }
+
+            const displayUrl = await getCachedImageUrl(r.image);
+            const img = document.getElementById('viewer-img');
+            if (img) img.src = displayUrl;
+            try { await img?.decode(); } catch(e) {}
+
+            const titleEl = document.getElementById('viewer-title');
+            if (titleEl) {
+                titleEl.innerText = r.role.replace(/_/g, ' ');
+                titleEl.style.color = factInfo.color;
+            }
+
+            const descEl = document.getElementById('viewer-desc');
+            if (descEl) descEl.innerText = r.description;
+
+            const viewerModal = document.getElementById('card-viewer');
+            if (viewerModal) viewerModal.style.display = 'flex';
+            setTimeout(() => { if (card) card.classList.add('flipped'); }, 50);
         }
-        function closeCardViewer() { document.getElementById('card-viewer').style.display = 'none'; }
-        async function nextCard() { currentViewerIndex = (currentViewerIndex + 1) % displayRoles.length; document.getElementById('mainViewerCard').classList.remove('flipped'); setTimeout(() => openCardViewer(currentViewerIndex), 300); }
-        async function prevCard() { currentViewerIndex = (currentViewerIndex - 1 + displayRoles.length) % displayRoles.length; document.getElementById('mainViewerCard').classList.remove('flipped'); setTimeout(() => openCardViewer(currentViewerIndex), 300); }
+
+        function closeCardViewer() {
+            const viewerModal = document.getElementById('card-viewer');
+            if (viewerModal) viewerModal.style.display = 'none';
+        }
+
+        async function nextCard() {
+            if (displayRoles.length === 0) return;
+            currentViewerIndex = (currentViewerIndex + 1) % displayRoles.length;
+            const card = document.getElementById('mainViewerCard');
+            if (card) card.classList.remove('flipped');
+            setTimeout(() => openCardViewer(currentViewerIndex), 250);
+        }
+
+        async function prevCard() {
+            if (displayRoles.length === 0) return;
+            currentViewerIndex = (currentViewerIndex - 1 + displayRoles.length) % displayRoles.length;
+            const card = document.getElementById('mainViewerCard');
+            if (card) card.classList.remove('flipped');
+            setTimeout(() => openCardViewer(currentViewerIndex), 250);
+        }
 
         async function displayMyRole(role) {
             if (!role) return; myRoleData = role; document.getElementById('role-badge-mini').style.display = 'block'; document.getElementById('role-badge-mini').innerText = role.role.replace(/_/g, ' ');
