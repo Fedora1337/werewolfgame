@@ -470,96 +470,326 @@
             letter-spacing: 2px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
         }
 
-        /* HUNT UI - TEAMMATE & MARKING */
-        .game-player-card.is-teammate { border-color: #ff4d4d !important; box-shadow: 0 0 15px rgba(255, 77, 77, 0.3); }
-        .game-player-card.is-teammate .player-num { color: #ff4d4d !important; text-decoration: underline; }
+        /* HUNT UI - TEAMMATE & RUNE MARKING */
+        .game-player-card.is-teammate {
+            border-color: #ff4757 !important;
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.45) !important;
+        }
+        .game-player-card.is-teammate .player-num {
+            color: #ff4757 !important;
+            text-shadow: 0 0 8px rgba(255, 71, 87, 0.8);
+            font-weight: 900;
+        }
+
+        /* BLOOD RUNE TARGET ON VICTIM CARDS */
+        .game-player-card.is-hunt-target {
+            border-color: #ff4757 !important;
+            box-shadow: 0 0 25px rgba(255, 71, 87, 0.7), inset 0 0 15px rgba(255, 71, 87, 0.3) !important;
+            animation: targetPulse 1.6s infinite ease-in-out;
+        }
+        .game-player-card.is-hunt-target::before {
+            content: '🐺';
+            position: absolute; top: -10px; right: -10px; font-size: 16px;
+            background: #ff4757; width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 12px #ff4757; z-index: 15;
+            animation: bounceSmall 1.2s infinite;
+        }
+        @keyframes targetPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 71, 87, 0.6); }
+            50% { transform: scale(1.04); box-shadow: 0 0 35px rgba(255, 71, 87, 0.95); }
+        }
+        @keyframes bounceSmall {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        /* DEFENDANT SPOTLIGHT ON TRIAL GALLOWS */
+        .game-player-card.is-trial-target {
+            border-color: #f1c40f !important;
+            box-shadow: 0 0 35px rgba(241, 196, 15, 0.8), 0 0 70px rgba(241, 196, 15, 0.4) !important;
+            transform: scale(1.08); z-index: 60;
+            animation: trialDefendantPulse 2s infinite ease-in-out;
+        }
+        .game-player-card.is-trial-target::before {
+            content: '⚖️';
+            position: absolute; top: -12px; right: -12px; font-size: 18px;
+            background: #f1c40f; color: black; width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px #f1c40f; z-index: 15;
+        }
+        @keyframes trialDefendantPulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(241, 196, 15, 0.7); }
+            50% { box-shadow: 0 0 50px rgba(241, 196, 15, 1); }
+        }
+
+        /* CLAW SLASH MARK ANIMATION */
+        .claw-slash-fx {
+            position: absolute; inset: 0; pointer-events: none; z-index: 30;
+            background: linear-gradient(135deg, transparent 40%, rgba(255, 71, 87, 0.9) 48%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 71, 87, 0.9) 52%, transparent 60%);
+            animation: slashSweep 0.4s ease-out forwards;
+        }
+        @keyframes slashSweep {
+            0% { opacity: 0; transform: scale(0.5) rotate(-20deg); }
+            50% { opacity: 1; transform: scale(1.2) rotate(0deg); }
+            100% { opacity: 0; transform: scale(1.4) rotate(10deg); }
+        }
 
         .mark-target-btn {
-            position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
-            background: #e74c3c; color: white; padding: 4px 12px; border-radius: 20px;
-            font-size: 10px; font-weight: bold; border: 1px solid white;
+            position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff4757 0%, #c0392b 100%);
+            color: white; padding: 5px 14px; border-radius: 20px;
+            font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
             cursor: pointer; z-index: 50; display: none; white-space: nowrap;
-            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.5);
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.6);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .mark-target-btn:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.9);
         }
 
         #hunt-search-container {
             position: absolute; top: var(--header-h); left: 50%; transform: translateX(-50%);
-            width: 80%; max-width: 400px; z-index: 2000; display: none;
+            width: 90%; max-width: 420px; z-index: 2000; display: none;
             padding: 10px; box-sizing: border-box;
         }
         #hunt-search-input {
-            width: 100%; padding: 10px 20px; border-radius: 25px; border: 1px solid #444;
-            background: rgba(0,0,0,0.85); color: white; backdrop-filter: blur(10px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            width: 100%; padding: 11px 20px 11px 42px; border-radius: 30px;
+            border: 1px solid rgba(255, 71, 87, 0.35);
+            background: rgba(18, 14, 20, 0.88); color: white; backdrop-filter: blur(16px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 71, 87, 0.2);
+            font-size: 0.9em; box-sizing: border-box; margin: 0;
+            transition: all 0.3s ease;
+        }
+        #hunt-search-input:focus {
+            border-color: #ff4757; box-shadow: 0 0 25px rgba(255, 71, 87, 0.5); outline: none;
         }
 
+        /* CRIMSON WOLF HUNT RANKING & GOLDEN JUSTICE VOTE RANKING */
         #huntranking, #voteranking {
-            position: fixed; right: 0; top: 0; bottom: 0; width: 240px;
-            background: rgba(15, 15, 15, 0.98);
-            display: none; flex-direction: column; padding: 20px; padding-top: 80px;
-            box-sizing: border-box; transition: margin-right 0.3s ease; z-index: 3500;
-            margin-right: -240px; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            position: fixed; right: 0; top: 0; bottom: 0; width: 280px;
+            display: none; flex-direction: column; padding: 22px 18px; padding-top: 85px;
+            box-sizing: border-box; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 3500; transform: translateX(100%);
+            backdrop-filter: blur(25px); box-shadow: -15px 0 45px rgba(0, 0, 0, 0.8);
         }
-        #huntranking { border-left: 2px solid #e74c3c; }
-        #voteranking { border-left: 2px solid #f1c40f; }
+        #huntranking {
+            background: linear-gradient(180deg, rgba(28, 10, 14, 0.97) 0%, rgba(15, 6, 8, 0.98) 100%);
+            border-left: 2px solid #ff4757;
+            box-shadow: -15px 0 45px rgba(255, 71, 87, 0.2);
+        }
+        #voteranking {
+            background: linear-gradient(180deg, rgba(28, 24, 10, 0.97) 0%, rgba(15, 12, 6, 0.98) 100%);
+            border-left: 2px solid #f1c40f;
+            box-shadow: -15px 0 45px rgba(241, 196, 15, 0.2);
+        }
 
-        #huntranking.active, #voteranking.active { margin-right: 0; }
+        #huntranking.active, #voteranking.active { transform: translateX(0); }
 
         #huntranking-toggle, #voteranking-toggle {
             position: fixed; right: 0; top: 40%; transform: translateY(-50%);
-            width: 35px; height: 60px; display: none;
-            align-items: center; justify-content: center; border-radius: 10px 0 0 10px;
-            cursor: pointer; z-index: 3501; transition: right 0.3s; color: white;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.4); font-size: 1.2em;
+            width: 44px; height: 68px; display: none;
+            align-items: center; justify-content: center; border-radius: 14px 0 0 14px;
+            cursor: pointer; z-index: 3501; transition: right 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: white; font-size: 1.4em; border: 1px solid rgba(255, 255, 255, 0.15);
+            border-right: none;
         }
-        #huntranking-toggle { background: #e74c3c; }
-        #voteranking-toggle { background: #f1c40f; color: black; }
+        #huntranking-toggle {
+            background: linear-gradient(135deg, #ff4757 0%, #b33939 100%);
+            box-shadow: -6px 0 20px rgba(255, 71, 87, 0.4);
+        }
+        #voteranking-toggle {
+            background: linear-gradient(135deg, #f1c40f 0%, #d35400 100%);
+            box-shadow: -6px 0 20px rgba(241, 196, 15, 0.4);
+        }
 
-        #huntranking.active + #huntranking-toggle, #voteranking.active + #voteranking-toggle { right: 240px; }
+        #huntranking.active + #huntranking-toggle, #voteranking.active + #voteranking-toggle { right: 280px; }
 
-        .rank-title { font-size: 0.8em; color: #f1c40f; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
-        .rank-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; color: #eee; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
-        .rank-mark-btn { background: #e74c3c; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.9em; cursor: pointer; }
-        .rank-mark-btn.vote-mode { background: #f1c40f; color: black; font-weight: bold; }
-        .rank-mark-btn:disabled { background: #555; opacity: 0.5; cursor: not-allowed; }
+        .rank-header-wrap {
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .rank-title {
+            font-family: 'Cinzel', serif; font-size: 0.95em; font-weight: 800;
+            letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; margin: 0;
+        }
+        .rank-item {
+            display: flex; flex-direction: column; gap: 6px;
+            background: rgba(255, 255, 255, 0.04); padding: 10px 12px;
+            border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.2s ease;
+        }
+        .rank-item:hover {
+            background: rgba(255, 255, 255, 0.08); transform: translateY(-2px);
+        }
+        .rank-item-top {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.85em; font-weight: 600; color: #fff;
+        }
+        .rank-progress-track {
+            width: 100%; height: 6px; background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px; overflow: hidden; position: relative;
+        }
+        .rank-progress-fill {
+            height: 100%; border-radius: 4px; transition: width 0.35s ease;
+        }
+        .rank-mark-btn {
+            background: linear-gradient(135deg, #ff4757 0%, #c0392b 100%);
+            color: white; border: none; padding: 4px 12px; border-radius: 8px;
+            font-size: 0.85em; font-weight: 800; cursor: pointer;
+            box-shadow: 0 3px 10px rgba(255, 71, 87, 0.4);
+            transition: all 0.2s ease;
+        }
+        .rank-mark-btn.vote-mode {
+            background: linear-gradient(135deg, #f1c40f 0%, #e67e22 100%);
+            color: #000; font-weight: 900;
+            box-shadow: 0 3px 10px rgba(241, 196, 15, 0.4);
+        }
+        .rank-mark-btn:disabled { background: #444 !important; color: #888; opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
-        /* TRIAL BUTTONS */
+        /* INQUISITOR GALLOWS 3D TRIAL BUTTONS */
         .trial-controls {
-            display: none; flex-direction: row; gap: 12px; z-index: 4000;
+            display: none; flex-direction: row; gap: 16px; z-index: 4000;
             align-items: center;
         }
         .trial-btn {
-            width: 45px; height: 45px; border-radius: 50%; border: 2px solid white;
-            display: flex; align-items: center; justify-content: center; font-size: 1.4em;
-            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.4); transition: transform 0.2s;
-            padding-bottom: 4px;
+            width: 54px; height: 54px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.6em;
+            cursor: pointer; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative; border: 2px solid rgba(255, 255, 255, 0.3);
         }
-        .trial-btn:active { transform: scale(0.9); }
-        .trial-btn.kill { background: #e74c3c; }
-        .trial-btn.save { background: #27ae60; }
+        .trial-btn:hover { transform: scale(1.12); }
+        .trial-btn:active { transform: scale(0.92); }
+        .trial-btn.kill {
+            background: radial-gradient(circle at 35% 35%, #ff6b81, #c0392b);
+            border-color: #ff4757; box-shadow: 0 0 25px rgba(255, 71, 87, 0.6);
+        }
+        .trial-btn.save {
+            background: radial-gradient(circle at 35% 35%, #2ed573, #27ae60);
+            border-color: #2ed573; box-shadow: 0 0 25px rgba(46, 213, 115, 0.6);
+        }
 
-        /* TRIAL COUNTERS */
+        /* TRIAL COUNTERS & BALANCE METER */
         .trial-counters {
-            display: none; flex-direction: column; gap: 5px;
-            background: rgba(0, 0, 0, 0.7); padding: 8px 12px;
-            border-radius: 12px; border: 1px solid #444;
-            font-family: monospace; font-weight: bold; font-size: 0.8em;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: none; flex-direction: column; gap: 6px;
+            background: rgba(14, 12, 18, 0.9); padding: 8px 14px;
+            border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.15);
+            font-family: 'Outfit', monospace; font-weight: 700; font-size: 0.85em;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px);
         }
-        .counter-kill { color: #e74c3c; }
-        .counter-save { color: #2ecc71; }
+        .counter-kill { color: #ff4757; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .counter-save { color: #2ed573; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 
-        /* VOTERS LOG PANEL */
+        /* INQUISITOR VOTERS LOG PANEL */
         #trial-voters-panel {
-            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 500px; background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid #444;
-            padding: 15px; display: none; flex-direction: row; gap: 20px; z-index: 3000;
+            position: absolute; top: calc(var(--header-h) + 15px); left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 520px;
+            background: rgba(16, 14, 22, 0.92); backdrop-filter: blur(20px);
+            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 18px 20px; display: none; flex-direction: row; gap: 20px; z-index: 3000;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(241, 196, 15, 0.15);
         }
-        .voter-list-section { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        .voter-list-title { font-size: 0.7em; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .voter-names { font-size: 0.8em; color: #ccc; line-height: 1.4; max-height: 150px; overflow-y: auto; }
-        .voter-names span { display: block; }
+        .voter-list-section {
+            flex: 1; display: flex; flex-direction: column; gap: 10px;
+            background: rgba(0, 0, 0, 0.35); padding: 12px; border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .voter-list-title {
+            font-family: 'Cinzel', serif; font-size: 0.78em; font-weight: 800;
+            letter-spacing: 1px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 6px; display: flex; align-items: center; gap: 6px;
+        }
+        .voter-names {
+            font-size: 0.82em; color: #ddd; line-height: 1.5;
+            max-height: 140px; overflow-y: auto;
+        }
+        .voter-names span { display: block; padding: 2px 0; }
+
+        /* GOTHIC BLOOD MOON & NIGHT OVERLAY */
+        #night-overlay {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 35%, rgba(45, 10, 18, 0.95) 0%, rgba(10, 4, 8, 0.98) 70%, #000 100%);
+            z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; overflow: hidden; backdrop-filter: blur(15px);
+        }
+        .blood-moon-sphere {
+            width: 140px; height: 140px; border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ff6b81 0%, #e84118 45%, #8b0000 85%, #3d0000 100%);
+            box-shadow: 0 0 60px rgba(255, 71, 87, 0.8), 0 0 120px rgba(232, 65, 24, 0.5), inset -15px -15px 30px rgba(0, 0, 0, 0.7);
+            animation: bloodMoonPulse 4s infinite ease-in-out;
+            position: relative; margin-bottom: 25px;
+        }
+        @keyframes bloodMoonPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(255, 71, 87, 0.8), 0 0 120px rgba(232, 65, 24, 0.5); }
+            50% { transform: scale(1.06); box-shadow: 0 0 90px rgba(255, 71, 87, 1), 0 0 160px rgba(232, 65, 24, 0.8); }
+        }
+        .wolf-eyes-glow {
+            display: flex; gap: 20px; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); opacity: 0.9;
+        }
+        .wolf-eye {
+            width: 12px; height: 6px; border-radius: 50% / 100% 100% 0 0;
+            background: #ff4757; box-shadow: 0 0 12px #ff4757;
+            animation: eyeBlink 3.5s infinite;
+        }
+        @keyframes eyeBlink {
+            0%, 45%, 55%, 100% { transform: scaleY(1); opacity: 0.9; }
+            50% { transform: scaleY(0.1); opacity: 0.2; }
+        }
+
+        .night-main-title {
+            font-family: 'Cinzel', serif; font-size: 2em; font-weight: 900;
+            letter-spacing: 4px; margin: 0;
+            background: linear-gradient(135deg, #ffffff 0%, #ff6b81 50%, #e84118 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 25px rgba(255, 71, 87, 0.7));
+        }
+        .night-sub-title {
+            color: rgba(255, 255, 255, 0.65); font-size: 0.95em;
+            margin-top: 12px; font-style: italic; letter-spacing: 1px;
+            max-width: 320px; line-height: 1.5;
+        }
+
+        /* GOTHIC OBITUARY SCROLL (DAY TRANSITION) */
+        .obituary-scroll {
+            background: linear-gradient(180deg, #2a1f18 0%, #1c1510 100%);
+            border: 2px solid #d4af37; border-radius: 20px;
+            padding: 30px 25px; max-width: 440px; width: 90%;
+            text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(212, 175, 55, 0.3);
+            position: relative; animation: scrollOpen 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes scrollOpen {
+            0% { transform: scale(0.6) translateY(30px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .obituary-seal {
+            font-size: 2.2em; margin-bottom: 10px;
+            filter: drop-shadow(0 0 15px rgba(241, 196, 15, 0.8));
+        }
+        .obituary-title {
+            font-family: 'Cinzel', serif; font-size: 1.5em; font-weight: 900;
+            color: #d4af37; letter-spacing: 3px; margin: 0 0 10px 0;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+        }
+        .obituary-body {
+            color: #f1f2f6; font-size: 1.05em; line-height: 1.6;
+            margin: 15px 0; font-weight: 500;
+        }
+
+        /* SCREEN SHAKE & CINEMATICS */
+        .screen-shake-fx {
+            animation: screenShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes screenShake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
 
         .move-controls {
             position: absolute; bottom: -5px; left: 0; right: 0; display: none;
@@ -920,24 +1150,30 @@
 
             <!-- HUNT UI: SEARCH & RANKING -->
             <div id="hunt-search-container">
-                <input type="text" id="hunt-search-input" placeholder="Tìm mục tiêu: #số hoặc @tên..." oninput="handleHuntSearch(this.value)">
+                <input type="text" id="hunt-search-input" placeholder="🔍 Tìm mục tiêu: #số hoặc @tên..." oninput="handleHuntSearch(this.value)">
             </div>
 
             <div id="huntranking">
-                <div id="rank-title-text" class="rank-title">BẢNG SĂN MỒI (RANKING)</div>
-                <div id="huntranking-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="rank-header-wrap">
+                    <div id="rank-title-text" class="rank-title" style="color: #ff4757;">🐺 BẢNG SĂN MỒI</div>
+                    <div onclick="toggleHuntRankBar()" style="color: #888; cursor: pointer; font-size: 1.1em; font-weight: bold; padding: 2px 6px;">✕</div>
+                </div>
+                <div id="huntranking-list" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
                     <!-- Sẽ được render bằng JS -->
                 </div>
             </div>
-            <div id="huntranking-toggle" onclick="toggleHuntRankBar()">🐺</div>
+            <div id="huntranking-toggle" onclick="toggleHuntRankBar()" title="Bảng săn mồi">🐺</div>
 
             <div id="voteranking">
-                <div class="rank-title" style="color: #f1c40f;">BẢNG BẦU CHỌN (RANKING)</div>
-                <div id="voteranking-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="rank-header-wrap">
+                    <div class="rank-title" style="color: #f1c40f;">⚖️ CÁN CÂN CÔNG LÝ</div>
+                    <div onclick="toggleVoteRankBar()" style="color: #888; cursor: pointer; font-size: 1.1em; font-weight: bold; padding: 2px 6px;">✕</div>
+                </div>
+                <div id="voteranking-list" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
                     <!-- Sẽ được render bằng JS -->
                 </div>
             </div>
-            <div id="voteranking-toggle" onclick="toggleVoteRankBar()">⚖️</div>
+            <div id="voteranking-toggle" onclick="toggleVoteRankBar()" title="Bảng bầu chọn">⚖️</div>
 
             <!-- CARD VIEWER -->
             <div id="card-viewer">
@@ -963,10 +1199,15 @@
 
             <div id="role-popup" class="role-popup"></div>
 
-            <div id="night-overlay" style="position:absolute; inset:0; background:#000; z-index:5000; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
-                <h1 style="font-size: 5em; margin:0;">🌑</h1>
-                <h2 style="color:var(--primary); letter-spacing:3px; margin-top:20px;">TRỜI TỐI RỒI...</h2>
-                <p id="night-overlay-sub" style="color:#444; font-style:italic; margin-top:10px;">Làng đang chìm trong giấc ngủ</p>
+            <div id="night-overlay">
+                <div class="blood-moon-sphere">
+                    <div class="wolf-eyes-glow">
+                        <div class="wolf-eye"></div>
+                        <div class="wolf-eye"></div>
+                    </div>
+                </div>
+                <h2 class="night-main-title">TRỜI TỐI RỒI...</h2>
+                <p id="night-overlay-sub" class="night-sub-title">Làng đang chìm sâu vào giấc ngủ huyền bí</p>
             </div>
 
             <header>
@@ -992,6 +1233,7 @@
                 </div>
 
                 <div class="header-right-actions">
+                    <div id="sound-toggle-btn" onclick="SoundFX.toggle()" class="header-action-btn" title="Âm thanh trò chơi" style="font-size: 1.15em;">🔊</div>
                     <div onclick="showDevLogin()" class="header-dev-btn" title="Dev Portal">🛠️</div>
                     <div onclick="toggleFullscreen()" class="header-action-btn header-fs-btn" title="Toàn màn hình">⛶</div>
                 </div>
@@ -1194,30 +1436,195 @@
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
+        // PROCEDURAL WEB AUDIO SYNTHESIZER (ZERO EXTERNAL ASSETS)
+        const SoundFX = {
+            ctx: null,
+            enabled: true,
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            toggle() {
+                this.enabled = !this.enabled;
+                const btn = document.getElementById('sound-toggle-btn');
+                if (btn) {
+                    btn.innerText = this.enabled ? '🔊' : '🔇';
+                    btn.style.opacity = this.enabled ? '1' : '0.5';
+                }
+                showNotification(this.enabled ? 'Đã bật âm thanh hiệu ứng' : 'Đã tắt âm thanh hiệu ứng');
+            },
+            playWolfHowl() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const t = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, t);
+                    osc.frequency.exponentialRampToValueAtTime(320, t + 0.8);
+                    osc.frequency.exponentialRampToValueAtTime(220, t + 2.0);
+                    osc.frequency.exponentialRampToValueAtTime(80, t + 3.2);
+
+                    gain.gain.setValueAtTime(0.001, t);
+                    gain.gain.linearRampToValueAtTime(0.12, t + 0.4);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 3.2);
+
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(600, t);
+                    filter.frequency.linearRampToValueAtTime(950, t + 0.8);
+                    filter.frequency.linearRampToValueAtTime(400, t + 3.2);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(t);
+                    osc.stop(t + 3.3);
+                } catch(e) {}
+            },
+            playVillageBell() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const t = this.ctx.currentTime;
+                    [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, t + idx * 0.15);
+                        gain.gain.setValueAtTime(0.1, t + idx * 0.15);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + idx * 0.15 + 2.5);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(t + idx * 0.15);
+                        osc.stop(t + idx * 0.15 + 2.6);
+                    });
+                } catch(e) {}
+            },
+            playGavel() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const t = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(260, t);
+                    osc.frequency.exponentialRampToValueAtTime(45, t + 0.18);
+                    gain.gain.setValueAtTime(0.25, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.25);
+                } catch(e) {}
+            },
+            playThunder() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const t = this.ctx.currentTime;
+                    const bufferSize = Math.floor(this.ctx.sampleRate * 1.5);
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(350, t);
+                    filter.frequency.exponentialRampToValueAtTime(60, t + 1.4);
+
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.3, t);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    noise.start(t);
+                    noise.stop(t + 1.5);
+                } catch(e) {}
+            },
+            playSlash() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const t = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(800, t);
+                    osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.18);
+                } catch(e) {}
+            },
+            playDivineGrace() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const t = this.ctx.currentTime;
+                    [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, t + idx * 0.1);
+                        gain.gain.setValueAtTime(0.08, t + idx * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + idx * 0.1 + 1.8);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(t + idx * 0.1);
+                        osc.stop(t + idx * 0.1 + 1.9);
+                    });
+                } catch(e) {}
+            }
+        };
+
+        // Enable Web Audio context on user first click/tap anywhere
+        window.addEventListener('click', () => { SoundFX.init(); }, { once: true });
+        window.addEventListener('touchstart', () => { SoundFX.init(); }, { once: true });
+
         let myId, myName, myAvatar, currentRoomCode, isHost = false, socket = null, countdownInterval = null, lastPage = 'page-home', isDev = false, selectedPlayerId = null, myRoleData = null, playersCache = [], currentViewerIndex = 0, displayRoles = [], currentPhase = 'LOBBY', currentTrialTargetId = null;
         let realId, realName, realAvatar;
         let hasMarkedThisNight = false; // Cờ khóa hành động (cả Sói và Dân bầu)
         let hasVotedInTrial = false;    // Cờ khóa phán quyết 👍/👎
 
         const allRoles = [
-            { role: 'WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewerewolf.png', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
-            { role: 'VILLAGER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.png', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
-            { role: 'SEER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theseer.png', description: 'Tiên Tri - Soi phe 1 người mỗi đêm.' },
-            { role: 'GUARDIAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theguardian.png', description: 'Bảo Vệ - Miễn nhiễm with Sói đêm đó.' },
-            { role: 'WITCH', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewitch.png', description: 'Phù Thủy - Độc và Cứu.' },
-            { role: 'HUNTER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thehunter.png', description: 'Thợ Săn - Kéo theo người chết cùng.' },
-            { role: 'RUSSIAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/therussianpng.png', description: 'Người Nga - Gấu báo Sói.' },
-            { role: 'THREE_BROTHERS', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thethreebrothers.png', description: '3 Anh Em - Nhận mặt đêm 1.' },
-            { role: 'TWINS', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thetwins.png', description: '2 Chị Em - Báo thù.' },
-            { role: 'CUPID', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thecupid.png', description: 'Cupid - Ghép đôi.' },
-            { role: 'CELESTIAL_FOX', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thecelestialfox.png', description: 'Hồ Ly - Soi 3 người.' },
-            { role: 'MOON_MAIDEN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/themoonmaiden.png', description: 'Nguyệt Nữ - Khóa chức năng.' },
-            { role: 'PIPER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thepiper.png', description: 'Thổi Sáo - Thôi miên.' },
-            { role: 'ELDER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theelder.png', description: 'Già Làng - Giáp 1 mạng.' },
-            { role: 'CURSER_WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thecurserwerewolf.png', description: 'Sói Nguyền - Biến nạn nhân thành Sói.' },
-            { role: 'PROPHET_WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theprophetwerewolf.png', description: 'Sói Tiên Tri - Soi chức năng đối phương.' },
-            { role: 'DERP_WOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thederpwolf.png', description: 'Sói Ngu - Có quyền báo thù.' },
-            { role: 'LYCAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thelycan.png', description: 'Bán Sói - Ban đầu phe Dân, khi bị Sói cắn sẽ hóa Sói thực sự.' }
+            { role: 'WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewerewolf.webp', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
+            { role: 'VILLAGER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.webp', description: 'Dân Làng - Những người bảo vệ ngôi làng.' },
+            { role: 'SEER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theseer.webp', description: 'Tiên Tri - Soi phe 1 người mỗi đêm.' },
+            { role: 'GUARDIAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theguardian.webp', description: 'Bảo Vệ - Miễn nhiễm with Sói đêm đó.' },
+            { role: 'WITCH', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewitch.webp', description: 'Phù Thủy - Độc và Cứu.' },
+            { role: 'HUNTER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thehunter.webp', description: 'Thợ Săn - Kéo theo người chết cùng.' },
+            { role: 'RUSSIAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/therussian.webp', description: 'Người Nga - Gấu báo Sói.' },
+            { role: 'THREE_BROTHERS', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thethreebrothers.webp', description: '3 Anh Em - Nhận mặt đêm 1.' },
+            { role: 'TWINS', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thetwins.webp', description: '2 Chị Em - Báo thù.' },
+            { role: 'CUPID', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thecupid.webp', description: 'Cupid - Ghép đôi.' },
+            { role: 'CELESTIAL_FOX', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thecelestialfox.webp', description: 'Hồ Ly - Soi 3 người.' },
+            { role: 'MOON_MAIDEN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/themoonmaiden.webp', description: 'Nguyệt Nữ - Khóa chức năng.' },
+            { role: 'PIPER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thepiper.webp', description: 'Thổi Sáo - Thôi miên.' },
+            { role: 'ELDER', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theelder.webp', description: 'Già Làng - Giáp 1 mạng.' },
+            { role: 'CURSER_WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thecurserwerewolf.webp', description: 'Sói Nguyền - Biến nạn nhân thành Sói.' },
+            { role: 'PROPHET_WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/theprophetwerewolf.webp', description: 'Sói Tiên Tri - Soi chức năng đối phương.' },
+            { role: 'DERP_WOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thederpwolf.webp', description: 'Sói Ngu - Có quyền báo thù.' },
+            { role: 'LYCAN', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thelycan.webp', description: 'Bán Sói - Ban đầu phe Dân, khi bị Sói cắn sẽ hóa Sói thực sự.' }
         ];
 
         const routes = {'/home': 'page-home','/dashboard': 'page-dashboard','/gallery': 'page-gallery','/lobby': 'page-lobby','/profile': 'page-profile','/dev-login': 'page-dev-login'};
@@ -1470,7 +1877,7 @@
             const iAmWolf = isWolfTeam(me);
             const isHuntPhase = ["WEREWOLF", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"].includes(currentPhase);
             const isVoteDayPhase = currentPhase === "EXECUTION";
-            const isTrialPhase = currentPhase === "TRIAL_VOTING";
+            const isTrialPhase = ["TRIAL_DEFENSE", "TRIAL_VOTING"].includes(currentPhase);
 
             // XỬ LÝ SORT VÀ UI SĂN MỒI / BẦU CHỌN
             let sortedPs = [...ps];
@@ -1532,11 +1939,11 @@
                 const killersList = document.getElementById('killers-list');
                 const saversList = document.getElementById('savers-list');
                 if (targetP) {
-                    if(killersList) killersList.innerHTML = (targetP.killersVotedForMe || []).map(name => `<span>• ${name}</span>`).join('');
-                    if(saversList) saversList.innerHTML = (targetP.saversVotedForMe || []).map(name => `<span>• ${name}</span>`).join('');
+                    if(killersList) killersList.innerHTML = (targetP.killersVotedForMe || []).map(name => `<span>⚔️ ${name}</span>`).join('') || '<span style="color:#666; font-style:italic;">Chưa có phiếu</span>';
+                    if(saversList) saversList.innerHTML = (targetP.saversVotedForMe || []).map(name => `<span>🛡️ ${name}</span>`).join('') || '<span style="color:#666; font-style:italic;">Chưa có phiếu</span>';
                 }
 
-                if (!me?.isDead && me?.id !== currentTrialTargetId && !hasVotedInTrial) {
+                if (currentPhase === "TRIAL_VOTING" && !me?.isDead && me?.id !== currentTrialTargetId && !hasVotedInTrial) {
                     if(trialDiv) trialDiv.style.display = 'flex';
                 } else {
                     if(trialDiv) trialDiv.style.display = 'none';
@@ -1554,9 +1961,11 @@
                 const showTeammate = iAmWolf && isWolf && p.id !== myId;
                 const originalIdx = ps.findIndex(x => x.id === p.id);
                 const canInteract = (isHuntPhase || isVoteDayPhase) && !p.isDead && !me?.isDead;
+                const isHuntTarget = (isHuntPhase && (p.werewolfMark || 0) > 0);
+                const isTrialTarget = (isTrialPhase && p.id === currentTrialTargetId);
 
                 return `
-                <div id="p-card-${p.id}" class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''} ${p.isDead?'is-dead':''} ${showTeammate?'is-teammate':''}"
+                <div id="p-card-${p.id}" class="game-player-card ${p.id===selectedPlayerId?'selected':''} ${p.isReady&&currentRoomCode?'ready':''} ${p.id===myId?'is-me':''} ${p.isDead?'is-dead':''} ${showTeammate?'is-teammate':''} ${isHuntTarget?'is-hunt-target':''} ${isTrialTarget?'is-trial-target':''}"
                      onclick="selectPlayerHunt('${p.id}')" ondblclick="markTarget('${p.id}')">
                     ${isHost && p.id !== myId && currentPhase === 'LOBBY' ?
                         `<div class="kick-btn ${p.isReady ? 'is-ready' : ''}" onclick="event.stopPropagation(); kickPlayer('${p.id}')">✕</div>` :
@@ -1565,8 +1974,8 @@
                     <div class="player-num">${p.isDead ? '#DIE' : '#'+(originalIdx+1)}</div>
                     <img src="${p.avatar}">
                     <p>${p.name}</p>
-                    ${p.isDead?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.4); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2em; color:#fff; z-index:5;">RIP</div>':''}
-                    ${canInteract && p.id !== myId ? `<div class="mark-target-btn" id="mark-btn-${p.id}" onclick="event.stopPropagation(); markTarget('${p.id}')">${isVoteDayPhase?'BẦU CHỌN':'ĐÁNH DẤU'}</div>` : ''}
+                    ${p.isDead?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.55); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:1.1em; color:#ff4757; text-shadow:0 0 10px rgba(0,0,0,0.8); z-index:5;"><span style="font-size:1.4em;">⚰️</span><span>RIP</span></div>':''}
+                    ${canInteract && p.id !== myId ? `<div class="mark-target-btn" id="mark-btn-${p.id}" onclick="event.stopPropagation(); markTarget('${p.id}')">${isVoteDayPhase?'🗳️ BẦU CHỌN':'🐺 ĐÁNH DẤU'}</div>` : ''}
                     <div class="move-controls" onclick="event.stopPropagation()"><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx-1})">◀</div><div class="move-btn" onclick="movePlayer(${originalIdx}, ${originalIdx-1})">▶</div></div>
                 </div>`;
             }).join('');
@@ -1600,38 +2009,79 @@
             const target = playersCache.find(p => p.id === id);
             if (!target || target.isDead) return;
 
+            const targetCard = document.getElementById(`p-card-${id}`);
+            if (targetCard) {
+                const slashEl = document.createElement('div');
+                slashEl.className = 'claw-slash-fx';
+                targetCard.appendChild(slashEl);
+                setTimeout(() => slashEl.remove(), 500);
+            }
+
+            SoundFX.playSlash();
             const type = (currentPhase === "EXECUTION") ? "VOTE" : "WEREWOLF_VOTE";
             socket.send(JSON.stringify({type: type, data: id}));
             hasMarkedThisNight = true;
             document.querySelectorAll('.mark-target-btn').forEach(b => b.style.display = 'none');
-            showNotification(currentPhase === "EXECUTION" ? "Đã bầu chọn mục tiêu!" : "Đã đánh dấu mục tiêu!");
+            showNotification(currentPhase === "EXECUTION" ? `Đã bầu chọn ${target.name}!` : `Đã chọn cắn ${target.name}!`);
             updatePlayerListUI(playersCache);
         }
 
         function renderWolfRank(ps) {
             const content = document.getElementById('huntranking-list');
+            const wolvesCount = ps.filter(p => p.trulyTeam === "Sói" && !p.isDead).length || 1;
             const ranked = ps.filter(p => !p.isDead && (p.werewolfMark || 0) > 0)
                             .sort((a, b) => (b.werewolfMark || 0) - (a.werewolfMark || 0));
 
-            content.innerHTML = ranked.map(p => `
+            if (ranked.length === 0) {
+                content.innerHTML = "<div style='text-align:center; color:rgba(255,255,255,0.4); font-size:0.8em; padding:20px 0;'>Chưa có mục tiêu nào được đánh dấu...</div>";
+                return;
+            }
+
+            content.innerHTML = ranked.map(p => {
+                const markPct = Math.min(100, Math.round(((p.werewolfMark || 0) / wolvesCount) * 100));
+                return `
                 <div class="rank-item">
-                    <span>#${playersCache.indexOf(p)+1} ${p.name} (${p.werewolfMark})</span>
-                    <button class="rank-mark-btn" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>CẮN</button>
+                    <div class="rank-item-top">
+                        <span>#${playersCache.indexOf(p)+1} ${p.name}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="color:#ff4757; font-weight:800;">${p.werewolfMark} 🐺</span>
+                            <button class="rank-mark-btn" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>CẮN</button>
+                        </div>
+                    </div>
+                    <div class="rank-progress-track">
+                        <div class="rank-progress-fill" style="width:${markPct}%; background:linear-gradient(90deg, #c0392b, #ff4757);"></div>
+                    </div>
                 </div>
-            `).join('') || "<p style='font-size:0.6em; color:#666;'>Chưa có mục tiêu...</p>";
+            `}).join('');
         }
 
         function renderVoteRank(ps) {
             const content = document.getElementById('voteranking-list');
+            const aliveCount = ps.filter(p => !p.isDead).length || 1;
             const ranked = ps.filter(p => !p.isDead && (p.vote || 0) > 0)
                             .sort((a, b) => (b.vote || 0) - (a.vote || 0));
 
-            content.innerHTML = ranked.map(p => `
+            if (ranked.length === 0) {
+                content.innerHTML = "<div style='text-align:center; color:rgba(255,255,255,0.4); font-size:0.8em; padding:20px 0;'>Làng chưa có ai bỏ phiếu...</div>";
+                return;
+            }
+
+            content.innerHTML = ranked.map(p => {
+                const votePct = Math.min(100, Math.round(((p.vote || 0) / aliveCount) * 100));
+                return `
                 <div class="rank-item">
-                    <span style="color:#f1c40f;">#${playersCache.indexOf(p)+1} ${p.name} (${p.vote})</span>
-                    <button class="rank-mark-btn vote-mode" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>BẦU</button>
+                    <div class="rank-item-top">
+                        <span style="color:#f1c40f;">#${playersCache.indexOf(p)+1} ${p.name}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="color:#f1c40f; font-weight:800;">${p.vote} 🗳️</span>
+                            <button class="rank-mark-btn vote-mode" onclick="markTarget('${p.id}')" ${hasMarkedThisNight?'disabled':''}>BẦU</button>
+                        </div>
+                    </div>
+                    <div class="rank-progress-track">
+                        <div class="rank-progress-fill" style="width:${votePct}%; background:linear-gradient(90deg, #d35400, #f1c40f);"></div>
+                    </div>
                 </div>
-            `).join('') || "<p style='font-size:0.6em; color:#666;'>Chưa có mục tiêu...</p>";
+            `}).join('');
         }
 
         function handleHuntSearch(val) {
@@ -1652,10 +2102,13 @@
 
         function handleTrialVote(t) {
             if (hasVotedInTrial) return;
+            if (t === "TRIAL_VOTE_KILL") SoundFX.playGavel();
+            else SoundFX.playDivineGrace();
+
             socket.send(JSON.stringify({type: t, data: ""}));
             hasVotedInTrial = true;
             document.getElementById('trial-controls').style.display = 'none';
-            showNotification(t === "TRIAL_VOTE_SAVE" ? "Đã chọn Tha Bổng!" : "Đã chọn Xử Tử!");
+            showNotification(t === "TRIAL_VOTE_SAVE" ? "🛡️ Bạn đã chọn Tha Bổng!" : "⚔️ Bạn đã chọn Xử Tử!");
         }
 
         function toggleReady() { if(socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type: "TOGGLE_READY", data: ""})); }
@@ -1821,7 +2274,7 @@
             content.innerHTML = `<div class="viewer-card" id="myRoleCard"><div class="viewer-back"></div><div class="viewer-front"><img id="my-role-img" src="${displayUrl}"><div class="viewer-info"><h3 style="color:#d4af37; margin:0; font-size: 0.7em;">VAI DIỄN CỦA BẠN</h3><h2 style="color:${role.role.includes('WOLF') ? '#ff4d4d' : '#4da6ff'}; margin: 5px 0;">${role.role.replace(/_/g, ' ')}</h2><p style="font-size: 0.85em;">"${role.description}"</p><button id="btnUnderstand" onclick="confirmUnderstand()" style="background:#e74c3c; width: 100%; margin-top: 15px; padding: 12px; font-weight:bold;">XÁC NHẬN</button></div></div></div>`;
             popup.appendChild(content); const img = document.getElementById('my-role-img'); const card = document.getElementById('myRoleCard');
             const triggerFlip = () => { setTimeout(() => { if(card) card.classList.add('flipped'); }, 100); };
-            if (img.complete) triggerFlip(); else { img.onload = triggerFlip; img.onerror = () => { img.src = 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.png'; triggerFlip(); }; }
+            if (img.complete) triggerFlip(); else { img.onload = triggerFlip; img.onerror = () => { img.src = 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thevillager.webp'; triggerFlip(); }; }
         }
 
         function confirmUnderstand() {
@@ -1831,7 +2284,14 @@
         }
 
         function handlePhaseUpdate(data) {
-            const parts=data.split('|'); const ph=parts[0]; const du=parts.length>1?parseInt(parts[1]) : 0; const rs=parts.length>2?parts[2] : ""; const day=parts.length>3?parseInt(parts[3]) : 0; const tick=parts.length>4?parseInt(parts[4]) : 1; const trialTargetId=parts.length>5?parts[5] : ""; const deadList=parts.length>6?parts[6] : "";
+            const parts = data.split('|');
+            const ph = parts[0];
+            const du = parts.length > 1 ? parseInt(parts[1]) : 0;
+            const rs = parts.length > 2 ? parts[2] : "";
+            const day = parts.length > 3 ? parseInt(parts[3]) : 0;
+            const tick = parts.length > 4 ? parseInt(parts[4]) : 1;
+            const trialTargetId = parts.length > 5 ? parts[5] : "";
+            const deadList = parts.length > 6 ? parts[6] : "";
             currentTrialTargetId = trialTargetId;
 
             // RESET FLAGS ON PHASE CHANGE
@@ -1842,81 +2302,70 @@
             }
 
             const nightRoles = ["WEREWOLF", "SEER", "WITCH", "GUARDIAN", "CUPID", "PIPER", "CELESTIAL_FOX", "MOON_MAIDEN", "ELDER", "THREE_BROTHERS", "TWINS", "CURSER_WEREWOLF", "PROPHET_WEREWOLF"];
-            const isNightTurn = nightRoles.includes(ph); currentPhase = ph;
-            const left = document.getElementById('header-status-left'); const right = document.getElementById('header-status-right');
-            const turnInd = document.getElementById('night-turn-indicator'); const nightOverlay = document.getElementById('night-overlay');
+            const isNightTurn = nightRoles.includes(ph);
+            const prevPhase = currentPhase;
+            currentPhase = ph;
 
-            if (currentPhase !== ph && ph !== "LOBBY") {
-                let transitionText = ""; let subText = "";
+            const left = document.getElementById('header-status-left');
+            const right = document.getElementById('header-status-right');
+            const turnInd = document.getElementById('night-turn-indicator');
+            const nightOverlay = document.getElementById('night-overlay');
+
+            if (prevPhase !== ph && ph !== "LOBBY") {
                 const target = playersCache.find(p => p.id === currentTrialTargetId);
 
-                if (currentPhase === "LOBBY" && ph === "PREPARING") {
-                    transitionText = "TRÒ CHƠI BẮT ĐẦU";
-                }
-                else if (currentPhase === "TRIAL_VOTING") {
-                    // ƯU TIÊN HIỆN KẾT QUẢ PHIÊN TÒA
-                    if (target) {
-                        if (target.isDead) {
-                            transitionText = "THỰC THI CÔNG LÝ";
-                            subText = `${target.name} ĐÃ BỊ XỬ TỬ`;
-                        } else {
-                            transitionText = "BẢN ÁN CUỐI CÙNG";
-                            subText = `${target.name} ĐƯỢC THA BỔNG`;
-                        }
-                    } else {
-                        transitionText = "KẾT THÚC PHIÊN TÒA";
-                        subText = "ĐÊM NAY ĐÃ BẮT ĐẦU";
+                // 1. KHI KẾT THÚC PHIÊN TÒA XỬ TỬ
+                if (prevPhase === "TRIAL_VOTING") {
+                    if (target && target.isDead) {
+                        SoundFX.playThunder();
+                        SoundFX.playSlash();
+                        document.getElementById('app-root').classList.add('screen-shake-fx');
+                        setTimeout(() => document.getElementById('app-root').classList.remove('screen-shake-fx'), 600);
+
+                        showCinematicBanner("THỰC THI CÔNG LÝ ⚡", `${target.name} ĐÃ BỊ XỬ TỬ`, "#ff4757");
+                    } else if (target) {
+                        SoundFX.playDivineGrace();
+                        showCinematicBanner("BẢN ÁN CÔNG BẰNG 🛡️", `${target.name} ĐƯỢC THA BỔNG`, "#2ed573");
                     }
                 }
+                // 2. CHUYỂN TỪ NGÀY SANG ĐÊM
                 else if (!isNightTurn && (ph === "NIGHT" || isNightTurn)) {
-                    // CHUYỂN TỪ NGÀY SANG ĐÊM
-                    transitionText = "TRỜI TỐI RỒI";
-                    subText = "LÀNG ĐANG CHÌM VÀO GIẤC NGỦ";
+                    SoundFX.playWolfHowl();
+                    showCinematicBanner("TRỜI TỐI RỒI 🌑", "LÀNG ĐANG CHÌM VÀO GIẤC NGỦ", "var(--primary)");
                 }
+                // 3. LƯỢT ĐÊM CỦA CHỨC NĂNG
                 else if (isNightTurn) {
-                    transitionText = `LƯỢT CỦA ${ph.replace(/_/g, ' ')}`;
-                    subText = "MỜI THỨC GIẤC";
+                    if (ph.includes("WOLF")) SoundFX.playWolfHowl();
+                    else SoundFX.playSlash();
                 }
+                // 4. BAN NGÀY - THẢO LUẬN & CÁO PHÓ NGÔI LÀNG
                 else if (ph === "DAY") {
-                    transitionText = deadList ? "ĐÊM QUA CÓ BIẾN" : "ĐÊM QUA BÌNH YÊN";
-                    subText = deadList ? `${deadList} ĐÃ RA ĐI...` : "Không có ai tử nạn trong đêm";
+                    SoundFX.playVillageBell();
+                    showDayObituaryModal(deadList, day);
                 }
+                // 5. BẦU CHỌN TREO CỔ
                 else if (ph === "EXECUTION") {
-                    transitionText = "BẮT ĐẦU BẦU CHỌN";
-                    subText = "HÃY TÌM RA MA SÓI";
+                    SoundFX.playGavel();
+                    showCinematicBanner("BẮT ĐẦU BẦU CHỌN 🗳️", "HÃY TÌM RA MA SÓI TRONG LÀNG", "#f1c40f");
+                }
+                // 6. PHIÊN TÒA BIỆN HỘ
+                else if (ph === "TRIAL_DEFENSE") {
+                    SoundFX.playGavel();
+                    showCinematicBanner("PHIÊN BIỆN HỘ ⚖️", `${target ? target.name : 'Bị cáo'} ĐANG BIỆN HỘ`, "#f1c40f");
                 }
                 else if (ph === "ANNOUNCING_VOTES") {
-                    const target = playersCache.find(p => p.id === currentTrialTargetId);
-                    transitionText = target ? "KẾT QUẢ BẦU CHỌN" : "KHÔNG AI PHẢI LÊN GIÀN";
-                    subText = target ? `${target.name} PHẢI LÊN GIÀN` : "LÀNG KHÔNG THỂ THỐNG NHẤT BẦU CHỌN";
+                    if (target) {
+                        SoundFX.playGavel();
+                        showCinematicBanner("KẾT QUẢ BẦU CHỌN ⚖️", `${target.name} PHẢI LÊN GIÀN TREO CỔ`, "#ff4757");
+                    } else {
+                        showCinematicBanner("HÒA PHIẾU ⚖️", "LÀNG KHÔNG THỐNG NHẤT ĐƯỢC BẢN ÁN", "#2ed573");
+                    }
                 }
-                else if (ph === "TRIAL_DEFENSE") {
-                    transitionText = "PHIÊN BIỆN HỘ";
-                    subText = `${target ? target.name : 'Mục tiêu'} ĐANG BIỆN HỘ`;
-                }
-
-                if (transitionText) {
-                    const transOverlay = document.createElement('div');
-                    transOverlay.style.cssText = `position:absolute; inset:0; background:rgba(0,0,0,0.9); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 4s forwards; pointer-events:none;`;
-
-                    // Đổi màu text theo kết quả
-                    const color = (transitionText.includes("XỬ TỬ") || transitionText.includes("CÔNG LÝ") || transitionText.includes("CÓ BIẾN")) ? "#e74c3c" :
-                                  (transitionText.includes("THA BỔNG") || transitionText.includes("BÌNH YÊN") ? "#2ecc71" : "var(--primary)");
-
-                    transOverlay.innerHTML = `<h1 style="color:${color}; letter-spacing:8px; text-transform:uppercase; text-shadow: 0 0 30px ${color}; margin:0; text-align:center;">${transitionText}</h1>${subText ? `<h2 style="color:#f1c40f; letter-spacing:4px; margin-top:20px; font-style:italic; text-align:center;">${subText}</h2>` : ''}`;
-                    document.getElementById('main-content').appendChild(transOverlay); setTimeout(() => transOverlay.remove(), 5000);
-                }
-            }
-
-            if (ph === "DAY") {
-                const dayOverlay = document.createElement('div');
-                dayOverlay.style.cssText = 'position:absolute; inset:0; background:rgba(255,255,255,0.1); z-index:4500; display:flex; flex-direction:column; align-items:center; justify-content:center; animation: fadeIn 0.5s ease, fadeOut 0.5s ease 2.5s forwards; pointer-events:none;';
-                dayOverlay.innerHTML = `<h1 style="color:#f1c40f; letter-spacing:10px; font-size:4em;">☀️</h1><h2 style="color:white; letter-spacing:5px;">THẢO LUẬN BẮT ĐẦU</h2>`;
-                document.getElementById('main-content').appendChild(dayOverlay); setTimeout(() => dayOverlay.remove(), 3000);
             }
 
             if (isNightTurn) {
-                turnInd.style.display = 'block'; turnInd.innerText = `Lượt của \\${ph.replace(/_/g, ' ')}`;
+                turnInd.style.display = 'block';
+                turnInd.innerText = `Lượt của \\${ph.replace(/_/g, ' ')}`;
                 const myRoleName = myRoleData ? (typeof myRoleData.role === 'string' ? myRoleData.role : (myRoleData.role ? myRoleData.role.name : "") || "").toUpperCase() : "";
                 const meInCache = playersCache.find(p => p.id === myId);
                 const iAmTransformedLycan = myRoleName === "LYCAN" && meInCache?.trulyTeam === "Sói";
@@ -1927,10 +2376,15 @@
                     nightOverlay.style.display = 'flex';
                     document.getElementById('night-overlay-sub').innerText = meInCache?.isDead ? "Bạn đã tử trận. Đang quan sát linh hồn..." : `Đang chờ \\${ph.replace(/_/g, ' ')} thực hiện chức năng`;
                 }
-            } else { turnInd.style.display = 'none'; nightOverlay.style.display = 'none'; }
+            } else {
+                turnInd.style.display = 'none';
+                nightOverlay.style.display = 'none';
+            }
 
             if (ph === "LOBBY") {
-                left.style.display = 'none'; right.style.display = 'none'; clearInterval(countdownInterval);
+                left.style.display = 'none';
+                right.style.display = 'none';
+                clearInterval(countdownInterval);
                 document.getElementById('lobby-controls').style.display = 'flex';
                 document.getElementById('btnReady').style.display = isHost ? 'none' : 'block';
 
@@ -1946,8 +2400,11 @@
                 if(voteToggle) voteToggle.style.display = 'none';
             }
             else {
-                left.style.display = 'flex'; right.style.display = 'flex'; document.getElementById('lobby-controls').style.display = 'none';
-                const pIcon = document.getElementById('header-phase-icon'); const pText = document.getElementById('header-phase-text');
+                left.style.display = 'flex';
+                right.style.display = 'flex';
+                document.getElementById('lobby-controls').style.display = 'none';
+                const pIcon = document.getElementById('header-phase-icon');
+                const pText = document.getElementById('header-phase-text');
                 if (isNightTurn || ph === "NIGHT") { pIcon.innerText = "🌙"; pText.innerText = `Đêm ${day}`; }
                 else if (ph === "DAY") { pIcon.innerText = "☀️"; pText.innerText = `Ngày ${day}`; }
                 else if (ph === "EXECUTION") { pIcon.innerText = "🗳️"; pText.innerText = "Bầu chọn"; }
@@ -1956,15 +2413,56 @@
             }
 
             startCountdown(du, tick);
-            if (ph === "DAY") { let m = "Sáng rồi."; if (rs === "RUSSIAN_VODKA") m = "Gấu nốc rượu! " + m; announce(m); }
-            else if (isNightTurn) announce(`Mời ${ph.replace(/_/g, ' ')} thức giấc`);
+            if (ph === "DAY") {
+                let m = "Sáng rồi.";
+                if (rs === "RUSSIAN_VODKA") m = "Gấu nốc rượu! " + m;
+                announce(m);
+            } else if (isNightTurn) {
+                announce(`Mời ${ph.replace(/_/g, ' ')} thức giấc`);
+            }
 
             if(isHost){
-                document.getElementById('host-action-bar').style.display= (document.querySelector('.page.active').id==='page-lobby') ? 'flex' : 'none';
-                document.getElementById('btnNextPhase').style.display=(ph!=="LOBBY")?'block':'none';
-                document.getElementById('btnStartGame').style.display=(ph==="LOBBY")?'block':'none';
+                document.getElementById('host-action-bar').style.display = (document.querySelector('.page.active').id==='page-lobby') ? 'flex' : 'none';
+                document.getElementById('btnNextPhase').style.display = (ph!=="LOBBY") ? 'block' : 'none';
+                document.getElementById('btnStartGame').style.display = (ph==="LOBBY") ? 'block' : 'none';
             }
             currentPhase = ph;
+        }
+
+        function showCinematicBanner(title, sub, color = "var(--primary)") {
+            const transOverlay = document.createElement('div');
+            transOverlay.style.cssText = `position:absolute; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(12px); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; animation: fadeIn 0.4s ease, fadeOut 0.5s ease 3.5s forwards; pointer-events:none;`;
+            transOverlay.innerHTML = `
+                <h1 style="color:${color}; font-family:'Cinzel', serif; letter-spacing:6px; font-size:2.2em; text-transform:uppercase; text-shadow: 0 0 35px ${color}; margin:0; text-align:center;">${title}</h1>
+                ${sub ? `<h3 style="color:#f1f2f6; letter-spacing:3px; margin-top:16px; font-style:italic; font-size:1.1em; text-align:center; opacity:0.9;">${sub}</h3>` : ''}
+            `;
+            document.getElementById('main-content').appendChild(transOverlay);
+            setTimeout(() => transOverlay.remove(), 4200);
+        }
+
+        function showDayObituaryModal(deadList, dayNum) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:absolute; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(15px); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.4s ease;';
+            const hasDeaths = !!deadList && deadList.trim().length > 0;
+
+            overlay.innerHTML = `
+                <div class="obituary-scroll">
+                    <div class="obituary-seal">${hasDeaths ? '🩸' : '🕊️'}</div>
+                    <div class="obituary-title">NGÀY THỨ ${dayNum || 1}</div>
+                    <div style="font-family:'Cinzel', serif; font-size:1.1em; color:${hasDeaths ? '#ff4757' : '#2ed573'}; font-weight:800; letter-spacing:1.5px; margin-bottom:12px;">
+                        ${hasDeaths ? 'ĐÊM QUA CÓ BIẾN' : 'MỘT ĐÊM BÌNH YÊN'}
+                    </div>
+                    <div class="obituary-body">
+                        ${hasDeaths ?
+                            `Hỡi dân làng, lưỡi hái tử thần đã giáng xuống:<br><strong style="color:#ff4757; font-size:1.15em; display:block; margin-top:8px;">${deadList} đã ra đi...</strong>` :
+                            `Thần linh đã chở che cho ngôi làng. Đêm qua không có ai tử nạn!`
+                        }
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:20px; width:100%; padding:12px; background:${hasDeaths ? '#ff4757' : '#2ed573'}; font-weight:bold; border-radius:12px;">BƯỚC VÀO THẢO LUẬN</button>
+                </div>
+            `;
+            document.getElementById('main-content').appendChild(overlay);
+            setTimeout(() => { if (overlay.parentElement) overlay.remove(); }, 6000);
         }
 
         async function nextPhase() { await fetch(`/room/${currentRoomCode}/next-phase`, {method:'POST'}); }
