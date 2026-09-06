@@ -18,3 +18,5 @@ local.properties
 Thumbs.db
 db.crypt
 desktop.ini
+/.gradle
+*.lock
