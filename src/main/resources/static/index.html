@@ -45,20 +45,83 @@
         /* ROOT LAYOUT - FLEX IS KEY */
         #app-root { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
 
-        /* DEV SIDEBAR */
+        /* CYBER MATRIX DEV CONSOLE */
         #dev-sidebar {
-            width: var(--dev-w); background: #111; border-right: 2px solid #27ae60;
-            display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
-            transition: margin-left 0.3s ease; flex-shrink: 0; z-index: 4000;
-            margin-left: calc(-1 * var(--dev-w)); /* Hidden by default */
+            width: var(--dev-w);
+            background: linear-gradient(180deg, rgba(8, 14, 11, 0.96) 0%, rgba(4, 8, 6, 0.98) 100%);
+            border-right: 2px solid #00ff88;
+            display: flex; flex-direction: column; padding: 18px; box-sizing: border-box;
+            transition: margin-left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            flex-shrink: 0; z-index: 4000;
+            margin-left: calc(-1 * var(--dev-w));
+            box-shadow: 10px 0 35px rgba(0, 255, 136, 0.15);
+            backdrop-filter: blur(20px);
         }
         #dev-sidebar.active { margin-left: 0; }
 
+        .dev-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px; border-bottom: 1px solid rgba(0, 255, 136, 0.3); padding-bottom: 8px;
+        }
+        .dev-title {
+            color: #00ff88; font-size: 0.78em; font-weight: 800; letter-spacing: 1.5px;
+            font-family: 'Consolas', monospace; display: flex; align-items: center; gap: 6px;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+        }
+        .dev-status-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: #00ff88;
+            box-shadow: 0 0 8px #00ff88; animation: pulse-dev 1.5s infinite;
+        }
+        @keyframes pulse-dev {
+            0%, 100% { opacity: 0.4; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        #dev-logs {
+            background: rgba(0, 0, 0, 0.85); color: #00ff88;
+            font-family: 'Consolas', 'Courier New', monospace; padding: 12px;
+            flex: 1; overflow-y: auto; font-size: 0.72em; border-radius: 10px;
+            margin-bottom: 12px; text-align: left; border: 1px solid rgba(0, 255, 136, 0.25);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8); line-height: 1.5;
+        }
+
+        .dev-input-wrap { position: relative; margin-bottom: 12px; }
+        .dev-input-wrap input {
+            width: 100%; background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(0, 255, 136, 0.4);
+            color: #00ff88; font-family: 'Consolas', monospace; font-size: 0.85em;
+            padding: 10px 12px 10px 24px; border-radius: 8px; box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.15); margin: 0;
+        }
+        .dev-input-wrap input:focus {
+            border-color: #00ff88; box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); outline: none;
+        }
+        .dev-input-wrap::before {
+            content: '>'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+            color: #00ff88; font-family: monospace; font-weight: bold;
+        }
+
+        .dev-btn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .dev-action-btn {
+            padding: 10px 6px; margin: 0; font-size: 0.72em; font-weight: 800;
+            letter-spacing: 0.5px; border-radius: 8px; border: 1px solid transparent;
+            cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        .dev-action-btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        .dev-btn-bot { background: rgba(0, 255, 136, 0.18); border-color: #00ff88; color: #00ff88; }
+        .dev-btn-next { background: rgba(243, 156, 18, 0.18); border-color: #f39c12; color: #f39c12; }
+        .dev-btn-start { background: rgba(0, 210, 211, 0.18); border-color: #00d2d3; color: #00d2d3; }
+        .dev-btn-roles { background: rgba(241, 196, 15, 0.18); border-color: #f1c40f; color: #f1c40f; }
+        .dev-btn-return { background: rgba(255, 71, 87, 0.18); border-color: #ff4757; color: #ff4757; }
+        .dev-btn-refresh { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); color: #ccc; }
+
         #dev-toggle {
             position: fixed; left: 0; top: 50%; transform: translateY(-50%);
-            background: #27ae60; width: 35px; height: 60px; display: none;
-            align-items: center; justify-content: center; border-radius: 0 10px 10px 0;
-            cursor: pointer; z-index: 4001; transition: left 0.3s; color: white;
+            background: linear-gradient(135deg, #00ff88 0%, #00b894 100%);
+            width: 38px; height: 64px; display: none; align-items: center;
+            justify-content: center; border-radius: 0 14px 14px 0;
+            cursor: pointer; z-index: 4001;
+            transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s;
+            color: #000; font-size: 1.2em; box-shadow: 5px 0 20px rgba(0, 255, 136, 0.4);
         }
         body.dev-open #dev-toggle { display: flex; }
         /* KHI SIDEBAR MỞ -> NÚT PHẢI CHẠY RA MÉP 300PX */
@@ -277,43 +340,135 @@
         .page { display: none !important; width: 100%; flex-direction: column; }
         .page.active { display: flex !important; }
 
+        /* DASHBOARD - HERO & ACTION CARDS */
+        .dashboard-hero {
+            background: linear-gradient(180deg, rgba(28, 22, 36, 0.88) 0%, rgba(16, 14, 22, 0.88) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 24px; padding: 22px 20px;
+            margin-bottom: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 71, 87, 0.1);
+            backdrop-filter: blur(16px); display: flex; align-items: center; gap: 16px;
+        }
+        .dash-avatar-mini {
+            width: 58px; height: 58px; border-radius: 50%; border: 2px solid var(--primary);
+            object-fit: cover; box-shadow: 0 0 15px var(--primary-glow); flex-shrink: 0;
+        }
+        .dash-welcome-text h3 { margin: 0 0 4px 0; font-size: 1.25em; font-weight: 700; }
+        .dash-welcome-text p { margin: 0; font-size: 0.8em; color: rgba(255, 255, 255, 0.6); font-style: italic; }
+
+        .dashboard-actions-grid {
+            display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 25px;
+        }
+        @media (min-width: 600px) { .dashboard-actions-grid { grid-template-columns: 1fr 1fr; } }
+
+        .dash-action-card {
+            background: linear-gradient(180deg, rgba(24, 20, 30, 0.82) 0%, rgba(14, 12, 18, 0.82) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 22px; padding: 22px 18px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5); backdrop-filter: blur(16px);
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .dash-action-card:hover {
+            transform: translateY(-4px); border-color: rgba(255, 71, 87, 0.4);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 71, 87, 0.15);
+        }
+        .dash-card-icon { font-size: 2.2em; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255, 71, 87, 0.5)); }
+        .dash-card-title { font-family: 'Cinzel', serif; font-size: 1.1em; font-weight: 700; color: #fff; margin: 0 0 6px 0; letter-spacing: 1px; }
+        .dash-card-desc { font-size: 0.78em; color: rgba(255, 255, 255, 0.55); margin: 0 0 18px 0; line-height: 1.4; }
+
+        .btn-create-room {
+            background: linear-gradient(135deg, #ff4757 0%, #e84118 100%) !important; color: #fff !important;
+            width: 100% !important; padding: 14px !important; border-radius: 12px !important;
+            font-weight: 800 !important; letter-spacing: 1px !important; box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4) !important;
+            border: none !important; cursor: pointer !important; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            margin: 0 !important;
+        }
+        .btn-create-room:hover { transform: scale(1.03); box-shadow: 0 10px 25px rgba(255, 71, 87, 0.6) !important; }
+
+        .room-code-input-wrap { width: 100%; margin-bottom: 12px; }
+        .room-code-input {
+            width: 100% !important; background: rgba(10, 8, 14, 0.85) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 12px !important; padding: 12px !important; color: #f1c40f !important;
+            font-family: 'Consolas', monospace !important; font-size: 1.2em !important; font-weight: 800 !important;
+            letter-spacing: 6px !important; text-align: center !important; text-transform: uppercase !important;
+            box-sizing: border-box !important; margin: 0 !important; transition: all 0.3s ease !important;
+        }
+        .room-code-input:focus { border-color: #3498db !important; box-shadow: 0 0 20px rgba(52, 152, 219, 0.4) !important; outline: none !important; }
+
+        .btn-join-room {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important; color: #fff !important;
+            width: 100% !important; padding: 14px !important; border-radius: 12px !important;
+            font-weight: 800 !important; letter-spacing: 1px !important; box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4) !important;
+            border: none !important; cursor: pointer !important; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            margin: 0 !important;
+        }
+        .btn-join-room:hover { transform: scale(1.03); box-shadow: 0 10px 25px rgba(52, 152, 219, 0.6) !important; }
+
+        /* LOBBY - ROOM BANNER & PLAYER GRID */
+        .lobby-room-banner {
+            background: linear-gradient(180deg, rgba(26, 20, 32, 0.9) 0%, rgba(14, 12, 18, 0.9) 100%);
+            border: 1px solid rgba(241, 196, 15, 0.35); border-radius: 20px; padding: 14px 18px;
+            margin-bottom: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 25px rgba(241, 196, 15, 0.15);
+            backdrop-filter: blur(16px); display: flex; flex-wrap: wrap; align-items: center;
+            justify-content: space-between; gap: 12px;
+        }
+        .lobby-code-group { display: flex; align-items: center; gap: 10px; }
+        .lobby-code-label { font-family: 'Cinzel', serif; font-size: 0.85em; color: rgba(255, 255, 255, 0.6); letter-spacing: 1px; }
+        .lobby-code-val { font-family: 'Consolas', monospace; font-size: 1.4em; font-weight: 800; color: #f1c40f; letter-spacing: 3px; text-shadow: 0 0 15px rgba(241, 196, 15, 0.5); }
+        .lobby-copy-btn {
+            background: rgba(241, 196, 15, 0.15); border: 1px solid rgba(241, 196, 15, 0.4); color: #f1c40f;
+            padding: 4px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700; cursor: pointer; transition: all 0.2s ease;
+        }
+        .lobby-copy-btn:hover { background: rgba(241, 196, 15, 0.3); transform: scale(1.08); }
+        .lobby-count-pill {
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 6px 14px; border-radius: 20px; font-size: 0.78em; font-weight: 700; color: #fff;
+        }
+
         /* GRID SYSTEMS */
         .game-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; width: 100%;
-            background-image: radial-gradient(#333 1px, transparent 1px); background-size: 20px 20px; /* Chấm nền nhẹ */
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; width: 100%;
         }
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; }
-
-        @media (min-width: 1000px) {
-            .game-grid { grid-template-columns: repeat(6, 1fr); }
-            .gallery-grid { grid-template-columns: repeat(7, 1fr); }
-        }
+        @media (min-width: 600px) { .game-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; } }
+        @media (min-width: 1000px) { .game-grid { grid-template-columns: repeat(6, 1fr); gap: 16px; } }
 
         .slot-empty {
-            border: 2px dashed #222; border-radius: 12px; height: 110px;
-            display: flex; align-items: center; justify-content: center; color: #222; font-size: 2em;
+            border: 2px dashed rgba(255, 255, 255, 0.15); border-radius: 14px; height: 115px;
+            display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.2); font-size: 1.8em;
+            background: rgba(0, 0, 0, 0.2);
         }
 
         .game-player-card {
-            background: #2a2a2a; border-radius: 12px; padding: 10px; border: 2px solid #444;
-            cursor: pointer; position: relative; height: 110px; width: 100%; max-width: 140px;
+            background: linear-gradient(180deg, rgba(32, 28, 40, 0.9) 0%, rgba(18, 16, 24, 0.9) 100%);
+            border-radius: 14px; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer; position: relative; height: 115px; width: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: all 0.2s; margin: 0 auto;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); box-sizing: border-box;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
         }
-        .game-player-card:hover { border-color: #666; transform: translateY(-2px); }
-        .game-player-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
-        .game-player-card .player-num { position: absolute; top: 5px; right: 8px; color: #f1c40f; font-size: 0.7em; font-weight: bold; }
+        .game-player-card:hover { border-color: rgba(255, 255, 255, 0.4); transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6); }
+        .game-player-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255, 255, 255, 0.2); }
+        .game-player-card .player-num { position: absolute; top: 6px; right: 8px; color: #f1c40f; font-size: 0.72em; font-weight: 800; font-family: monospace; }
         .game-player-card p {
-            font-size: 0.7em; margin: 8px 0 0 0; width: 100%;
-            overflow: hidden; text-overflow: ellipsis;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            line-height: 1.1; text-align: center; word-break: break-word;
+            font-size: 0.72em; margin: 8px 0 0 0; width: 100%;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            line-height: 1.1; text-align: center; color: #eee; font-weight: 600;
         }
-        .game-player-card.ready { border-color: #27ae60; }
-        .game-player-card.is-dead { border-color: #444 !important; opacity: 0.6; }
+        .game-player-card.ready { border-color: #2ed573; box-shadow: 0 0 15px rgba(46, 213, 115, 0.35); }
+        .game-player-card.is-dead { border-color: #444 !important; opacity: 0.55; }
         .game-player-card.is-dead img { filter: grayscale(1); }
         .game-player-card.is-dead p { color: #888 !important; }
         .game-player-card.is-dead .player-num { color: #666 !important; }
+
+        /* DEV LOGIN PAGE */
+        .dev-login-card {
+            background: linear-gradient(180deg, rgba(10, 18, 14, 0.9) 0%, rgba(5, 10, 8, 0.9) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.35); border-radius: 24px; padding: 30px 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 255, 136, 0.15);
+            backdrop-filter: blur(20px); max-width: 400px; margin: 40px auto; text-align: center;
+        }
+        .dev-login-title {
+            color: #00ff88; font-family: 'Consolas', monospace; font-size: 1.3em; font-weight: 800;
+            letter-spacing: 2px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
 
         /* HUNT UI - TEAMMATE & MARKING */
         .game-player-card.is-teammate { border-color: #ff4d4d !important; box-shadow: 0 0 15px rgba(255, 77, 77, 0.3); }
@@ -734,17 +889,27 @@
 <body>
     <div id="app-root">
         <aside id="dev-sidebar">
-            <label style="color:#27ae60; font-size: 0.7em; font-weight: bold; margin-bottom: 10px; display: block;">DEVELOPER CONSOLE</label>
-            <div id="dev-logs" style="background: black; color: #27ae60; font-family: monospace; padding: 10px; flex: 1; overflow-y: auto; font-size: 0.7em; border-radius: 8px; margin-bottom: 15px; text-align: left; border: 1px solid #222;">> Sẵn sàng...</div>
-            <input type="text" id="devConsole" placeholder="Lệnh /..." onkeydown="if(event.key==='Enter') executeDevCommand()">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button onclick="addBot()" style="background:#27ae60; padding:10px; margin:0">+BOT</button>
-                <button onclick="devCommand('/next')" style="background:#f39c12; padding:10px; margin:0">NEXT</button>
-                <button onclick="devCommand('/start')" style="background:#2980b9; padding:10px; margin:0">START</button>
-                <button onclick="location.reload()" style="background:#555; padding:10px; margin:0">REFRESH</button>
+            <div class="dev-header">
+                <div class="dev-title">
+                    <span class="dev-status-dot"></span>
+                    <span>CYBER TERMINAL v2.0</span>
+                </div>
+                <div onclick="toggleDevBar()" style="color: #666; cursor: pointer; font-size: 1.1em; font-weight: bold; padding: 2px 6px;">✕</div>
+            </div>
+            <div id="dev-logs">> Terminal sẵn sàng...</div>
+            <div class="dev-input-wrap">
+                <input type="text" id="devConsole" placeholder="Lệnh (/next, /access, /getallrole...)" onkeydown="if(event.key==='Enter') executeDevCommand()">
+            </div>
+            <div class="dev-btn-grid">
+                <button onclick="addBot()" class="dev-action-btn dev-btn-bot">+ BOT</button>
+                <button onclick="devCommand('/next')" class="dev-action-btn dev-btn-next">⏭ NEXT</button>
+                <button onclick="devCommand('/start')" class="dev-action-btn dev-btn-start">▶ START</button>
+                <button onclick="executeQuickCmd('/getallrole')" class="dev-action-btn dev-btn-roles">👁 ROLES</button>
+                <button onclick="executeQuickCmd('/return')" class="dev-action-btn dev-btn-return">↩ RETURN</button>
+                <button onclick="location.reload()" class="dev-action-btn dev-btn-refresh">🔄 REFRESH</button>
             </div>
         </aside>
-        <div id="dev-toggle" onclick="toggleDevBar()">⚙️</div>
+        <div id="dev-toggle" onclick="toggleDevBar()">⚡</div>
 
         <div id="main-content">
             <div id="loading-overlay">
@@ -834,8 +999,44 @@
 
             <main id="scroll-area">
                 <div class="container">
-                    <div id="page-home" class="page active"><div id="home-auth-section" class="card"><h3>Đang tải...</h3></div></div>
-                    <div id="page-dashboard" class="page"><div class="card"><h3>Chào, <span id="dash-name" style="color:var(--primary)">User</span>!</h3></div><button onclick="createRoom()" class="secondary-btn">TẠO PHÒNG MỚI</button><input type="text" id="roomCodeInput" placeholder="Mã phòng (6 số)..."><button onclick="joinRoom()">GIA NHẬP PHÒNG</button></div>
+                    <div id="page-home" class="page active">
+                        <div class="dash-action-card" style="max-width: 420px; margin: 30px auto; padding: 35px 25px;">
+                            <div class="dash-card-icon">🌕</div>
+                            <h2 class="dash-card-title" style="font-size: 1.4em; margin-bottom: 8px;">MÔN SÓI LÀ</h2>
+                            <p class="dash-card-desc" style="margin-bottom: 25px;">Đăng nhập để bước vào thế giới ma thuật, đấu trí và sinh tồn giữa Dân Làng và Ma Sói.</p>
+                            <div id="home-auth-section" style="width: 100%;">
+                                <h3>Đang tải...</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="page-dashboard" class="page">
+                        <div class="dashboard-hero">
+                            <img id="dash-ava-preview" src="" class="dash-avatar-mini" alt="User">
+                            <div class="dash-welcome-text">
+                                <h3>Chào mừng, <span id="dash-name" style="color:var(--primary)">User</span>!</h3>
+                                <p>Sẵn sàng cho ván đấu cân não tiếp theo?</p>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-actions-grid">
+                            <div class="dash-action-card">
+                                <div class="dash-card-icon">🏰</div>
+                                <h3 class="dash-card-title">TẠO PHÒNG MỚI</h3>
+                                <p class="dash-card-desc">Khởi tạo phòng chơi tùy chỉnh và mời bạn bè tham gia tranh tài.</p>
+                                <button onclick="createRoom()" class="btn-create-room">TẠO PHÒNG NGAY</button>
+                            </div>
+
+                            <div class="dash-action-card">
+                                <div class="dash-card-icon">⚔️</div>
+                                <h3 class="dash-card-title">GIA NHẬP PHÒNG</h3>
+                                <p class="dash-card-desc">Nhập mã phòng 6 ký tự để tham gia vào trận đấu đang chờ.</p>
+                                <div class="room-code-input-wrap">
+                                    <input type="text" id="roomCodeInput" class="room-code-input" placeholder="######" maxlength="6" onkeydown="if(event.key==='Enter') joinRoom()">
+                                </div>
+                                <button onclick="joinRoom()" class="btn-join-room">VÀO PHÒNG CHỜ</button>
+                            </div>
+                        </div>
+                    </div>
                     <div id="page-profile" class="page">
                         <div class="profile-card">
                             <div class="profile-rank-badge">
@@ -882,9 +1083,15 @@
                         </div>
                     </div>
                     <div id="page-lobby" class="page">
-                        <div class="card" style="flex:1; overflow-y:auto; margin-bottom: 80px;">
-                            <h2>Mã: <span id="displayRoomCode" style="color:#f1c40f">######</span></h2>
-                            <div id="player-count-badge" style="background:#333;padding:5px 10px;border-radius:10px;font-size:0.8em;margin-bottom:10px">Đang chờ...</div>
+                        <div class="lobby-room-banner">
+                            <div class="lobby-code-group">
+                                <span class="lobby-code-label">PHÒNG:</span>
+                                <span id="displayRoomCode" class="lobby-code-val">######</span>
+                                <button onclick="copyRoomCode()" class="lobby-copy-btn" title="Sao chép mã phòng">📋 Copy</button>
+                            </div>
+                            <div id="player-count-badge" class="lobby-count-pill">👥 Đang chờ...</div>
+                        </div>
+                        <div class="card" style="flex:1; overflow-y:auto; margin-bottom: 80px; background: rgba(18, 16, 24, 0.7); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); padding: 15px; box-sizing: border-box;">
                             <div id="game-grid" class="game-grid"></div>
                         </div>
                     </div>
@@ -912,7 +1119,18 @@
                             <!-- Rendered dynamically -->
                         </div>
                     </div>
-                    <div id="page-dev-login" class="page"><div class="card"><h3>Developer Portal</h3><input type="password" id="devPassword" placeholder="Mật khẩu..."><button onclick="checkDevPassword()">Kích hoạt</button></div></div>
+                    <div id="page-dev-login" class="page">
+                        <div class="dev-login-card">
+                            <div style="font-size: 2.5em; margin-bottom: 10px;">⚡</div>
+                            <div class="dev-login-title">DEVELOPER PORTAL</div>
+                            <p style="font-size: 0.8em; color: #888; margin-bottom: 20px;">Nhập mã khóa bảo mật để kích hoạt Dev Console</p>
+                            <input type="password" id="devPassword" placeholder="Nhập mật khẩu Dev..." class="profile-input" style="font-family: monospace; text-align: center; margin-bottom: 15px;" onkeydown="if(event.key==='Enter') checkDevPassword()">
+                            <div style="display: flex; gap: 10px; width: 100%;">
+                                <button onclick="goBack()" class="ghost-btn" style="flex: 1; padding: 12px; margin: 0;">Quay lại</button>
+                                <button onclick="checkDevPassword()" style="flex: 1; background: #00ff88; color: #000; font-weight: 800; padding: 12px; margin: 0; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4);">Kích hoạt</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
 
@@ -1091,9 +1309,30 @@
 
         function updateProfileUI() {
             const names=['dash-name','editName','self-mini-name']; names.forEach(id=>{const e=document.getElementById(id); if(e)(e.value!==undefined?e.value=myName:e.innerText=myName);});
-            const avas=['profile-ava-preview','self-mini-ava']; avas.forEach(id=>{const e=document.getElementById(id); if(e)e.src=myAvatar;});
+            const avas=['profile-ava-preview','self-mini-ava','dash-ava-preview']; avas.forEach(id=>{const e=document.getElementById(id); if(e)e.src=myAvatar;});
             const ed=document.getElementById('editAvatar'); if(ed)ed.value=myAvatar;
             renderPresetAvatars();
+        }
+
+        function copyRoomCode() {
+            if (!currentRoomCode) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentRoomCode).then(() => {
+                    showNotification(`Đã sao chép mã phòng: ${currentRoomCode}`);
+                }).catch(() => {
+                    showNotification(`Mã phòng của bạn: ${currentRoomCode}`);
+                });
+            } else {
+                showNotification(`Mã phòng của bạn: ${currentRoomCode}`);
+            }
+        }
+
+        function executeQuickCmd(cmd) {
+            const i = document.getElementById('devConsole');
+            if (i) {
+                i.value = cmd;
+                executeDevCommand();
+            }
         }
 
         async function renderPresetAvatars() {
@@ -1124,8 +1363,8 @@
 
         function updateHomeUI() {
             const s=document.getElementById('home-auth-section'); if(!s) return;
-            if(myId){ s.innerHTML=`<img src="${myAvatar}" width="80" style="border-radius:50%; border:3px solid var(--primary);"><h3 style="margin:10px 0;">${myName}</h3><button onclick="navigateTo('page-dashboard')">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer;">Đăng xuất</p>`; }
-            else { s.innerHTML=`<h3>Vào game ngay</h3><div id="google-btn"></div>`; if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'rectangular'}); } }
+            if(myId){ s.innerHTML=`<div style="display:flex; flex-direction:column; align-items:center; gap:10px;"><img src="${myAvatar}" width="80" height="80" style="border-radius:50%; border:3px solid var(--primary); box-shadow: 0 0 20px var(--primary-glow); object-fit:cover;"><h3 style="margin:5px 0 0 0; font-size:1.2em;">${myName}</h3><button onclick="navigateTo('page-dashboard')" class="btn-join-room" style="margin-top:10px;">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer; margin:5px 0 0 0;">Đăng xuất</p></div>`; }
+            else { s.innerHTML=`<div id="google-btn" style="display:flex; justify-content:center;"></div>`; if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'pill', theme:'filled_black'}); } }
         }
 
         function logout() { localStorage.removeItem('werewolf_user'); myId=null; updateHomeUI(); navigateTo('page-home'); }
@@ -1146,11 +1385,25 @@
         }
 
         function showDevLogin() { navigateTo('page-dev-login'); }
-        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("Xác thực Dev!"); } else showNotification("Mật khẩu sai!"); }
+        function checkDevPassword() { if(document.getElementById('devPassword').value==='N3Tyevcl'){ isDev=true; localStorage.setItem('werewolf_dev_auth', 'true'); document.getElementById('dev-sidebar').classList.add('active'); document.getElementById('dev-toggle').style.display='flex'; document.body.classList.add('dev-open'); document.body.classList.add('dev-expanded'); navigateTo(lastPage); logDev("[SYS] Xác thực Developer thành công!"); } else showNotification("Mật khẩu không chính xác!"); }
         function toggleDevBar() { document.getElementById('dev-sidebar').classList.toggle('active'); document.body.classList.toggle('dev-expanded'); }
         function toggleHuntRankBar() { document.getElementById('huntranking').classList.toggle('active'); }
         function toggleVoteRankBar() { document.getElementById('voteranking').classList.toggle('active'); }
-        function logDev(m) { const l=document.getElementById('dev-logs'); if(l){ l.innerHTML+=`<div>> ${m}</div>`; l.scrollTop=l.scrollHeight; } }
+        function logDev(m) {
+            const l=document.getElementById('dev-logs');
+            if(l){
+                let formatted = m;
+                if (typeof formatted === 'string') {
+                    formatted = formatted
+                        .replace(/^(\[LOG\])/i, '<span style="color:#00d2d3">$1</span>')
+                        .replace(/^(\[SYS\])/i, '<span style="color:#f1c40f">$1</span>')
+                        .replace(/^(\[DEV\])/i, '<span style="color:#00ff88">$1</span>')
+                        .replace(/^(\[ERR\])/i, '<span style="color:#ff4757">$1</span>');
+                }
+                l.innerHTML += `<div>> ${formatted}</div>`;
+                l.scrollTop = l.scrollHeight;
+            }
+        }
         function toggleAvatarEdit() { const o = document.getElementById('avatar-options'); const img = document.getElementById('profile-ava-preview'); if (o.style.display === 'none' || o.style.display === '') { o.style.display = 'flex'; img.style.borderRadius = '20px'; } else { o.style.display = 'none'; img.style.borderRadius = '50%'; } }
         function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e => {}); else if (document.exitFullscreen) document.exitFullscreen(); }
         function previewFileAvatar(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = (e) => { document.getElementById('profile-ava-preview').src = e.target.result; }; r.readAsDataURL(input.files[0]); } }
