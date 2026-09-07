@@ -201,10 +201,10 @@
         .header-back-btn { left: 15px; font-weight: bold; }
         .header-right-actions { position: absolute; right: 15px; bottom: 12px; display: flex; gap: 10px; align-items: center; }
         .header-fs-btn { position: static; }
-        .header-dev-btn { opacity: 0.0001; cursor: pointer; padding: 6px; }
+        .header-dev-btn { position: absolute; right: 100%; margin-right: 12px; opacity: 0.0001; cursor: pointer; padding: 8px; z-index: 10; }
 
         .header-status-badge {
-            position: absolute; bottom: 12px; background: rgba(18, 18, 24, 0.75);
+            position: absolute; background: rgba(18, 18, 24, 0.75);
             backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 20px; padding: 4px 12px; display: none; align-items: center; gap: 6px;
             font-size: 0.75em; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); transition: all 0.3s ease;
