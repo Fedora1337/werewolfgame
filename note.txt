@@ -26,3 +26,24 @@ Già Làng (ELDER): Chưa viết hàm "Vô hiệu hóa chức năng phe Dân" kh
 Thợ Săn (HUNTER): Chưa xử lý logic bắn súng lúc chết hoặc bắn chủ động ban đêm. ✔️
 •
 Nguyệt Nữ (MOON_MAIDEN): Chưa có hàm "khóa" hành động của người khác. ✔️
+
+mô tả mới:
+* **Ma Sói**: Ăn thịt dân làng mỗi đêm, là kẻ thù chính của dân làng.
+* **Dân Làng**: Những người bảo vệ ngôi làng, có nhiệm vụ tìm kiếm và tiêu diệt ma sói.
+* **Tiên Tri**: Có khả năng soi phe một người mỗi đêm, giúp dân làng biết được danh tính của ma sói.
+* **Bảo Vệ**: Miễn nhiễm với ma sói đêm đó, giúp bảo vệ dân làng khỏi sự tấn công của ma sói.
+* **Phù Thủy**: Có khả năng độc hại và cứu giúp, giúp dân làng thoát khỏi sự tấn công của ma sói.
+* **Thợ Săn**: Kéo theo người chết cùng, giúp tiêu diệt ma sói và bảo vệ dân làng.
+* **Người Nga**: Có khả năng báo cho dân làng biết danh tính của ma sói.
+* **3 Anh Em**: Nhận mặt danh tính của ma sói đêm 1, giúp dân làng biết được danh tính của kẻ thù.
+* **2 Chị Em**: Có khả năng báo thù, giúp tiêu diệt ma sói và bảo vệ dân làng.
+* **Cupid**: Có khả năng ghép đôi, giúp dân làng tìm được người bạn.
+* **Hồ Ly**: Có khả năng soi 3 người, giúp dân làng biết được danh tính của ma sói.
+* **Nguyệt Nữ**: Có khả năng khóa chức năng, giúp bảo vệ dân làng khỏi sự tấn công của ma sói.
+* **Thổi Sáo**: Có khả năng thôi miên, giúp dân làng thoát khỏi sự tấn công của ma sói.
+* **Già Làng**: Có khả năng giáp 1 mạng, giúp bảo vệ dân làng khỏi sự tấn công của ma sói.
+* **Sói Nguyền**: Có khả năng biến nạn nhân thành ma sói, giúp tăng cường sức mạnh của phe ma sói.
+* **Sói Tiên Tri**: Có khả năng soi chức năng đối phương, giúp ma sói biết được danh tính và khả năng của dân
+làng.
+* **Sói Ngu**: Có khả năng báo thù, giúp ma sói tiêu diệt dân làng và bảo vệ phe của mình.
+* **Bán Sói**: Có khả năng ban đầu phe dân, khi bị ma sói cắn sẽ hóa ma sói thực sự.
