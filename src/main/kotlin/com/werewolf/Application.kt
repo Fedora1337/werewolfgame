@@ -188,11 +188,17 @@ fun main() {
 
             // GUEST AUTH: Tạo UserID tạm thời dựa trên IP
             get("/guest-auth") {
-                val remoteHost = call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim() 
+                val remoteHost = call.request.headers["X-Real-IP"] 
+                                 ?: call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim() 
                                  ?: call.request.local.remoteHost
-                val guestId = "guest_${remoteHost.replace(".", "_").replace(":", "_")}"
-                val guestName = "Khách_${remoteHost.takeLast(4)}"
+                
+                // Clean the IP string for safe ID usage
+                val cleanIp = remoteHost.replace(".", "_").replace(":", "_").replace("%", "_")
+                val guestId = "guest_$cleanIp"
+                val guestName = "Người chơi mới"
                 val guestAvatar = "https://robohash.org/$guestId?set=set4"
+                
+                println("[AUTH] New Guest detected: $guestId from $remoteHost")
                 call.respond(Player(id = guestId, name = guestName, avatar = guestAvatar))
             }
 
