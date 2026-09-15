@@ -1771,7 +1771,33 @@
         function updateHomeUI() {
             const s=document.getElementById('home-auth-section'); if(!s) return;
             if(myId){ s.innerHTML=`<div style="display:flex; flex-direction:column; align-items:center; gap:10px;"><img src="${myAvatar}" width="80" height="80" style="border-radius:50%; border:3px solid var(--primary); box-shadow: 0 0 20px var(--primary-glow); object-fit:cover;"><h3 style="margin:5px 0 0 0; font-size:1.2em;">${myName}</h3><button onclick="navigateTo('page-dashboard')" class="btn-join-room" style="margin-top:10px;">VÀO PHÒNG CHỜ</button><p onclick="logout()" style="font-size:0.8em; color:#888; cursor:pointer; margin:5px 0 0 0;">Đăng xuất</p></div>`; }
-            else { s.innerHTML=`<div id="google-btn" style="display:flex; justify-content:center;"></div>`; if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'pill', theme:'filled_black'}); } }
+            else {
+                s.innerHTML=`
+                    <div id="google-btn" style="display:flex; justify-content:center; margin-bottom:15px;"></div>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <button onclick="loginAsGuest()" class="btn-create-room" style="background:linear-gradient(135deg, #555 0%, #333 100%) !important; box-shadow:0 4px 15px rgba(0,0,0,0.3) !important;">Gia nhập với tư cách khách</button>
+                        <p style="font-size:0.7em; color:#666; font-style:italic;">* Chế độ khách dùng IP để định danh tạm thời.</p>
+                    </div>
+                `;
+                if(window.google){ google.accounts.id.initialize({client_id:"10011358335-gn9mrfr7fi460d11u1a55kf2jtvuopo5.apps.googleusercontent.com", callback:handleCredentialResponse}); google.accounts.id.renderButton(document.getElementById("google-btn"), {type:'standard', shape:'pill', theme:'filled_black'}); }
+            }
+        }
+
+        async function loginAsGuest() {
+            showLoading("XÁC THỰC KHÁCH", "Đang định danh qua IP...");
+            try {
+                const res = await fetch('/guest-auth');
+                const p = await res.json();
+                myId = p.id; myName = p.name; myAvatar = p.avatar;
+                localStorage.setItem('werewolf_user', JSON.stringify({id:myId, name:myName, avatar:myAvatar}));
+                updateProfileUI();
+                updateHomeUI();
+                hideLoading();
+                showNotification("Chào mừng Khách! Bạn nên cập nhật tên trong Hồ sơ.");
+            } catch(e) {
+                hideLoading();
+                showNotification("Lỗi định danh khách. Thử lại sau!");
+            }
         }
 
         function logout() { localStorage.removeItem('werewolf_user'); myId=null; updateHomeUI(); navigateTo('page-home'); }

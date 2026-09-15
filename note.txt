@@ -28,22 +28,21 @@ Thợ Săn (HUNTER): Chưa xử lý logic bắn súng lúc chết hoặc bắn c
 Nguyệt Nữ (MOON_MAIDEN): Chưa có hàm "khóa" hành động của người khác. ✔️
 
 mô tả mới:
-* **Ma Sói**: Ăn thịt dân làng mỗi đêm, là kẻ thù chính của dân làng.
-* **Dân Làng**: Những người bảo vệ ngôi làng, có nhiệm vụ tìm kiếm và tiêu diệt ma sói.
-* **Tiên Tri**: Có khả năng soi phe một người mỗi đêm, giúp dân làng biết được danh tính của ma sói.
-* **Bảo Vệ**: Miễn nhiễm với ma sói đêm đó, giúp bảo vệ dân làng khỏi sự tấn công của ma sói.
-* **Phù Thủy**: Có khả năng độc hại và cứu giúp, giúp dân làng thoát khỏi sự tấn công của ma sói.
-* **Thợ Săn**: Kéo theo người chết cùng, giúp tiêu diệt ma sói và bảo vệ dân làng.
-* **Người Nga**: Có khả năng báo cho dân làng biết danh tính của ma sói.
-* **3 Anh Em**: Nhận mặt danh tính của ma sói đêm 1, giúp dân làng biết được danh tính của kẻ thù.
-* **2 Chị Em**: Có khả năng báo thù, giúp tiêu diệt ma sói và bảo vệ dân làng.
-* **Cupid**: Có khả năng ghép đôi, giúp dân làng tìm được người bạn.
-* **Hồ Ly**: Có khả năng soi 3 người, giúp dân làng biết được danh tính của ma sói.
-* **Nguyệt Nữ**: Có khả năng khóa chức năng, giúp bảo vệ dân làng khỏi sự tấn công của ma sói.
-* **Thổi Sáo**: Có khả năng thôi miên, giúp dân làng thoát khỏi sự tấn công của ma sói.
-* **Già Làng**: Có khả năng giáp 1 mạng, giúp bảo vệ dân làng khỏi sự tấn công của ma sói.
-* **Sói Nguyền**: Có khả năng biến nạn nhân thành ma sói, giúp tăng cường sức mạnh của phe ma sói.
-* **Sói Tiên Tri**: Có khả năng soi chức năng đối phương, giúp ma sói biết được danh tính và khả năng của dân
-làng.
-* **Sói Ngu**: Có khả năng báo thù, giúp ma sói tiêu diệt dân làng và bảo vệ phe của mình.
-* **Bán Sói**: Có khả năng ban đầu phe dân, khi bị ma sói cắn sẽ hóa ma sói thực sự.
+* **Ma Sói**: Mỗi đêm tham gia thảo luận, bỏ phiếu và chọn 1 người c số phiếu cao nhất để cắn. Người được chọn sẽ chết vào cuối đêm.
+* **Dân Làng**: Không có chức năng đặc biệt, nhiệm vụ là tìm và tiêu diệt tất cả sói trong làng.
+* **Tiên Tri**: Mỗi đêm chỉ định soi phe 1 người, Tiên tri sẽ được biết người đuược chỉ định theo phe dân hay sói.
+* **Bảo Vệ**: Mỗi đêm chỉ định bảo vệ 1 người (không được bảo vệ 1 ng 2 đêm liên tiếp), người được chỉ định sẽ được bảo vệ khỏi sói cắn trong đêm đó (chỉ bảo vệ khỏi sự kiện đi săn của bầy Sói).
+* **Phù Thủy**: Có 2 bình thuốc: độc và chữa lành. Bình độc giết chết người được chỉ định, bình chữa lành cứu sống người được chỉ định, sau khi dùng sẽ mất bình thuốc tương ứng.
+* **Thợ Săn**: Có 2 kĩ năng: bị động và chủ động. Chủ động: trong đêm được quyền bắn 1 người, nếu người bị chỉ định không phải sói sẽ bị phản phệ và chết theo. Bị động: khi thợ săn chết sẽ mở bài và chọn kéo 1 người chết chung. (Số lần dùng 2 kĩ năng sẽ tùy theo cài đặt của chủ phòng và tổng số người chơi).
+* **Người Nga**: Mỗi sáng, nếu người Nga hoặc 2 người bên cạnh có Sói, cả làng nhận thông báo: "Gấu của người Nga hốc vodka".
+* **3 Anh Em**: Đêm đầu tiên 3 anh em được quyền nhận mặt nhau.
+* **2 Chị Em**: Đêm đầu tiên 2 chị em được quyền nhận mặt nhau. Trong suốt trận, nếu 1 trong 2 người chết, người còn lại sẽ thức dậy mỗi đêm và chọn giết 1 người trong làng.
+* **Cupid**: Đêm đầu tiên, Cupid dậy và chỉ định ghép đôi 2 người. Nếu cặp đôi cùng nhau sống sót đến khi làng còn 4 người thì cả đôi và Cupid chiến thắng.
+* **Hồ Ly**: Mỗi đêm chỉ định 3 người liền nhau. Nếu trong 3 người không có sói, Hồ Ly sẽ mất chức năng vĩnh viễn.
+* **Nguyệt Nữ**: Mỗi đêm chỉ định nguyền rủa 1 người (không được chỉ định cùng 1 người 2 đêm liên tiếp), người được chỉ định không thể sử dụng chức năng của họ vào đêm đó.
+* **Người thổi Sáo**: Mỗi đêm chỉ định thôi miên 2 người. Sau khi người thổi sáo ngủ, những người từng bị thôi miên còn sống dậy nhận mặt nhau. Nếu tất cả người còn sống (trừ bản thân) bị thôi miên, Người thổi sáo chiến thắng.
+* **Già Làng**: Miễn nhiễm với 1 lần bị sói cắn, khi Già Làng chết, tất cả các chức năng không phải giết của phe dân làng bị vô hiệu hóa.
+* **Sói Nguyền**: 1 lần duy nhất, Sói nguyền có quyền biến con mồi của bầy sói đêm đó (người được chỉ định không thuộc phe sói như Sói Ngu, Bán Sói) thành sói (Không tiêu hao nếu mục tiêu không bị biến đổi).
+* **Sói Tiên Tri**: Có số lần giới hạn soi chức năng của người được chỉ định, chức năng của người bị chỉ định sẽ được thông báo với cả làng: "Sói tiên tri đã soi ra ..." (Nếu không chỉ định ai sẽ thông báo là dân làng). (Số lần sử dụng chức năng dựa trên cài đặt chủ phòng và số lượng người chơi).
+* **Sói Ngu**: Không được dậy vào bam đêm và không được biết các sói khác. Khi Sói Ngu bị treo cổ, nó có quyền chỉ định 1 trong những người vote giết cho nó chết theo.
+* **Bán Sói**: Ban đầu có chức năng và phe như dân làng, sau khi bị sói cắn sẽ trở thành sói (dù có hóa sói hay không vẫn thắng theo phe sói).
