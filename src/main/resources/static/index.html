@@ -1786,8 +1786,12 @@
         async function loginAsGuest() {
             showLoading("XÁC THỰC KHÁCH", "Đang định danh qua IP...");
             try {
-                const res = await fetch('/guest-auth');
-                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+                // Thử dùng đường dẫn tuyệt đối từ origin hiện tại
+                const apiUrl = window.location.origin + '/guest-auth';
+                console.log("[AUTH] Fetching from:", apiUrl);
+
+                const res = await fetch(apiUrl);
+                if (!res.ok) throw new Error(`Server returned ${res.status} (${res.statusText})`);
                 const p = await res.json();
 
                 if (!p.id || !p.name) throw new Error("Dữ liệu định danh không hợp lệ");

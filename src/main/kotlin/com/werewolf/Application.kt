@@ -174,7 +174,7 @@ fun main() {
                     val guestName = "Người chơi mới"
                     val guestAvatar = "https://robohash.org/$guestId?set=set4"
                     
-                    println("[AUTH] New Guest request from: $remoteHost -> Generated ID: $guestId")
+                    println("[AUTH] GUEST ATTEMPT: $remoteHost -> ID: $guestId")
                     call.respond(Player(id = guestId, name = guestName, avatar = guestAvatar))
                 } catch (e: Exception) {
                     println("[AUTH ERROR] ${e.message}")
@@ -182,7 +182,11 @@ fun main() {
                 }
             }
 
-            staticResources("/", "static")
+            // Gộp các file tĩnh vào đây
+            static("/") {
+                resources("static")
+                defaultResource("static/index.html")
+            }
             
             // FALLBACK ROUTES FOR SPA VIRTUAL NAVIGATION
             listOf("/home", "/dashboard", "/gallery", "/lobby", "/profile", "/dev-login").forEach { path ->
