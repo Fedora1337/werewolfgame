@@ -162,6 +162,26 @@ fun main() {
         install(WebSockets) { pingPeriod = Duration.ofSeconds(15); timeout = Duration.ofSeconds(15); contentConverter = KotlinxWebsocketSerializationConverter(Json) }
         val moderator = Moderator()
         routing {
+            // === API ROUTES FIRST ===
+            get("/guest-auth") {
+                try {
+                    val remoteHost = call.request.headers["X-Real-IP"] 
+                                     ?: call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim() 
+                                     ?: call.request.local.remoteHost
+                    
+                    val cleanIp = remoteHost.replace(".", "_").replace(":", "_").replace("%", "_").replace(" ", "_")
+                    val guestId = "guest_$cleanIp"
+                    val guestName = "Người chơi mới"
+                    val guestAvatar = "https://robohash.org/$guestId?set=set4"
+                    
+                    println("[AUTH] New Guest request from: $remoteHost -> Generated ID: $guestId")
+                    call.respond(Player(id = guestId, name = guestName, avatar = guestAvatar))
+                } catch (e: Exception) {
+                    println("[AUTH ERROR] ${e.message}")
+                    call.respond(io.ktor.http.HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "Unknown error")))
+                }
+            }
+
             staticResources("/", "static")
             
             // FALLBACK ROUTES FOR SPA VIRTUAL NAVIGATION
@@ -184,22 +204,6 @@ fun main() {
                 } else {
                     call.respond(io.ktor.http.HttpStatusCode.NotFound)
                 }
-            }
-
-            // GUEST AUTH: Tạo UserID tạm thời dựa trên IP
-            get("/guest-auth") {
-                val remoteHost = call.request.headers["X-Real-IP"] 
-                                 ?: call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim() 
-                                 ?: call.request.local.remoteHost
-                
-                // Clean the IP string for safe ID usage
-                val cleanIp = remoteHost.replace(".", "_").replace(":", "_").replace("%", "_")
-                val guestId = "guest_$cleanIp"
-                val guestName = "Người chơi mới"
-                val guestAvatar = "https://robohash.org/$guestId?set=set4"
-                
-                println("[AUTH] New Guest detected: $guestId from $remoteHost")
-                call.respond(Player(id = guestId, name = guestName, avatar = guestAvatar))
             }
 
             webSocket("/ws/{playerId}") {
