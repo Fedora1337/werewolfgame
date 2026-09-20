@@ -162,32 +162,37 @@ fun main() {
         install(WebSockets) { pingPeriod = Duration.ofSeconds(15); timeout = Duration.ofSeconds(15); contentConverter = KotlinxWebsocketSerializationConverter(Json) }
         val moderator = Moderator()
         routing {
-            // === API ROUTES: MUST BE FIRST ===
-            get("/guest-auth") {
-                try {
-                    val remoteHost = call.request.headers["X-Real-IP"] 
-                                     ?: call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim() 
-                                     ?: call.request.local.remoteHost
-                    
-                    val cleanIp = remoteHost.replace(".", "_").replace(":", "_").replace("%", "_").replace(" ", "_")
-                    val guestId = "guest_$cleanIp"
-                    val guestName = "Người chơi mới"
-                    val guestAvatar = "https://robohash.org/$guestId?set=set4"
-                    
-                    println("[AUTH] GUEST SUCCESS: $remoteHost -> $guestId")
-                    call.respond(Player(id = guestId, name = guestName, avatar = guestAvatar))
-                } catch (e: Exception) {
-                    println("[AUTH ERROR] ${e.message}")
-                    call.respond(io.ktor.http.HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "Unknown error")))
+            // === 1. DYNAMIC API ROUTES (Highest Priority) ===
+            route("/api") {
+                get("/guest-auth") {
+                    try {
+                        val remoteHost = call.request.headers["X-Real-IP"] 
+                                         ?: call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim() 
+                                         ?: call.request.local.remoteHost
+                        
+                        val cleanIp = remoteHost.replace(".", "_").replace(":", "_").replace("%", "_").replace(" ", "_")
+                        val guestId = "guest_$cleanIp"
+                        val guestName = "Người chơi mới"
+                        val guestAvatar = "https://robohash.org/$guestId?set=set4"
+                        
+                        println("[AUTH] API GUEST REQUEST: $remoteHost -> Generated ID: $guestId")
+                        call.respond(Player(id = guestId, name = guestName, avatar = guestAvatar))
+                    } catch (e: Exception) {
+                        println("[AUTH ERROR] ${e.message}")
+                        call.respond(io.ktor.http.HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "Unknown error")))
+                    }
+                }
+                get("/ping") { call.respondText("PONG") }
+                get("/test-ip") { 
+                    val ip = call.request.headers["X-Forwarded-For"] ?: call.request.local.remoteHost
+                    call.respondText("Your IP: $ip")
                 }
             }
 
-            // Test route
-            get("/ping") { call.respondText("PONG") }
-
-            // Gộp các file tĩnh: Để ở cuối hoặc dùng path cụ thể
+            // === 2. STATIC ASSETS ===
             staticResources("/static", "static")
             
+            // === 3. SPA FRONTEND ROUTES (Lowest Priority) ===
             // Route gốc
             get("/") {
                 val html = javaClass.classLoader.getResource("static/index.html")?.readBytes()
@@ -195,23 +200,20 @@ fun main() {
                 else call.respond(io.ktor.http.HttpStatusCode.NotFound)
             }
             
-            // FALLBACK ROUTES
-            listOf("/home", "/dashboard", "/gallery", "/lobby", "/profile", "/dev-login").forEach { path ->
+            // Một route duy nhất cho SPA fallbacks
+            val spaRoutes = listOf("/home", "/dashboard", "/gallery", "/lobby", "/profile", "/dev-login")
+            spaRoutes.forEach { path ->
                 get(path) {
                     val html = javaClass.classLoader.getResource("static/index.html")?.readBytes()
                     if (html != null) call.respondBytes(html, io.ktor.http.ContentType.Text.Html)
                     else call.respond(io.ktor.http.HttpStatusCode.NotFound)
                 }
             }
-
-            // Route cho phòng Lobby cụ thể: /lobby/code=xxxxxx
+            
             get("/lobby/code={code}") {
                 val html = javaClass.classLoader.getResource("static/index.html")?.readBytes()
-                if (html != null) {
-                    call.respondBytes(html, io.ktor.http.ContentType.Text.Html)
-                } else {
-                    call.respond(io.ktor.http.HttpStatusCode.NotFound)
-                }
+                if (html != null) call.respondBytes(html, io.ktor.http.ContentType.Text.Html)
+                else call.respond(io.ktor.http.HttpStatusCode.NotFound)
             }
 
             webSocket("/ws/{playerId}") {

@@ -1605,6 +1605,7 @@
         let realId, realName, realAvatar;
         let hasMarkedThisNight = false; // Cờ khóa hành động (cả Sói và Dân bầu)
         let hasVotedInTrial = false;    // Cờ khóa phán quyết 👍/👎
+        let diagnosticLogs = [];        // Lưu vết lỗi để chẩn đoán
 
         const allRoles = [
             { role: 'WEREWOLF', image: 'https://raw.githubusercontent.com/Fedora1337/werewolfgame/main/src/card/roles/thewerewolf.webp', description: 'Ma Sói - Ăn thịt dân làng mỗi đêm.' },
@@ -1787,10 +1788,13 @@
             showLoading("XÁC THỰC KHÁCH", "Đang định danh qua IP...");
             try {
                 // Thử dùng đường dẫn tuyệt đối từ origin hiện tại
-                const apiUrl = window.location.origin + '/guest-auth';
+                const apiUrl = window.location.origin + '/api/guest-auth';
                 console.log("[AUTH] Fetching from:", apiUrl);
+                diagnosticLogs.push({ time: new Date().toLocaleTimeString(), type: "FETCH_REQ", url: apiUrl });
 
                 const res = await fetch(apiUrl);
+                diagnosticLogs.push({ time: new Date().toLocaleTimeString(), type: "FETCH_RES", status: res.status, ok: res.ok });
+
                 if (!res.ok) throw new Error(`Server returned ${res.status} (${res.statusText})`);
                 const p = await res.json();
 
@@ -1804,6 +1808,7 @@
                 showNotification("Chào mừng Khách! Bạn hãy cập nhật tên trong Hồ sơ.");
             } catch(e) {
                 console.error("[AUTH ERROR]", e);
+                diagnosticLogs.push({ time: new Date().toLocaleTimeString(), type: "AUTH_ERR", error: e.message });
                 hideLoading();
                 showNotification(`Lỗi định danh khách: ${e.message}`);
             }
@@ -1812,6 +1817,7 @@
         function logout() { localStorage.removeItem('werewolf_user'); myId=null; updateHomeUI(); navigateTo('page-home'); }
 
         function showNotification(message) {
+            diagnosticLogs.push({ time: new Date().toLocaleTimeString(), type: "NOTIF", msg: message });
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:10000; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.3s ease;';
             overlay.innerHTML = `<div class="card" style="max-width:320px; text-align:center; border:2px solid var(--primary); box-shadow: 0 0 30px var(--primary);"><h3 style="color:var(--primary); margin-top:0;">THÔNG BÁO</h3><p style="margin:20px 0; font-size:0.9em; line-height:1.5;">${message}</p><button onclick="this.parentElement.parentElement.remove()" style="margin:0; padding:12px;">XÁC NHẬN</button></div>`;
@@ -2516,7 +2522,21 @@
         async function addBot() { const bc=playersCache.filter(p=>p.name.startsWith("Bot_")).length+1; await fetch(`/join-room/${currentRoomCode}`, {method:'POST', headers:{'Content-Type': 'application/json'}, body:JSON.stringify({id:"bot_"+Date.now()+"_"+bc, name:"Bot_"+bc, avatar:"https://robohash.org/bot_"+bc, isReady:true})}); }
         function executeDevCommand() {
             const i=document.getElementById('devConsole'); const cmd=i.value.trim(); if(!cmd.startsWith('/')) return;
-            if(cmd.startsWith('/access')){
+
+            if (cmd === '/get ip') {
+                logDev("[SYS] Đang truy vấn IP từ Server...");
+                fetch(window.location.origin + '/api/test-ip').then(r => r.text()).then(t => {
+                    logDev("[DEV] " + t);
+                }).catch(e => logDev("[ERR] Không thể lấy IP: " + e.message));
+            } else if (cmd === '/get playerid') {
+                logDev("[DEV] PlayerID hiện tại: " + (myId || "Chưa định danh"));
+            } else if (cmd === '/get error details') {
+                logDev("<span style='color:#ff4757'>--- CHI TIẾT LỖI HỆ THỐNG ---</span>");
+                if (diagnosticLogs.length === 0) logDev("Không có ghi chép lỗi nào.");
+                diagnosticLogs.forEach(l => {
+                    logDev(`[${l.time}] <span style='color:#f1c40f'>${l.type}</span>: ${JSON.stringify(l)}`);
+                });
+            } else if(cmd.startsWith('/access')){
                 const param = cmd.substring(8).trim(); let target = null;
                 if (param.startsWith('@')) target = playersCache.find(p => p.name.toLowerCase().includes(param.substring(1).toLowerCase()));
                 else if (param.startsWith('#')) target = playersCache[parseInt(param.substring(1)) - 1];
