@@ -162,7 +162,7 @@ fun main() {
         install(WebSockets) { pingPeriod = Duration.ofSeconds(15); timeout = Duration.ofSeconds(15); contentConverter = KotlinxWebsocketSerializationConverter(Json) }
         val moderator = Moderator()
         routing {
-            // === API ROUTES FIRST ===
+            // === API ROUTES: MUST BE FIRST ===
             get("/guest-auth") {
                 try {
                     val remoteHost = call.request.headers["X-Real-IP"] 
@@ -174,7 +174,7 @@ fun main() {
                     val guestName = "Người chơi mới"
                     val guestAvatar = "https://robohash.org/$guestId?set=set4"
                     
-                    println("[AUTH] GUEST ATTEMPT: $remoteHost -> ID: $guestId")
+                    println("[AUTH] GUEST SUCCESS: $remoteHost -> $guestId")
                     call.respond(Player(id = guestId, name = guestName, avatar = guestAvatar))
                 } catch (e: Exception) {
                     println("[AUTH ERROR] ${e.message}")
@@ -182,21 +182,25 @@ fun main() {
                 }
             }
 
-            // Gộp các file tĩnh vào đây
-            static("/") {
-                resources("static")
-                defaultResource("static/index.html")
+            // Test route
+            get("/ping") { call.respondText("PONG") }
+
+            // Gộp các file tĩnh: Để ở cuối hoặc dùng path cụ thể
+            staticResources("/static", "static")
+            
+            // Route gốc
+            get("/") {
+                val html = javaClass.classLoader.getResource("static/index.html")?.readBytes()
+                if (html != null) call.respondBytes(html, io.ktor.http.ContentType.Text.Html)
+                else call.respond(io.ktor.http.HttpStatusCode.NotFound)
             }
             
-            // FALLBACK ROUTES FOR SPA VIRTUAL NAVIGATION
+            // FALLBACK ROUTES
             listOf("/home", "/dashboard", "/gallery", "/lobby", "/profile", "/dev-login").forEach { path ->
                 get(path) {
                     val html = javaClass.classLoader.getResource("static/index.html")?.readBytes()
-                    if (html != null) {
-                        call.respondBytes(html, io.ktor.http.ContentType.Text.Html)
-                    } else {
-                        call.respond(io.ktor.http.HttpStatusCode.NotFound)
-                    }
+                    if (html != null) call.respondBytes(html, io.ktor.http.ContentType.Text.Html)
+                    else call.respond(io.ktor.http.HttpStatusCode.NotFound)
                 }
             }
 
